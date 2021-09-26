@@ -30,6 +30,9 @@ def get_data_and_remove_unwanted_columns():
     df.drop('Scan', inplace=True, axis=1)
     df.drop('Source File', inplace=True, axis=1)
     df.drop('Found By', inplace=True, axis=1)
+    #apply count_no_of_modifications to each PTM column
+    df['#modifications'] = df['PTM'].apply(count_no_of_modifications)
+
     print(df.columns)
     return df
 
@@ -66,6 +69,14 @@ def sanitize_data(df):
             print('peptide mismatch')
             df.drop(index)
         return df
+
+import numpy as np
+def count_no_of_modifications(ptm_str):
+    #check if NaN value
+    if pd.isnull(ptm_str):
+        return 0
+    return 1 + ptm_str.count(';')
+
 
 def count_no_of_modifications(ptm_str):
     #check if NaN value
