@@ -79,13 +79,6 @@ def count_no_of_modifications(ptm_str):
         return 0
     return 1 + ptm_str.count(';')
 
-
-def count_no_of_modifications(ptm_str):
-    #check if NaN value
-    if pd.isnull(ptm_str):
-        return 0
-    return 1 + ptm_str.count(';')
-
 def mass_div_len_column(mass, length):
     return mass/length
 
