@@ -1,4 +1,6 @@
 from pandas.core.construction import is_empty_data
+from pandas.core.dtypes.missing import isnull
+from pandas.core.frame import DataFrame
 import requests
 import pandas as pd
 from requests.api import get
@@ -30,6 +32,9 @@ def get_data_and_remove_unwanted_columns():
     df.drop('Scan', inplace=True, axis=1)
     df.drop('Source File', inplace=True, axis=1)
     df.drop('Found By', inplace=True, axis=1)
+    #apply count_no_of_modifications to each PTM column
+    df['#modifications'] = df['PTM'].apply(count_no_of_modifications)
+
     print(df.columns)
     return df
 
@@ -67,6 +72,14 @@ def sanitize_data(df):
             df.drop(index)
         return df
 
+import numpy as np
+def count_no_of_modifications(ptm_str):
+    #check if NaN value
+    if pd.isnull(ptm_str):
+        return 0
+    return 1 + ptm_str.count(';')
+
+
 def count_no_of_modifications(ptm_str):
     #check if NaN value
     if pd.isnull(ptm_str):
@@ -76,6 +89,27 @@ def count_no_of_modifications(ptm_str):
 def mass_div_len_column(mass, length):
     return mass/length
 
+def split_data_in_samples(df):
+    df1 = []
+    df2 = []
+    df3 = []
+    df4 = []
+    for i, row in df.iterrows():
+        if row['Area Sample 1'] != 0 and row['Area Sample 1'] != None:
+            df1.append(row)
+        if row['Area Sample 2'] != 0 and row['Area Sample 2'] != None:
+            df2.append(row)
+        if row['Area Sample 3'] != 0 and row['Area Sample 3'] != None:
+            df3.append(row)
+        if row['Area Sample 4'] != 0 and row['Area Sample 4'] != None:
+            df4.append(row)
+    df1 = pd.DataFrame(df1, columns=df.columns)
+    df2 = pd.DataFrame(df2, columns=df.columns)
+    df3 = pd.DataFrame(df3, columns=df.columns)
+    df4 = pd.DataFrame(df4, columns=df.columns)
+    return df1, df2, df3, df4
 
 df = get_data_and_remove_unwanted_columns()
 df = sanitize_data(df)
+df1, df2, df3, df4 = split_data_in_samples(df)
+print(df1)
