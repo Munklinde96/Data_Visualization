@@ -1,6 +1,3 @@
-from pandas.core.construction import is_empty_data
-from pandas.core.dtypes.missing import isnull
-from pandas.core.frame import DataFrame
 import requests
 import pandas as pd
 from requests.api import get
@@ -72,7 +69,6 @@ def sanitize_data(df):
             df.drop(index)
         return df
 
-import numpy as np
 def count_no_of_modifications(ptm_str):
     #check if NaN value
     if pd.isnull(ptm_str):
@@ -109,7 +105,53 @@ def split_data_in_samples(df):
     df4 = pd.DataFrame(df4, columns=df.columns)
     return df1, df2, df3, df4
 
-df = get_data_and_remove_unwanted_columns()
-df = sanitize_data(df)
-df1, df2, df3, df4 = split_data_in_samples(df)
-print(df1)
+
+def check_if_string_contains_substring_x_times(string, substring, no_times, exact = False):
+    if exact:
+        return string.count(substring) == no_times
+    elif not exact and  string.count(substring) > no_times:
+        return True
+    else:
+        return False
+
+def get_all_rows_with_at_least_x_modifications(df, no_modifications):
+    df = df[df['PTM'].notna()]
+    return df[df['PTM'].apply(check_if_string_contains_substring_x_times, args =(';', no_modifications-1, False) )] #-1 because of the ";" in the PTM column
+
+def get_all_rows_with_exactly_x_modifications(df, no_modifications):
+    df = df[df['PTM'].notna()]
+    return df[df['PTM'].apply(check_if_string_contains_substring_x_times, args =(';', no_modifications-1,True) )] #-1 because of the ";" in the PTM column
+
+def get_mass_shift_per_peptide(string):
+    ls = string.split('(')
+    if len(ls) == 0:
+        return np.nan
+    res = []
+    for chunch in ls:
+        res.append(chunch.split(')')[0])
+    return ",".join(res)
+
+def create_mass_shift_column(df):
+    #remove nan values
+    df['MassShift'] = df['Peptide'].apply(get_mass_shift_per_peptide)
+    return df
+
+#Used for boxplots
+def add_value_labels(ax, spacing=1):
+    for rect in ax.patches:
+        y_value = rect.get_height()
+        x_value = rect.get_x() + rect.get_width() / 2
+        space = spacing
+        va='bottom'
+        if y_value < 0:
+            space *= -1
+            va='top'
+        label='{:.2f}'.format(y_value)
+        #creat annotation
+        ax.annotate(label,(x_value,y_value),xytext=(0,space),textcoords='offset points',ha='center',va=va)
+        ax.axhline(y=0.0, color='black', linestyle='-', linewidth=2)
+
+# df = get_data_and_remove_unwanted_columns()
+# df = sanitize_data(df)
+# df1, df2, df3, df4 = split_data_in_samples(df)
+# print(df1)
