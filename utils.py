@@ -133,3 +133,30 @@ def combine_and_aggregate_sample_PTM_in_dataframe(df1,df2,df3,df4):
                           df3_new[['PTM', '#PTM', 'Sample']],
                           df4_new[['PTM', '#PTM', 'Sample']]], axis=0)
     return combined
+
+def get_modification_count_per_protein(df, countFilter):
+    df_protein_mods = df[["PTM", "Protein Accession"]]
+    modificationCountByProtein = {}
+    totalProteinModCount = {}
+    for modString, proteinName in df_protein_mods.itertuples(index=False):
+        if pd.isnull(modString):
+            continue
+        proteinName = proteinName.strip()
+        modString = modString.strip()
+        if proteinName not in modificationCountByProtein:
+            modificationCountByProtein[proteinName] = {}
+            totalProteinModCount[proteinName] = 0
+        mods = modString.split(";")
+        for mod in mods:
+            mod = mod.strip()
+            if mod not in modificationCountByProtein[proteinName]:
+                 modificationCountByProtein[proteinName][mod] = 1
+            else:
+                 modificationCountByProtein[proteinName][mod] += 1
+                 totalProteinModCount[proteinName] += 1
+    modificationCountByProteinFiltered = {}       
+    for proteinName, mods in modificationCountByProtein.items():
+        if totalProteinModCount[proteinName] > countFilter:
+            modificationCountByProteinFiltered[proteinName] = mods
+    modPd = pd.DataFrame(modificationCountByProteinFiltered)
+    return modPd
