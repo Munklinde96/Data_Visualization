@@ -1,3 +1,4 @@
+from numpy.lib.function_base import append
 import requests
 import pandas as pd
 import re
@@ -48,6 +49,27 @@ def clean_peptide(peptide):
     if peptide[len(peptide) - 2] is '.':
         clean_peptide = clean_peptide[0:len(clean_peptide)-2]
     return clean_peptide
+
+def get_cleavage_sites_for_peptides(df):
+    start_cleavage = []
+    end_cleavage = []
+    protein_sequence = ''
+    current_protein = ''
+    for index, row in df.iterrows():
+        if(current_protein != row['Protein Accession']):
+            current_protein = row['Protein Accession']
+            protein_sequence = get_protein_sequence(current_protein)
+        if protein_sequence[row['Start']-5 : row['Start'] -1] != "":
+            start_cleavage.append(f"{protein_sequence[row['Start']-5 : row['Start'] -1]}.{protein_sequence[row['Start'] -1 : row['Start'] + 3]}")
+        else:
+            start_cleavage.append("")
+        if protein_sequence[row['End'] : row['End'] + 4] != "":
+            end_cleavage.append(f"{protein_sequence[row['End']-4 : row['End']]}.{protein_sequence[row['End'] : row['End'] + 4]}")
+        else: 
+            end_cleavage.append("")
+    df['Start Cleavage'] = start_cleavage
+    df['End Cleavage'] = end_cleavage
+
 
 def sanitize_data(df):
     protein_sequence = ''
