@@ -1,6 +1,5 @@
 import requests
 import pandas as pd
-from requests.api import get
 import re
 from matplotlib import pyplot as plt
 import numpy as np
@@ -68,13 +67,6 @@ def sanitize_data(df):
             print('peptide mismatch')
             df.drop(index)
         return df
-
-def count_no_of_modifications(ptm_str):
-    #check if NaN value
-    if pd.isnull(ptm_str):
-        return 0
-    return 1 + ptm_str.count(';')
-
 
 def count_no_of_modifications(ptm_str):
     #check if NaN value
@@ -155,3 +147,38 @@ def add_value_labels(ax, spacing=1):
 # df = sanitize_data(df)
 # df1, df2, df3, df4 = split_data_in_samples(df)
 # print(df1)
+def combine_and_aggregate_sample_PTM_in_dataframe(df1,df2,df3,df4):
+    df1['PTM'] = df1['PTM'].str.split(';').str[0]
+    df1_PTM_count = df1['PTM'].value_counts()
+    df1_new = pd.DataFrame()
+    df1_new['PTM'] = df1_PTM_count.index
+    df1_new['#PTM'] = df1_PTM_count.values
+
+    df2['PTM'] = df2['PTM'].str.split(';').str[0]
+    df2_PTM_count = df2['PTM'].value_counts()
+    df2_new = pd.DataFrame()
+    df2_new['PTM'] = df2_PTM_count.index
+    df2_new['#PTM'] = df2_PTM_count.values
+
+    df3['PTM'] = df3['PTM'].str.split(';').str[0]
+    df3_PTM_count = df3['PTM'].value_counts()
+    df3_new = pd.DataFrame()
+    df3_new['PTM'] = df3_PTM_count.index
+    df3_new['#PTM'] = df3_PTM_count.values
+
+    df4['PTM'] = df4['PTM'].str.split(';').str[0]
+    df4_PTM_count = df4['PTM'].value_counts()
+    df4_new = pd.DataFrame()
+    df4_new['PTM'] = df4_PTM_count.index
+    df4_new['#PTM'] = df4_PTM_count.values
+
+    df1_new['Sample'] = 1
+    df2_new['Sample'] = 2
+    df3_new['Sample'] = 3
+    df4_new['Sample'] = 4
+
+    combined = pd.concat([df1_new[['PTM', '#PTM', 'Sample']],
+                          df2_new[['PTM', '#PTM', 'Sample']],
+                          df3_new[['PTM', '#PTM', 'Sample']],
+                          df4_new[['PTM', '#PTM', 'Sample']]], axis=0)
+    return combined
