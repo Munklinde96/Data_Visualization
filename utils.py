@@ -186,6 +186,7 @@ def get_protein_mass_from_uniprot(protein):
 
 def get_modification_count_per_protein(df, countFilter, normalize):
     df_protein_mods = df[["PTM", "Protein Accession"]]
+    print("normalization: "+normalize)
     modificationCountByProtein = {}
     totalProteinModCount = {}
     for modString, proteinName in df_protein_mods.itertuples(index=False):
@@ -209,34 +210,32 @@ def get_modification_count_per_protein(df, countFilter, normalize):
         if totalProteinModCount[proteinName] > countFilter:
             modificationCountByProteinFiltered[proteinName] = mods
     
-    if normalize is "protein_total_mod_count":
+    if "protein_total_mod_count" in '{0}'.format(normalize):
+        print("norm is: protein_total_mod_count")
         for protein, mods in modificationCountByProteinFiltered.items():
             print(protein)
             updateMods = {}
             for mod, count in mods.items():
                 updateMods[mod] = count / totalProteinModCount[protein]
             modificationCountByProteinFiltered[protein] = updateMods
-    elif normalize is "protein_amino_acid_length":
-        for protein, mods in modificationCountByProteinFiltered.items():
-            sequence = get_protein_sequence(protein)
-            updateMods = {}
-            for mod, count in mods.items():
-                updateMods[mod] = count / len(sequence)
-            modificationCountByProteinFiltered[protein] = updateMods
-    elif normalize is "protein_length":
+    elif "protein_length" in '{0}'.format(normalize):
+        print("norm is: protein_length")
         for protein, mods in modificationCountByProteinFiltered.items():
             proteinLength = get_protein_length_from_uniprot(protein)
             updateMods = {}
             for mod, count in mods.items():
                 updateMods[mod] = count / proteinLength
             modificationCountByProteinFiltered[protein] = updateMods
-    elif normalize is "protein_mass":
+    elif "protein_mass" in '{0}'.format(normalize):
+        print("norm is: protein_mass")
         for protein, mods in modificationCountByProteinFiltered.items():
             proteinMass = get_protein_mass_from_uniprot(protein)
             updateMods = {}
             for mod, count in mods.items():
                 updateMods[mod] = count / proteinMass
             modificationCountByProteinFiltered[protein] = updateMods
+    else:
+        print("norm is: no normalization")
     return modificationCountByProteinFiltered
 
 def get_modification_count_per_protein_reverse(df, countFilter, normalize):
