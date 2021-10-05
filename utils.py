@@ -1,8 +1,11 @@
+from numpy.lib.function_base import append
 import requests
 import pandas as pd
 import re
 from matplotlib import pyplot as plt
 import numpy as np
+import json
+
 uniprot = 'https://www.uniprot.org/uniprot/'
 
 def heatmap2d(arr: np.ndarray):
@@ -48,6 +51,27 @@ def clean_peptide(peptide):
     if peptide[len(peptide) - 2] is '.':
         clean_peptide = clean_peptide[0:len(clean_peptide)-2]
     return clean_peptide
+
+def get_cleavage_sites_for_peptides(df):
+    start_cleavage = []
+    end_cleavage = []
+    protein_sequence = ''
+    current_protein = ''
+    for index, row in df.iterrows():
+        if(current_protein != row['Protein Accession']):
+            current_protein = row['Protein Accession']
+            protein_sequence = get_protein_sequence(current_protein)
+        if protein_sequence[row['Start']-5 : row['Start'] -1] != "":
+            start_cleavage.append(f"{protein_sequence[row['Start']-5 : row['Start'] -1]}.{protein_sequence[row['Start'] -1 : row['Start'] + 3]}")
+        else:
+            start_cleavage.append("")
+        if protein_sequence[row['End'] : row['End'] + 4] != "":
+            end_cleavage.append(f"{protein_sequence[row['End']-4 : row['End']]}.{protein_sequence[row['End'] : row['End'] + 4]}")
+        else: 
+            end_cleavage.append("")
+    df['Start Cleavage'] = start_cleavage
+    df['End Cleavage'] = end_cleavage
+
 
 def sanitize_data(df):
     protein_sequence = ''
@@ -134,7 +158,33 @@ def combine_and_aggregate_sample_PTM_in_dataframe(df1,df2,df3,df4):
                           df4_new[['PTM', '#PTM', 'Sample']]], axis=0)
     return combined
 
-def get_modification_count_per_protein(df, countFilter):
+def get_protein_length_from_uniprot(protein):
+    url = "https://www.ebi.ac.uk/proteins/api/proteins/"+ protein
+    response = requests.get(url).text
+    if(response):
+        proteinJson = json.loads(response)
+        proteinLength = int(proteinJson["sequence"]["length"])
+        if proteinLength is 0:
+            print("protein lenth was 0")
+        return proteinLength
+    else:
+        print("no response")
+        return 0
+
+def get_protein_mass_from_uniprot(protein):
+    url = "https://www.ebi.ac.uk/proteins/api/proteins/"+ protein
+    response = requests.get(url).text
+    if(response):
+        proteinJson = json.loads(response)
+        proteinMass = int(proteinJson["sequence"]["mass"])
+        if proteinMass is 0:
+            print("protein mass was 0")
+        return proteinMass
+    else:
+        print("no response")
+        return 0
+
+def get_modification_count_per_protein(df, countFilter, normalize):
     df_protein_mods = df[["PTM", "Protein Accession"]]
     modificationCountByProtein = {}
     totalProteinModCount = {}
@@ -158,5 +208,88 @@ def get_modification_count_per_protein(df, countFilter):
     for proteinName, mods in modificationCountByProtein.items():
         if totalProteinModCount[proteinName] > countFilter:
             modificationCountByProteinFiltered[proteinName] = mods
-    modPd = pd.DataFrame(modificationCountByProteinFiltered)
-    return modPd
+    
+    if normalize is "protein_total_mod_count":
+        for protein, mods in modificationCountByProteinFiltered.items():
+            print(protein)
+            updateMods = {}
+            for mod, count in mods.items():
+                updateMods[mod] = count / totalProteinModCount[protein]
+            modificationCountByProteinFiltered[protein] = updateMods
+    elif normalize is "protein_amino_acid_length":
+        for protein, mods in modificationCountByProteinFiltered.items():
+            sequence = get_protein_sequence(protein)
+            updateMods = {}
+            for mod, count in mods.items():
+                updateMods[mod] = count / len(sequence)
+            modificationCountByProteinFiltered[protein] = updateMods
+    elif normalize is "protein_length":
+        for protein, mods in modificationCountByProteinFiltered.items():
+            proteinLength = get_protein_length_from_uniprot(protein)
+            updateMods = {}
+            for mod, count in mods.items():
+                updateMods[mod] = count / proteinLength
+            modificationCountByProteinFiltered[protein] = updateMods
+    elif normalize is "protein_mass":
+        for protein, mods in modificationCountByProteinFiltered.items():
+            proteinMass = get_protein_mass_from_uniprot(protein)
+            updateMods = {}
+            for mod, count in mods.items():
+                updateMods[mod] = count / proteinMass
+            modificationCountByProteinFiltered[protein] = updateMods
+    return modificationCountByProteinFiltered
+
+def get_modification_count_per_protein_reverse(df, countFilter, normalize):
+    df_protein_mods = df[["PTM", "Protein Accession"]]
+    modificationCountByProtein = {}
+    totalProteinModCount = {}
+    for modString, proteinName in df_protein_mods.itertuples(index=False):
+        if pd.isnull(modString):
+            continue
+        proteinName = proteinName.strip()
+        modString = modString.strip()
+        if proteinName not in modificationCountByProtein:
+            modificationCountByProtein[proteinName] = {}
+            totalProteinModCount[proteinName] = 0
+        mods = modString.split(";")
+        for mod in mods:
+            mod = mod.strip()
+            if mod not in modificationCountByProtein[proteinName]:
+                 modificationCountByProtein[proteinName][mod] = 1
+            else:
+                 modificationCountByProtein[proteinName][mod] += 1
+                 totalProteinModCount[proteinName] += 1
+    modificationCountByProteinFiltered = {}       
+    for proteinName, mods in modificationCountByProtein.items():
+        if totalProteinModCount[proteinName] < countFilter:
+            modificationCountByProteinFiltered[proteinName] = mods
+    # different modifications
+    if normalize is "protein_total_mod_count":
+        for protein, mods in modificationCountByProteinFiltered.items():
+            print(protein)
+            updateMods = {}
+            for mod, count in mods.items():
+                updateMods[mod] = count / totalProteinModCount[protein]
+            modificationCountByProteinFiltered[protein] = updateMods
+    elif normalize is "protein_amino_acid_length":
+        for protein, mods in modificationCountByProteinFiltered.items():
+            sequence = get_protein_sequence(protein)
+            updateMods = {}
+            for mod, count in mods.items():
+                updateMods[mod] = count / len(sequence)
+            modificationCountByProteinFiltered[protein] = updateMods
+    elif normalize is "protein_length":
+        for protein, mods in modificationCountByProteinFiltered.items():
+            proteinLength = get_protein_length_from_uniprot(protein)
+            updateMods = {}
+            for mod, count in mods.items():
+                updateMods[mod] = count / proteinLength
+            modificationCountByProteinFiltered[protein] = updateMods
+    elif normalize is "protein_mass":
+        for protein, mods in modificationCountByProteinFiltered.items():
+            proteinMass = get_protein_mass_from_uniprot(protein)
+            updateMods = {}
+            for mod, count in mods.items():
+                updateMods[mod] = count / proteinMass
+            modificationCountByProteinFiltered[protein] = updateMods
+    return modificationCountByProteinFiltered
