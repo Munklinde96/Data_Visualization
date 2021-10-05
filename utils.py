@@ -1,4 +1,4 @@
-from numpy.lib.function_base import append
+from textwrap import fill
 import requests
 import pandas as pd
 import re
@@ -32,7 +32,6 @@ def get_data_and_remove_unwanted_columns():
     #apply count_no_of_modifications to each PTM column
     df['#modifications'] = df['PTM'].apply(count_no_of_modifications)
 
-    print(df.columns)
     return df
 
 def clean_peptide(peptide):
@@ -60,15 +59,16 @@ def get_cleavage_sites_for_peptides(df):
             current_protein = row['Protein Accession']
             protein_sequence = get_protein_sequence(current_protein)
         if protein_sequence[row['Start']-5 : row['Start'] -1] != "":
-            start_cleavage.append(f"{protein_sequence[row['Start']-5 : row['Start'] -1]}.{protein_sequence[row['Start'] -1 : row['Start'] + 3]}")
+            start_cleavage.append(f" {protein_sequence[row['Start']-5 : row['Start'] -1]}-{protein_sequence[row['Start'] -1 : row['Start'] + 3]} ")
         else:
             start_cleavage.append("")
         if protein_sequence[row['End'] : row['End'] + 4] != "":
-            end_cleavage.append(f"{protein_sequence[row['End']-4 : row['End']]}.{protein_sequence[row['End'] : row['End'] + 4]}")
+            end_cleavage.append(f" {protein_sequence[row['End']-4 : row['End']]}-{protein_sequence[row['End'] : row['End'] + 4]} ")
         else: 
             end_cleavage.append("")
     df['Start Cleavage'] = start_cleavage
     df['End Cleavage'] = end_cleavage
+    return df, start_cleavage, end_cleavage
 
 
 def sanitize_data(df):
@@ -94,7 +94,7 @@ import numpy as np
 def count_no_of_modifications(ptm_str):
     #check if NaN value
     if pd.isnull(ptm_str):
-        return 0
+        return None
     return 1 + ptm_str.count(';')
 
 def mass_div_len_column(mass, length):
@@ -121,6 +121,9 @@ def split_data_in_samples(df):
     return df1, df2, df3, df4
 
 def combine_and_aggregate_sample_PTM_in_dataframe(df1,df2,df3,df4):
+    maxs = [df1['Area Sample 1'].max(), df2['Area Sample 2'].max(), df3['Area Sample 3'].max(), df4['Area Sample 4'].max()]
+    max = np.max(maxs)
+
     df1['PTM'] = df1['PTM'].str.split(';').str[0]
     df1_PTM_count = df1['PTM'].value_counts()
     df1_new = pd.DataFrame()
@@ -182,3 +185,83 @@ def get_modification_count_per_protein(df, countFilter):
             modificationCountByProteinFiltered[proteinName] = mods
     modPd = pd.DataFrame(modificationCountByProteinFiltered)
     return modPd
+
+def normalize_intensities_by_protein_intensity(df):
+    protein_start = [0]
+    protein_end = []
+    protein_id = ""
+
+    for i, row in df.iterrows():
+        if i == 0:
+            protein_id = row['Protein Accession']
+
+        if(row['Protein Accession'] != protein_id):
+            protein_start.append(i)
+            protein_end.append(i)
+            protein_id = row['Protein Accession']
+
+    protein_start.pop()
+
+    dataframes = []
+    for i in range(len(protein_start)):
+        protein_df = df.iloc[protein_start[i] : protein_end[i]]
+        protein_df = protein_df.copy()
+        intensity_sum1 = protein_df['Area Sample 1'].sum()
+        intensity_sum2 = protein_df['Area Sample 2'].sum()
+        intensity_sum3 = protein_df['Area Sample 3'].sum()
+        intensity_sum4 = protein_df['Area Sample 4'].sum()
+        protein_df['Area Sample 1'] = protein_df['Area Sample 1'].divide(intensity_sum1)
+        protein_df['Area Sample 2'] = protein_df['Area Sample 2'].divide(intensity_sum2)
+        protein_df['Area Sample 3'] = protein_df['Area Sample 3'].divide(intensity_sum3)
+        protein_df['Area Sample 4'] = protein_df['Area Sample 4'].divide(intensity_sum4)
+
+        dataframes.append(protein_df)
+    
+    return dataframes
+
+def combine_and_aggregate_intensity(df1, df2, df3, df4):
+    df1 = df1[df1["PTM"].notnull()]
+    df1 = df1.copy()
+    df1['Intensity'] = df1['Area Sample 1'].divide(df1['#modifications'])
+    df1['PTM'] = df1['PTM'].str.split(';').str[0]
+    df1_new = df1[['PTM', 'Intensity']]
+    df1_new = df1_new.groupby(['PTM']).sum()
+    df1_new = df1_new.reset_index()
+
+    df2 = df2[df2["PTM"].notnull()]
+    df2 = df2.copy()
+    df2['Intensity'] = df2['Area Sample 2'].divide(df2['#modifications'])
+    df2['PTM'] = df2['PTM'].str.split(';').str[0]
+    df2_new = df2[['PTM', 'Intensity']]
+    df2_new = df2_new.groupby(['PTM']).sum()
+    df2_new = df2_new.reset_index()
+
+    df3 = df3[df3["PTM"].notnull()]
+    df3 = df3.copy()
+    df3['Intensity'] = df3['Area Sample 3'].divide(df3['#modifications'])
+    df3['PTM'] = df3['PTM'].str.split(';').str[0]
+    df3_new = df3[['PTM', 'Intensity']]
+    df3_new = df3_new.groupby(['PTM']).sum()
+    df3_new = df3_new.reset_index()
+
+    df4 = df4[df4["PTM"].notnull()]
+    df4 = df4.copy()
+    df4['Intensity'] = df4['Area Sample 4'].divide(df4['#modifications'])
+    df4['PTM'] = df4['PTM'].str.split(';').str[0]
+    df4_new = df4[['PTM', 'Intensity']]
+    df4_new = df4_new.groupby(['PTM']).sum()
+    df4_new = df4_new.reset_index()
+
+    df1_new['Sample'] = 1
+    df2_new['Sample'] = 2
+    df3_new['Sample'] = 3
+    df4_new['Sample'] = 4
+
+    combined = pd.concat([df1_new[['PTM', 'Intensity', 'Sample']],
+                          df2_new[['PTM', 'Intensity', 'Sample']],
+                          df3_new[['PTM', 'Intensity', 'Sample']],
+                          df4_new[['PTM', 'Intensity', 'Sample']]], axis=0)
+    return combined
+    
+
+
