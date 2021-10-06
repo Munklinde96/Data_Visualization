@@ -187,34 +187,6 @@ def get_protein_mass_from_uniprot(protein):
         print("no response")
         return 0
 
-def get_modification_count_per_protein(df, countFilter, normalize):
-    df_protein_mods = df[["PTM", "Protein Accession"]]
-    print("normalization: "+normalize)
-    modificationCountByProtein = {}
-    totalProteinModCount = {}
-    for modString, proteinName in df_protein_mods.itertuples(index=False):
-        if pd.isnull(modString):
-            continue
-        proteinName = proteinName.strip()
-        modString = modString.strip()
-        if proteinName not in modificationCountByProtein:
-            modificationCountByProtein[proteinName] = {}
-            totalProteinModCount[proteinName] = 0
-        mods = modString.split(";")
-        for mod in mods:
-            mod = mod.strip()
-            if mod not in modificationCountByProtein[proteinName]:
-                 modificationCountByProtein[proteinName][mod] = 1
-            else:
-                 modificationCountByProtein[proteinName][mod] += 1
-                 totalProteinModCount[proteinName] += 1
-    modificationCountByProteinFiltered = {}       
-    for proteinName, mods in modificationCountByProtein.items():
-        if totalProteinModCount[proteinName] > countFilter:
-            modificationCountByProteinFiltered[proteinName] = mods
-    modPd = pd.DataFrame(modificationCountByProteinFiltered)
-    return modPd
-
 def normalize_intensities_by_protein_intensity(df):
     protein_start = [0]
     protein_end = []
@@ -293,8 +265,74 @@ def combine_and_aggregate_intensity(df1, df2, df3, df4):
     return combined
     
 
-
+def get_protein_total_intensity(df, protein):
+    intensity = 0
+    hasSeen = False
+    df_protein_intensity = df[["Protein Accession", "Area Sample 1"]]
+    df_protein_intensity.sort_values(by="Protein Accession", ascending=False)
+    for proteinName, area1 in df_protein_intensity.itertuples(index=False):
+        if hasSeen and proteinName != protein:
+            break
+        if proteinName == protein:
+            hasSeen = True
+            if not pd.isnull(area1):
+                intensity += area1
+    hasSeen = False
+    df_protein_intensity = df[["Protein Accession", "Area Sample 2"]]
+    df_protein_intensity.sort_values(by="Protein Accession", ascending=False)
+    for proteinName, area2 in df_protein_intensity.itertuples(index=False):
+        if hasSeen and proteinName != protein:
+            break
+        if proteinName == protein:
+            hasSeen = True
+            if not pd.isnull(area2):
+                intensity += area2
+    df_protein_intensity = df[["Protein Accession", "Area Sample 3"]]
+    df_protein_intensity.sort_values(by="Protein Accession", ascending=False)
+    for proteinName, area3 in df_protein_intensity.itertuples(index=False):
+        if hasSeen and proteinName != protein:
+            break
+        if proteinName == protein:
+            hasSeen = True
+            if not pd.isnull(area3):
+                intensity += area3
+    df_protein_intensity = df[["Protein Accession", "Area Sample 4"]]
+    df_protein_intensity.sort_values(by="Protein Accession", ascending=False)
+    for proteinName, area4 in df_protein_intensity.itertuples(index=False):
+        if hasSeen and proteinName != protein:
+            break
+        if proteinName == protein:
+            hasSeen = True
+            if not pd.isnull(area4):
+                intensity += area4
     
+    return intensity
+
+def get_modification_count_per_protein(df, countFilter, normalize):
+    df_protein_mods = df[["PTM", "Protein Accession"]]
+    print("normalization: "+normalize)
+    modificationCountByProtein = {}
+    totalProteinModCount = {}
+    for modString, proteinName in df_protein_mods.itertuples(index=False):
+        if pd.isnull(modString):
+            continue
+        proteinName = proteinName.strip()
+        modString = modString.strip()
+        if proteinName not in modificationCountByProtein:
+            modificationCountByProtein[proteinName] = {}
+            totalProteinModCount[proteinName] = 0
+        mods = modString.split(";")
+        for mod in mods:
+            mod = mod.strip()
+            if mod not in modificationCountByProtein[proteinName]:
+                 modificationCountByProtein[proteinName][mod] = 1
+            else:
+                 modificationCountByProtein[proteinName][mod] += 1
+                 totalProteinModCount[proteinName] += 1
+    modificationCountByProteinFiltered = {}       
+    for proteinName, mods in modificationCountByProtein.items():
+        if totalProteinModCount[proteinName] > countFilter:
+            modificationCountByProteinFiltered[proteinName] = mods
     if "protein_total_mod_count" in '{0}'.format(normalize):
         print("norm is: protein_total_mod_count")
         for protein, mods in modificationCountByProteinFiltered.items():
@@ -318,6 +356,14 @@ def combine_and_aggregate_intensity(df1, df2, df3, df4):
             updateMods = {}
             for mod, count in mods.items():
                 updateMods[mod] = count / proteinMass
+            modificationCountByProteinFiltered[protein] = updateMods
+    elif "protein_intensity" in '{0}'.format(normalize):
+        print("norm is: protein_intensity")
+        for protein, mods in modificationCountByProteinFiltered.items():
+            proteinIntensity =  get_protein_total_intensity(df, "P02666")
+            updateMods = {}
+            for mod, count in mods.items():
+                updateMods[mod] = count / proteinIntensity
             modificationCountByProteinFiltered[protein] = updateMods
     else:
         print("norm is: no normalization")
@@ -370,6 +416,13 @@ def get_modification_count_per_protein_reverse(df, countFilter, normalize):
                 updateMods[mod] = count / proteinLength
             modificationCountByProteinFiltered[protein] = updateMods
     elif normalize is "protein_mass":
+        for protein, mods in modificationCountByProteinFiltered.items():
+            proteinMass = get_protein_mass_from_uniprot(protein)
+            updateMods = {}
+            for mod, count in mods.items():
+                updateMods[mod] = count / proteinMass
+            modificationCountByProteinFiltered[protein] = updateMods
+    elif normalize is "protein_intensity":
         for protein, mods in modificationCountByProteinFiltered.items():
             proteinMass = get_protein_mass_from_uniprot(protein)
             updateMods = {}
