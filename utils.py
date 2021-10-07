@@ -3,6 +3,8 @@ import pandas as pd
 import re
 from matplotlib import pyplot as plt
 import numpy as np
+import matplotlib.patches as patches
+import seaborn as sns
 uniprot = 'https://www.uniprot.org/uniprot/'
 
 def heatmap2d(arr: np.ndarray):
@@ -182,3 +184,143 @@ def combine_and_aggregate_sample_PTM_in_dataframe(df1,df2,df3,df4):
                           df3_new[['PTM', '#PTM', 'Sample']],
                           df4_new[['PTM', '#PTM', 'Sample']]], axis=0)
     return combined
+
+
+def get_position_of_mass_shift(input_string):
+    # get charachters after and before mass shift
+    ls = input_string.split('(')
+    if len(ls) == 0:
+        return np.nan
+    firs_chunch = [ls[0]]
+    ls = firs_chunch + [l.split(")")[1] for l in ls[1:]]
+    before_ms = [l for l in ls[::2]]# get every second element
+    after_ms= [l for l in ls[1::2]]# get every second element starting from 1
+    #replace everythting witthin parenthesis with "#"
+    modified_string = re.sub(r"\([^()]*\)", "#", input_string)
+    modified_string = modified_string[2:-2] #remove first and last splice sites
+    #get indices of "#"
+    indices = [m.start() for m in re.finditer("#", modified_string)]
+    return indices, before_ms, after_ms 
+
+# indicies have sign in front
+def get_position_of_mass_shift_and_sign(input_string):
+    # get charachters after and before mass shift
+    ls = input_string.split('(')
+    if len(ls) == 0:
+        return np.nan
+    #replace everythting witthin parenthesis with "#"
+    modified_string = re.sub(r"\([^()]*\)", "#", input_string)
+    modified_string = modified_string[2:-2] #remove first and last splice sites
+    #get indices of "#"
+    indices = [m.start()-1 for m in re.finditer("#", modified_string)]
+    # add sign value in front of every index determined by value in ls 
+    counter = 0
+    for idx in indices:
+        if input_string[idx+4] == '-' : #4 is 2 removed indices and + for the "(" and the sign
+            indices[counter] = -indices[counter]
+        counter += 1
+    return indices 
+
+def plot_peptide_segments_and_mass_shift(data, delta=0.5, _protein="P02666"):
+    """data is a dictionary, {"Label":(low,hi), ... }
+    return a drawing that you can manipulate, show, save etc"""
+    yplaces = [.5+i for i in range(len(data))]
+    #sort map by values, lowest first
+    protein_labels = sorted(data.keys(), key=lambda x: data[x][0], reverse=True)
+    fig = plt.figure(figsize=(30,25))
+    ax = fig.add_subplot(111)
+    ax.set_yticks(yplaces)
+    ax.set_yticklabels(protein_labels)
+    ax.set_ylim((0,len(data)))
+
+    low, hi, _, ms_pos=  data[protein_labels[0]][0]
+    for pos, label in zip(yplaces,protein_labels):
+        start, end, peptide, ms_pos = data[label][0]
+        start, end = start-1, end-1
+        # add recatangle
+        ax.add_patch(patches.Rectangle((start,pos-delta/2.0),end-start+1, delta, facecolor = '#add8e6', alpha=0.5))  #light blue      
+        ax.text(start, pos, label, ha='right', va='center') #add protetin label to the left og the rectatngle
+        for _ms in ms_pos: #add mass shift color on rectangles if present
+            if _ms > 0:
+                ax.add_patch(patches.Rectangle((start+_ms,pos-delta/2.0),1,delta, color="green"))
+            else:
+                _ms = (-1)*_ms
+                ax.add_patch(patches.Rectangle((start+_ms,pos-delta/2.0),1,delta, color="red"))
+        if start<low : low=start
+        if end>hi : hi=end
+
+    ax.plot((low,hi),(0,0))
+    ax.grid(axis='x')
+    seqq = get_protein_sequence(_protein)
+    ax.set_xlabel("Full Protein Sequence")
+    ax.set_xticks(range(0,len(seqq)))
+    # create list of chars from string 
+    protein_seq_list = list(seqq)
+    ax.set_xticklabels(protein_seq_list)
+
+    plt.show()
+    return ax
+
+def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", size=50):
+    # get position of mass shift in "peptide" for each row
+    df["Position of Mass Shift"] = df["Peptide"].apply(get_position_of_mass_shift_and_sign)
+    # this is the main script, note that we have imported pyplot as plt
+    start_end_df = df[["Start", "End", "Protein Accession", "Peptide", 'Position of Mass Shift']]
+    #only look at values for protein : P02666
+    start_end_df = start_end_df[start_end_df["Protein Accession"] == _protein]
+    start_end_df.sort_values('Start', inplace=True)
+    start_end_df['index1'] = start_end_df.index
+    #concat index1 and protein accession
+    start_end_df['Protein_Accession_idx'] = start_end_df['Protein Accession'] +"_" + start_end_df['index1'].astype(str) 
+    start_end_df["(start,end,peptide,pos_ms)"] = start_end_df[["Start", "End", "Peptide",'Position of Mass Shift']].apply(tuple, axis=1)
+    start_end_df.drop(["Start", "End", "index1"], axis=1, inplace=True)
+    start_end_df.sort_values('Protein_Accession_idx', inplace=True)
+    new = start_end_df.head(size)
+    # make dictionary with index as keys and (Start,End) as values
+    data = new.groupby("Protein_Accession_idx").apply(lambda x: x["(start,end,peptide,pos_ms)"].tolist())
+    return data 
+
+# get colour palette from y-value distribution
+def colors_from_values(values, palette_name):
+    # normalize the values to range [0, 1]
+    normalized = (values - min(values)) / (max(values) - min(values))
+    # convert to indices
+    indices = np.round(normalized * (len(values) - 1)).astype(np.int32)
+    # use the indices to get the colors
+    palette = sns.color_palette(palette_name, len(values))
+    return np.array(palette).take(indices, axis=0)
+
+def plot_overlap_barchart(df, selected_protein= "P02666"):
+    df_new = df[df["Protein Accession"] == selected_protein]
+    seq_list = list(get_protein_sequence(selected_protein))
+    _len = len(seq_list)
+    num_overlpas_list = [0]*_len # init as zeroes
+    # add 1 into all positions where there is an overlap
+    for i in range(len(df_new)):
+        for j in range(df_new.iloc[i]['Start'], df_new.iloc[i]['End']):
+            num_overlpas_list[j] += 1
+    df_overlaps = pd.DataFrame(list(zip(range(_len), num_overlpas_list)), columns=['Position', 'Overlaps'])
+    plt.figure(figsize=(30,10))
+    g= sns.barplot(x="Position", y= "Overlaps", data= df_overlaps, palette=colors_from_values(np.asarray(num_overlpas_list), "YlOrRd"))
+    g.set_xticklabels(seq_list)
+    g.set_title(f"Number of overlaps per position - for protein: {selected_protein}")
+    return g    
+
+
+def add_trailing_white_spaces_to_chars(seq_list):
+    # equal to number of time char is seen in the sequence
+    res_list = seq_list
+    char_count_dict = {}
+    counter = 0
+    for char in seq_list:
+        if char in char_count_dict:
+            res_list[counter] = char + " "*char_count_dict[char]
+            char_count_dict[char] += 1
+        else:
+            char_count_dict[char] = 1
+        counter += 1
+    return res_list
+
+
+#test get_position_of_mass_shift_and_sign
+print(get_position_of_mass_shift_and_sign("K.jkfnekj(-12)8787"))
