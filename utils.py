@@ -4,13 +4,10 @@ import pandas as pd
 import re
 from matplotlib import pyplot as plt
 import numpy as np
-<<<<<<< HEAD
 import matplotlib.patches as patches
 import seaborn as sns
-=======
 import json
 
->>>>>>> cc6a8e746f0730275cea3e992e9de10fd75f4bf7
 uniprot = 'https://www.uniprot.org/uniprot/'
 
 def heatmap2d(arr: np.ndarray):
@@ -380,6 +377,7 @@ def get_protein_mass_from_uniprot(protein):
         print("no response")
         return 0
 
+# nomalize peptide intensity(per sample) over protetin intensity
 def normalize_intensities_by_protein_intensity(df):
     protein_start = [0]
     protein_end = []
