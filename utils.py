@@ -27,7 +27,7 @@ def get_protein_sequence(protein):
 
 def get_data_and_remove_unwanted_columns():
     # df = pd.read_csv('UHT milk P036.csv')
-    df = pd.read_csv('/Users/sebastianloeschcke/Desktop/visualization_project/Data_Visualization/UHT milk P036.csv')
+    df = pd.read_csv('UHT milk P036.csv')
     df.drop('Protein ID', inplace=True, axis=1)
     df.drop('Unique', inplace=True, axis=1)
     df.drop('m/z', inplace=True, axis=1)
@@ -170,14 +170,8 @@ def add_value_labels(ax, spacing=1):
         ax.annotate(label,(x_value,y_value),xytext=(0,space),textcoords='offset points',ha='center',va=va)
         ax.axhline(y=0.0, color='black', linestyle='-', linewidth=2)
 
-# df = get_data_and_remove_unwanted_columns()
-# df = sanitize_data(df)
-# df1, df2, df3, df4 = split_data_in_samples(df)
-# print(df1)
-def combine_and_aggregate_sample_PTM_in_dataframe(df1,df2,df3,df4):
-    maxs = [df1['Area Sample 1'].max(), df2['Area Sample 2'].max(), df3['Area Sample 3'].max(), df4['Area Sample 4'].max()]
-    max = np.max(maxs)
 
+def combine_and_aggregate_sample_PTM_in_dataframe(df1,df2,df3,df4):
     df1['PTM'] = df1['PTM'].str.split(';').str[0]
     df1_PTM_count = df1['PTM'].value_counts()
     df1_new = pd.DataFrame()
@@ -387,7 +381,6 @@ def add_trailing_white_spaces_to_chars(seq_list):
 
 
 #test get_position_of_mass_shift_and_sign
-#print(get_position_of_mass_shifts("K.jkfnekj(-12)8787"))
 def get_protein_length_from_uniprot(protein):
     url = "https://www.ebi.ac.uk/proteins/api/proteins/"+ protein
     response = requests.get(url).text
