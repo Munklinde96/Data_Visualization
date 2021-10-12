@@ -4,6 +4,8 @@ import pandas as pd
 import re
 from matplotlib import pyplot as plt
 import numpy as np
+import matplotlib.patches as patches
+import seaborn as sns
 import json
 
 uniprot = 'https://www.uniprot.org/uniprot/'
@@ -24,6 +26,7 @@ def get_protein_sequence(protein):
         return ''
 
 def get_data_and_remove_unwanted_columns():
+    # df = pd.read_csv('UHT milk P036.csv')
     df = pd.read_csv('UHT milk P036.csv')
     df.drop('Protein ID', inplace=True, axis=1)
     df.drop('Unique', inplace=True, axis=1)
@@ -92,7 +95,6 @@ def sanitize_data(df):
             df.drop(index)
         return df
 
-import numpy as np
 def count_no_of_modifications(ptm_str):
     #check if NaN value
     if pd.isnull(ptm_str):
@@ -122,10 +124,54 @@ def split_data_in_samples(df):
     df4 = pd.DataFrame(df4, columns=df.columns)
     return df1, df2, df3, df4
 
-def combine_and_aggregate_sample_PTM_in_dataframe(df1,df2,df3,df4):
-    maxs = [df1['Area Sample 1'].max(), df2['Area Sample 2'].max(), df3['Area Sample 3'].max(), df4['Area Sample 4'].max()]
-    max = np.max(maxs)
 
+def check_if_string_contains_substring_x_times(string, substring, no_times, exact = False):
+    if exact:
+        return string.count(substring) == no_times
+    elif not exact and  string.count(substring) > no_times:
+        return True
+    else:
+        return False
+
+def get_all_rows_with_at_least_x_modifications(df, no_modifications):
+    df = df[df['PTM'].notna()]
+    return df[df['PTM'].apply(check_if_string_contains_substring_x_times, args =(';', no_modifications-1, False) )] #-1 because of the ";" in the PTM column
+
+def get_all_rows_with_exactly_x_modifications(df, no_modifications):
+    df = df[df['PTM'].notna()]
+    return df[df['PTM'].apply(check_if_string_contains_substring_x_times, args =(';', no_modifications-1,True) )] #-1 because of the ";" in the PTM column
+
+def get_mass_shift_per_peptide(string):
+    ls = string.split('(')
+    if len(ls) == 0:
+        return np.nan
+    res = []
+    for chunch in ls:
+        res.append(chunch.split(')')[0])
+    return ",".join(res)
+
+def create_mass_shift_column(df):
+    #remove nan values
+    df['MassShift'] = df['Peptide'].apply(get_mass_shift_per_peptide)
+    return df
+
+#Used for boxplots
+def add_value_labels(ax, spacing=1):
+    for rect in ax.patches:
+        y_value = rect.get_height()
+        x_value = rect.get_x() + rect.get_width() / 2
+        space = spacing
+        va='bottom'
+        if y_value < 0:
+            space *= -1
+            va='top'
+        label='{:.2f}'.format(y_value)
+        #creat annotation
+        ax.annotate(label,(x_value,y_value),xytext=(0,space),textcoords='offset points',ha='center',va=va)
+        ax.axhline(y=0.0, color='black', linestyle='-', linewidth=2)
+
+
+def combine_and_aggregate_sample_PTM_in_dataframe(df1,df2,df3,df4):
     df1['PTM'] = df1['PTM'].str.split(';').str[0]
     df1_PTM_count = df1['PTM'].value_counts()
     df1_new = pd.DataFrame()
@@ -161,6 +207,180 @@ def combine_and_aggregate_sample_PTM_in_dataframe(df1,df2,df3,df4):
                           df4_new[['PTM', '#PTM', 'Sample']]], axis=0)
     return combined
 
+
+#OLD VERSION
+def get_position_of_mass_shifts(input_string):
+    # get charachters after and before mass shift
+    ls = input_string.split('(')
+    if len(ls) == 0:
+        return np.nan
+    firs_chunch = [ls[0]]
+    ls = firs_chunch + [l.split(")")[1] for l in ls[1:]]
+    before_ms = [l for l in ls[::2]]# get every second element
+    after_ms= [l for l in ls[1::2]]# get every second element starting from 1
+    #replace everythting witthin parenthesis with "#"
+    modified_string = re.sub(r"\([^()]*\)", "#", input_string)
+    modified_string = modified_string[2:-2] #remove first and last splice sites
+    #get indices of "#"
+    indices = [m.start() for m in re.finditer("#", modified_string)]
+    return indices, before_ms, after_ms 
+
+# indicies have sign in front
+def get_position_of_mass_shift(input_string):
+    # get charachters after and before mass shift
+    ls = input_string.split('(')
+    if len(ls) == 0:
+        return np.nan
+    modified_string = re.sub(r"\([^()]*\)", "#", input_string) #replace everythting witthin parenthesis with "#"
+    modified_string = modified_string[2:-2] #remove first and last splice sites
+    indices = [m.start()-1 for m in re.finditer("#", modified_string)] #get indices of "#"
+    return indices 
+
+
+# create modification_types to color mapping
+def get_color_palette_for_modifications ():
+    modification_types = ['Oxidation (M)', 'Phosphorylation (STY)', 'Deamidation (NQ)', 'lal',
+                      'Lactosylation', 'Pyro-glu from Q', 'Glycosylation type b', 'Dioxidation (M)',
+                    'Glycosylation type e', 'Glycosylation type a','Glycosylation type c/d', 'Carbamidomethylation', 'lan']
+    modification_types_to_color = {}
+    color_palette = sns.color_palette("tab10", n_colors=len(modification_types)) 
+    for i in range(len(modification_types)):
+        modification_types_to_color[modification_types[i]] = color_palette[i]
+    return modification_types_to_color
+
+def get_peptide_segments_and_modifications(data, delta=0.5, _protein="P02666"):
+    """data is a list of tuples on the form (low,hi, [modifications], [modtypes])"""
+    yplaces = [.5+i for i in range(len(data))]
+    data = sorted(data, key=lambda x: x[0], reverse=False)
+    modification_types_to_color_map = get_color_palette_for_modifications()
+    rectatngles = []
+    modifications = []
+    highest_values_for_index = [0]*len(data)
+    position_idx = 0 #value to keep track of where we should place next rectangle
+    for i in range (len(data)):
+        low, hi, mod_positions, mod_types = data[i]
+        low, hi = low-1, hi-1 #convert to zero based index
+        position_idx = i 
+        if i == 12:
+            print("")
+        for j in range (len(data)):
+            if j >= i:
+                break
+            hi_j = highest_values_for_index[j]
+            if hi_j < low:
+                position_idx = j
+                break
+        pos = yplaces[position_idx]
+        highest_values_for_index[position_idx] = hi
+        rectatngles.append(patches.Rectangle((low,pos-delta/2.0),hi-low+1, delta, facecolor = '#add8e6', ec='black', lw=3, alpha=0.5))
+        #add modification type-color to mass shift position
+        if len(mod_positions) > 0:
+            for _ms_pos, mod_type in zip(mod_positions, mod_types): #add mass shift color on rectangles if present
+                ms_color = modification_types_to_color_map[mod_type]
+                modifications.append(patches.Rectangle((low+_ms_pos,pos-delta/2.0),1,delta, facecolor= ms_color, edgecolor="black"))
+    #remove 0's from highest_values_for_index
+    highest_values_for_index = [x for x in highest_values_for_index if x != 0]
+    height = len(highest_values_for_index)
+    return rectatngles, modifications, height
+
+def plot_peptide_segments(segments_patches, modifications_patches, height, _protein="P02666"):
+    fig = plt.figure(figsize=(30,25))
+    ax = fig.add_subplot(111)
+    yplaces = [.5+i for i in range(len(segments_patches))]
+    ax.set_ylim((0,height))
+
+    for rect in segments_patches:
+        ax.add_patch(rect)
+    for mod in modifications_patches:
+        ax.add_patch(mod)
+    ax.grid(axis='x')
+    seqq = get_protein_sequence(_protein)
+    ax.set_xlabel("Full Protein Sequence")
+    ax.set_xticks(range(0,len(seqq)))
+    # create list of chars from string 
+    protein_seq_list = list(seqq)
+    ax.set_xticklabels(protein_seq_list)
+    ax.get_yaxis().set_visible(False)
+    modification_types_to_color_map = get_color_palette_for_modifications()
+    # create legend based on modification_types_to_color_map
+    handles = get_color_legend_mods(modification_types_to_color_map)
+    ax.legend(handles=handles)
+    # plt.colorbar(modification_types_to_color_map, ticks=list(modification_types_to_color_map.keys()))
+    plt.show()
+    return ax
+
+def get_color_legend_mods(modification_types_to_color_map):
+    handles = []
+    for mod_type in modification_types_to_color_map:
+        handles.append(patches.Patch(color=modification_types_to_color_map[mod_type], label=mod_type))
+    return handles
+    
+def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", size=50):
+    # get position of mass shift in "peptide" for each row
+    df["Position of Mass Shift"] = df["Peptide"].apply(get_position_of_mass_shift)
+    # get list of modification for each PTM
+    df["Modification_types"] = df["PTM"].apply(lambda x: x if pd.isnull(x) else [s.strip() for s in x.split(";")])
+
+    # this is the main script, note that we have imported pyplot as plt
+    start_end_df = df[["Start", "End", "Protein Accession", "Peptide", 'Position of Mass Shift', 'PTM', 'Modification_types']]
+    #only look at values for protein : P02666
+    start_end_df = start_end_df[start_end_df["Protein Accession"] == _protein]
+    start_end_df.sort_values('Start', inplace=True)
+    start_end_df['index1'] = start_end_df.index
+    #concat index1 and protein accession
+    start_end_df['Protein_Accession_idx'] = start_end_df['Protein Accession'] +"_" + start_end_df['index1'].astype(str) 
+    start_end_df["(start,end,pos_ms,mod_types)"] = start_end_df[["Start", "End", 'Position of Mass Shift', 'Modification_types']].apply(tuple, axis=1)
+    start_end_df.drop(["Start", "End", "index1", 'PTM','Modification_types'], axis=1, inplace=True)
+    start_end_df.sort_values('Protein_Accession_idx', inplace=True)
+    new = start_end_df.head(size)
+    # make dictionary with index as keys and (Start,End) as values
+    #data = new.groupby("Protein_Accession_idx").apply(lambda x: x["(start,end,peptide,pos_ms)"].tolist())
+    start_end_ms_modtype_list = new['(start,end,pos_ms,mod_types)'].tolist()
+    return start_end_ms_modtype_list
+
+# get colour palette from y-value distribution
+def colors_from_values(values, palette_name):
+    # normalize the values to range [0, 1]
+    normalized = (values - min(values)) / (max(values) - min(values))
+    # convert to indices
+    indices = np.round(normalized * (len(values) - 1)).astype(np.int32)
+    # use the indices to get the colors
+    palette = sns.color_palette(palette_name, len(values))
+    return np.array(palette).take(indices, axis=0)
+
+def plot_overlap_barchart(df, selected_protein= "P02666"):
+    df_new = df[df["Protein Accession"] == selected_protein]
+    seq_list = list(get_protein_sequence(selected_protein))
+    _len = len(seq_list)
+    num_overlpas_list = [0]*_len # init as zeroes
+    # add 1 into all positions where there is an overlap
+    for i in range(len(df_new)):
+        for j in range(df_new.iloc[i]['Start'], df_new.iloc[i]['End']):
+            num_overlpas_list[j] += 1
+    df_overlaps = pd.DataFrame(list(zip(range(_len), num_overlpas_list)), columns=['Position', 'Overlaps'])
+    plt.figure(figsize=(30,10))
+    g= sns.barplot(x="Position", y= "Overlaps", data= df_overlaps, palette=colors_from_values(np.asarray(num_overlpas_list), "YlOrRd"))
+    g.set_xticklabels(seq_list)
+    g.set_title(f"Number of overlaps per position - for protein: {selected_protein}")
+    return g    
+
+
+def add_trailing_white_spaces_to_chars(seq_list):
+    # equal to number of time char is seen in the sequence
+    res_list = seq_list
+    char_count_dict = {}
+    counter = 0
+    for char in seq_list:
+        if char in char_count_dict:
+            res_list[counter] = char + " "*char_count_dict[char]
+            char_count_dict[char] += 1
+        else:
+            char_count_dict[char] = 1
+        counter += 1
+    return res_list
+
+
+#test get_position_of_mass_shift_and_sign
 def get_protein_length_from_uniprot(protein):
     url = "https://www.ebi.ac.uk/proteins/api/proteins/"+ protein
     response = requests.get(url).text
@@ -187,6 +407,7 @@ def get_protein_mass_from_uniprot(protein):
         print("no response")
         return 0
 
+# nomalize peptide intensity(per sample) over protetin intensity
 def normalize_intensities_by_protein_intensity(df):
     protein_start = [0]
     protein_end = []
