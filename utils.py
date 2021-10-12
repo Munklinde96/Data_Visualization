@@ -656,3 +656,56 @@ def get_modification_count_per_protein_reverse(df, countFilter, normalize):
                 updateMods[mod] = count / proteinMass
             modificationCountByProteinFiltered[protein] = updateMods
     return modificationCountByProteinFiltered
+
+
+def get_overlap_overlaps_by_intensity_and_sample(df, selected_protein= "P02666"):
+    df_new = df[df["Protein Accession"] == selected_protein]
+    seq_list = list(get_protein_sequence(selected_protein))
+    _len = len(seq_list)
+    overlaps_list_1 = [0]*_len
+    overlaps_list_2 = [0]*_len
+    overlaps_list_3 = [0]*_len
+    overlaps_list_4 = [0]*_len
+
+    # add intensity into all positions where there is an overlap
+    for i in range(len(df_new)):
+        row = df_new.iloc[i]
+        for j in range(row['Start'], row['End']):
+            if not pd.isnull(row["Area Sample 1"]):
+                overlaps_list_1[j] += row['Area Sample 1']
+            if not pd.isnull(row["Area Sample 2"]):
+                overlaps_list_2[j] += row['Area Sample 2']
+            if not pd.isnull(row["Area Sample 3"]):
+                overlaps_list_3[j] += row['Area Sample 3']            
+            if not pd.isnull(row["Area Sample 4"]):
+                overlaps_list_4[j] += row['Area Sample 4']
+
+    df_overlaps1 = pd.DataFrame(list(zip(range(_len), overlaps_list_1)), columns=['Position', 'Overlaps'])
+    df_overlaps2 = pd.DataFrame(list(zip(range(_len), overlaps_list_2)), columns=['Position', 'Overlaps'])
+    df_overlaps3 = pd.DataFrame(list(zip(range(_len), overlaps_list_3)), columns=['Position', 'Overlaps'])
+    df_overlaps4 = pd.DataFrame(list(zip(range(_len), overlaps_list_4)), columns=['Position', 'Overlaps'])
+
+    overlap_lists = (overlaps_list_1, overlaps_list_2, overlaps_list_3, overlaps_list_4)
+    overlap_dataframes = (df_overlaps1, df_overlaps2, df_overlaps3, df_overlaps4)
+
+    return overlap_lists, overlap_dataframes
+
+def get_overlap_pixel_plot(num_overlpas_lists, peptide_seq_list, protein_num, fig_size=(30,10), color_scale='YlOrRd'):
+    plt.figure(figsize=fig_size)
+    for ls in num_overlpas_lists:
+        plt.imshow(np.asarray(ls).reshape(1, -1), cmap=color_scale, extent=[0, len(peptide_seq_list), 0, 10])
+        plt.colorbar()
+        plt.title(f"Frequency of Overlaps for Protein {protein_num}")
+        plt.xlabel("Position in Protein ")
+        plt.yticks([])
+
+def get_gradient_plot(num_overlpas_lists, peptide_seq_list, protein_num, fig_size=(30,10), color_scale='YlOrRd'):
+    plt.figure(figsize=fig_size)
+    for ls in num_overlpas_lists:
+        plt.title(f"Gradient plot for {protein_num} - Shows frequent clevage sites")
+        plt.imshow(abs(np.diff(np.asarray(ls).reshape(1, -1)[::-1])), cmap=color_scale, extent=[0, len(peptide_seq_list), 0, 10])
+        plt.yticks([])
+        plt.colorbar()
+        plt.xlabel("Position in Protein ")
+        plt.show()
+
