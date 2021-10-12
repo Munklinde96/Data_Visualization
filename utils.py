@@ -240,6 +240,8 @@ def get_position_of_mass_shift(input_string):
     modified_string = re.sub(r"\([^()]*\)", "#", input_string) #replace everythting witthin parenthesis with "#"
     modified_string = modified_string[2:-2] #remove first and last splice sites
     indices = [m.start()-1 for m in re.finditer("#", modified_string)] #get indices of "#"
+    for i in range(len(indices)):
+        indices[i] -= i
     return indices 
 
 
