@@ -248,7 +248,7 @@ def get_color_palette_for_modifications ():
         modification_types_to_color[modification_types[i]] = color_palette[i]
     return modification_types_to_color
 
-def get_peptide_segments_and_modifications(data, delta=0.5, _protein="P02666"):
+def get_peptide_segments_and_modifications(data, delta=0.5):
     """data is a list of tuples on the form (low,hi, [modifications], [modtypes], [agg intensity])"""
     # pos = 0.5
     yplaces = [.5+i for i in range(len(data))]
