@@ -27,7 +27,7 @@ def get_protein_sequence(protein):
 
 def get_data_and_remove_unwanted_columns():
     # df = pd.read_csv('UHT milk P036.csv')
-    df = pd.read_csv('/Users/sebastianloeschcke/Desktop/visualization_project/Data_Visualization/UHT milk P036.csv')
+    df = pd.read_csv('UHT milk P036.csv')
     df.drop('Protein ID', inplace=True, axis=1)
     df.drop('Unique', inplace=True, axis=1)
     df.drop('m/z', inplace=True, axis=1)
@@ -170,14 +170,8 @@ def add_value_labels(ax, spacing=1):
         ax.annotate(label,(x_value,y_value),xytext=(0,space),textcoords='offset points',ha='center',va=va)
         ax.axhline(y=0.0, color='black', linestyle='-', linewidth=2)
 
-# df = get_data_and_remove_unwanted_columns()
-# df = sanitize_data(df)
-# df1, df2, df3, df4 = split_data_in_samples(df)
-# print(df1)
-def combine_and_aggregate_sample_PTM_in_dataframe(df1,df2,df3,df4):
-    maxs = [df1['Area Sample 1'].max(), df2['Area Sample 2'].max(), df3['Area Sample 3'].max(), df4['Area Sample 4'].max()]
-    max = np.max(maxs)
 
+def combine_and_aggregate_sample_PTM_in_dataframe(df1,df2,df3,df4):
     df1['PTM'] = df1['PTM'].str.split(';').str[0]
     df1_PTM_count = df1['PTM'].value_counts()
     df1_new = pd.DataFrame()
@@ -257,7 +251,8 @@ def get_color_palette_for_modifications ():
     return modification_types_to_color
 
 def get_peptide_segments_and_modifications(data, delta=0.5, _protein="P02666"):
-    """data is a list of tuples on the form (low,hi, [modifications], [modtypes])"""
+    """data is a list of tuples on the form (low,hi, [modifications], [modtypes], [agg intensity])"""
+    # pos = 0.5
     yplaces = [.5+i for i in range(len(data))]
     data = sorted(data, key=lambda x: x[0], reverse=False)
     modification_types_to_color_map = get_color_palette_for_modifications()
@@ -266,11 +261,9 @@ def get_peptide_segments_and_modifications(data, delta=0.5, _protein="P02666"):
     highest_values_for_index = [0]*len(data)
     position_idx = 0 #value to keep track of where we should place next rectangle
     for i in range (len(data)):
-        low, hi, mod_positions, mod_types = data[i]
+        low, hi, mod_positions, mod_types, intensity = data[i]
         low, hi = low-1, hi-1 #convert to zero based index
         position_idx = i 
-        if i == 12:
-            print("")
         for j in range (len(data)):
             if j >= i:
                 break
@@ -286,6 +279,7 @@ def get_peptide_segments_and_modifications(data, delta=0.5, _protein="P02666"):
             for _ms_pos, mod_type in zip(mod_positions, mod_types): #add mass shift color on rectangles if present
                 ms_color = modification_types_to_color_map[mod_type]
                 modifications.append(patches.Rectangle((low+_ms_pos,pos-delta/2.0),1,delta, facecolor= ms_color, edgecolor="black"))
+        # pos = pos + intensity / 2
     #remove 0's from highest_values_for_index
     highest_values_for_index = [x for x in highest_values_for_index if x != 0]
     height = len(highest_values_for_index)
@@ -294,7 +288,6 @@ def get_peptide_segments_and_modifications(data, delta=0.5, _protein="P02666"):
 def plot_peptide_segments(segments_patches, modifications_patches, height, _protein="P02666"):
     fig = plt.figure(figsize=(30,25))
     ax = fig.add_subplot(111)
-    yplaces = [.5+i for i in range(len(segments_patches))]
     ax.set_ylim((0,height))
 
     for rect in segments_patches:
@@ -330,20 +323,26 @@ def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", size=50):
     df["Modification_types"] = df["PTM"].apply(lambda x: x if pd.isnull(x) else [s.strip() for s in x.split(";")])
 
     # this is the main script, note that we have imported pyplot as plt
-    start_end_df = df[["Start", "End", "Protein Accession", "Peptide", 'Position of Mass Shift', 'PTM', 'Modification_types']]
+    start_end_df = df[["Start", "End", "Protein Accession", "Peptide", 'Position of Mass Shift', 'PTM', 'Modification_types', 'Area Sample 1', 'Area Sample 2', 'Area Sample 3', 'Area Sample 4']]
     #only look at values for protein : P02666
     start_end_df = start_end_df[start_end_df["Protein Accession"] == _protein]
     start_end_df.sort_values('Start', inplace=True)
     start_end_df['index1'] = start_end_df.index
+
+    #Aggregate sample intensity, and normalize it
+    start_end_df['Agg Intensity'] = start_end_df['Area Sample 1'] + start_end_df['Area Sample 2'] + start_end_df['Area Sample 3'] + start_end_df['Area Sample 4']
+    start_end_df['Agg Intensity'] = start_end_df['Agg Intensity'] / start_end_df['Agg Intensity'].sum()
+
     #concat index1 and protein accession
     start_end_df['Protein_Accession_idx'] = start_end_df['Protein Accession'] +"_" + start_end_df['index1'].astype(str) 
-    start_end_df["(start,end,pos_ms,mod_types)"] = start_end_df[["Start", "End", 'Position of Mass Shift', 'Modification_types']].apply(tuple, axis=1)
-    start_end_df.drop(["Start", "End", "index1", 'PTM','Modification_types'], axis=1, inplace=True)
+    start_end_df["(start,end,pos_ms,mod_types, agg_intensity)"] = start_end_df[["Start", "End", 'Position of Mass Shift', 'Modification_types', 'Agg Intensity']].apply(tuple, axis=1)
+    start_end_df.drop(["Start", "End", "index1", 'PTM','Modification_types', 'Area Sample 1', 'Area Sample 2', 'Area Sample 3', 'Area Sample 4'], axis=1, inplace=True)
     start_end_df.sort_values('Protein_Accession_idx', inplace=True)
     new = start_end_df.head(size)
+
     # make dictionary with index as keys and (Start,End) as values
     #data = new.groupby("Protein_Accession_idx").apply(lambda x: x["(start,end,peptide,pos_ms)"].tolist())
-    start_end_ms_modtype_list = new['(start,end,pos_ms,mod_types)'].tolist()
+    start_end_ms_modtype_list = new['(start,end,pos_ms,mod_types, agg_intensity)'].tolist()
     return start_end_ms_modtype_list
 
 # get colour palette from y-value distribution
@@ -389,7 +388,6 @@ def add_trailing_white_spaces_to_chars(seq_list):
 
 
 #test get_position_of_mass_shift_and_sign
-#print(get_position_of_mass_shifts("K.jkfnekj(-12)8787"))
 def get_protein_length_from_uniprot(protein):
     url = "https://www.ebi.ac.uk/proteins/api/proteins/"+ protein
     response = requests.get(url).text
@@ -660,3 +658,60 @@ def get_modification_count_per_protein_reverse(df, countFilter, normalize):
                 updateMods[mod] = count / proteinMass
             modificationCountByProteinFiltered[protein] = updateMods
     return modificationCountByProteinFiltered
+
+
+def get_overlap_overlaps_by_intensity_and_sample(df, selected_protein= "P02666"):
+    df_new = df[df["Protein Accession"] == selected_protein]
+    seq_list = list(get_protein_sequence(selected_protein))
+    _len = len(seq_list)
+    overlaps_list_1 = [0]*_len
+    overlaps_list_2 = [0]*_len
+    overlaps_list_3 = [0]*_len
+    overlaps_list_4 = [0]*_len
+
+    # add intensity into all positions where there is an overlap
+    for i in range(len(df_new)):
+        row = df_new.iloc[i]
+        for j in range(row['Start'], row['End']):
+            if not pd.isnull(row["Area Sample 1"]):
+                overlaps_list_1[j] += row['Area Sample 1']
+            if not pd.isnull(row["Area Sample 2"]):
+                overlaps_list_2[j] += row['Area Sample 2']
+            if not pd.isnull(row["Area Sample 3"]):
+                overlaps_list_3[j] += row['Area Sample 3']            
+            if not pd.isnull(row["Area Sample 4"]):
+                overlaps_list_4[j] += row['Area Sample 4']
+
+    df_overlaps1 = pd.DataFrame(list(zip(range(_len), overlaps_list_1)), columns=['Position', 'Overlaps'])
+    df_overlaps2 = pd.DataFrame(list(zip(range(_len), overlaps_list_2)), columns=['Position', 'Overlaps'])
+    df_overlaps3 = pd.DataFrame(list(zip(range(_len), overlaps_list_3)), columns=['Position', 'Overlaps'])
+    df_overlaps4 = pd.DataFrame(list(zip(range(_len), overlaps_list_4)), columns=['Position', 'Overlaps'])
+
+    overlap_lists = (overlaps_list_1, overlaps_list_2, overlaps_list_3, overlaps_list_4)
+    overlap_dataframes = (df_overlaps1, df_overlaps2, df_overlaps3, df_overlaps4)
+
+    return overlap_lists, overlap_dataframes
+
+def get_overlap_pixel_plot(num_overlpas_lists, peptide_seq_list, protein_num, fig_size=(30,10), color_scale='YlOrRd'):
+    plt.figure(figsize=fig_size)
+    fig, axs = plt.subplots(len(num_overlpas_lists), 1, figsize=fig_size)
+    for ls in num_overlpas_lists:
+        #make imshow for each list
+        im = axs.imshow(np.asarray(ls).reshape(1, -1), cmap=color_scale, extent=[0, len(peptide_seq_list), 0, 10])
+        axs.set_xticks(np.arange(len(peptide_seq_list)))
+        axs.set_xticklabels(peptide_seq_list)
+    fig.colorbar(im, ax=axs)
+    axs.set_title(f"Frequency of Overlaps for Protein {protein_num} - sample 1,2,3,4")
+    axs.set_ylabel("Overlaps")
+    plt.show()
+
+def get_gradient_plot(num_overlpas_lists, peptide_seq_list, protein_num, fig_size=(30,10), color_scale='YlOrRd'):
+    plt.figure(figsize=fig_size)
+    for ls in num_overlpas_lists:
+        plt.title(f"Gradient plot for {protein_num} - Shows frequent clevage sites")
+        plt.imshow(abs(np.diff(np.asarray(ls).reshape(1, -1)[::-1])), cmap=color_scale, extent=[0, len(peptide_seq_list), 0, 10])
+        plt.yticks([])
+        plt.colorbar()
+        plt.xlabel("Position in Protein ")
+        plt.show()
+
