@@ -241,14 +241,17 @@ def get_position_of_mass_shift(input_string):
 
 # create modification_types to color mapping
 def get_color_palette_for_modifications ():
-    modification_types = ['Oxidation (M)', 'Phosphorylation (STY)', 'Deamidation (NQ)', 'lal',
-                      'Lactosylation', 'Pyro-glu from Q', 'Glycosylation type b', 'Dioxidation (M)',
-                    'Glycosylation type e', 'Glycosylation type a','Glycosylation type c/d', 'Carbamidomethylation', 'lan']
-    modification_types_to_color = {}
-    color_palette = sns.color_palette("tab10", n_colors=len(modification_types)) 
-    for i in range(len(modification_types)):
-        modification_types_to_color[modification_types[i]] = color_palette[i]
-    return modification_types_to_color
+    mod_type_map = {'Oxidation (M)': '#E6194B' , 'Phosphorylation (STY)': '#F58231', 'Deamidation (NQ)': '#FFE119', 'lal': '#BFEF45',
+                      'Lactosylation': '#3CB44B', 'Pyro-glu from Q': '#42D4F4', 'Glycosylation type b': '#4363D8', 'Dioxidation (M)': '#911EB4',
+                    'Glycosylation type e': '#F032E6', 'Glycosylation type a': '#000000','Glycosylation type c/d': '#800000', 'Carbamidomethylation': '#FABED4', 'lan': '#808000'}
+    # modification_types = ['Oxidation (M)', 'Phosphorylation (STY)', 'Deamidation (NQ)', 'lal',
+    #                   'Lactosylation', 'Pyro-glu from Q', 'Glycosylation type b', 'Dioxidation (M)',
+    #                 'Glycosylation type e', 'Glycosylation type a','Glycosylation type c/d', 'Carbamidomethylation', 'lan']
+    # modification_types_to_color = {}
+    # color_palette = sns.color_palette("tab10", n_colors=len(modification_types)) 
+    # for i in range(len(modification_types)):
+    #     modification_types_to_color[modification_types[i]] = color_palette[i]
+    return mod_type_map
 
 def get_peptide_segments_and_modifications(data, delta=0.5, _protein="P02666"):
     """data is a list of tuples on the form (low,hi, [modifications], [modtypes], [agg intensity])"""
@@ -307,6 +310,7 @@ def plot_peptide_segments(segments_patches, modifications_patches, height, _prot
     handles = get_color_legend_mods(modification_types_to_color_map)
     ax.legend(handles=handles)
     # plt.colorbar(modification_types_to_color_map, ticks=list(modification_types_to_color_map.keys()))
+    #plt.gca().invert_yaxis()
     plt.show()
     return ax
 
@@ -698,12 +702,16 @@ def get_overlap_pixel_plot(num_overlpas_lists, peptide_seq_list, protein_num, fi
     fig, axs = plt.subplots(len(num_overlpas_lists), 1, figsize=fig_size)
     counter=0
     for ls in num_overlpas_lists:
+        if counter == 0:
+            axs[counter].set_title(f"Frequency of Overlaps for Protein {protein_num} - sample 1,2,3,4")
         im = axs[counter].imshow(np.asarray(ls).reshape(1, -1), cmap=color_scale, extent=[0, len(peptide_seq_list), 0, 10])
         axs[counter].set_xticks(np.arange(len(peptide_seq_list)))
         axs[counter].set_xticklabels(peptide_seq_list)
         axs[counter].set_yticks([])
+        axs[counter].set_ylabel(f"Sample {counter+1}")
+        
         counter = counter + 1
-    fig.colorbar(im, ax=axs)
+    fig.colorbar(im, ax=axs, label = "Percentage of Overlab")
     plt.title(f"Frequency of Overlaps for Protein {protein_num} - sample 1,2,3,4")
     plt.show()
 
@@ -711,12 +719,15 @@ def get_gradient_plot(num_overlpas_lists, peptide_seq_list, protein_num, fig_siz
     fig, axs = plt.subplots(len(num_overlpas_lists), 1, figsize=fig_size)
     counter=0
     for ls in num_overlpas_lists:
+        if counter == 0:
+            axs[counter].set_title(f"Gradient plot for {protein_num} - Shows frequent clevage sites")
         im = axs[counter].imshow(abs(np.diff(np.asarray(ls).reshape(1, -1)[::-1])), cmap=color_scale, extent=[0, len(peptide_seq_list), 0, 10])
         axs[counter].set_xticks(np.arange(len(peptide_seq_list)))
         axs[counter].set_xticklabels(peptide_seq_list)
         axs[counter].set_yticks([])
+        axs[counter].set_ylabel(f"Sample {counter+1}")
         counter = counter + 1
-    fig.colorbar(im, ax=axs)
-    plt.title(f"Gradient plot for {protein_num} - Shows frequent clevage sites")
+    #set label on colorbar
+    fig.colorbar(im, ax=axs, label="Overlab Gradient")
     plt.show()
 
