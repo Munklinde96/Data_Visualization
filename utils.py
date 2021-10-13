@@ -695,25 +695,28 @@ def get_overlap_overlaps_by_intensity_and_sample(df, selected_protein= "P02666")
     return overlap_lists, overlap_dataframes
 
 def get_overlap_pixel_plot(num_overlpas_lists, peptide_seq_list, protein_num, fig_size=(30,10), color_scale='YlOrRd'):
-    plt.figure(figsize=fig_size)
     fig, axs = plt.subplots(len(num_overlpas_lists), 1, figsize=fig_size)
+    counter=0
     for ls in num_overlpas_lists:
-        #make imshow for each list
-        im = axs.imshow(np.asarray(ls).reshape(1, -1), cmap=color_scale, extent=[0, len(peptide_seq_list), 0, 10])
-        axs.set_xticks(np.arange(len(peptide_seq_list)))
-        axs.set_xticklabels(peptide_seq_list)
+        im = axs[counter].imshow(np.asarray(ls).reshape(1, -1), cmap=color_scale, extent=[0, len(peptide_seq_list), 0, 10])
+        axs[counter].set_xticks(np.arange(len(peptide_seq_list)))
+        axs[counter].set_xticklabels(peptide_seq_list)
+        axs[counter].set_yticks([])
+        counter = counter + 1
     fig.colorbar(im, ax=axs)
-    axs.set_title(f"Frequency of Overlaps for Protein {protein_num} - sample 1,2,3,4")
-    axs.set_ylabel("Overlaps")
+    plt.title(f"Frequency of Overlaps for Protein {protein_num} - sample 1,2,3,4")
     plt.show()
 
 def get_gradient_plot(num_overlpas_lists, peptide_seq_list, protein_num, fig_size=(30,10), color_scale='YlOrRd'):
-    plt.figure(figsize=fig_size)
+    fig, axs = plt.subplots(len(num_overlpas_lists), 1, figsize=fig_size)
+    counter=0
     for ls in num_overlpas_lists:
-        plt.title(f"Gradient plot for {protein_num} - Shows frequent clevage sites")
-        plt.imshow(abs(np.diff(np.asarray(ls).reshape(1, -1)[::-1])), cmap=color_scale, extent=[0, len(peptide_seq_list), 0, 10])
-        plt.yticks([])
-        plt.colorbar()
-        plt.xlabel("Position in Protein ")
-        plt.show()
+        im = axs[counter].imshow(abs(np.diff(np.asarray(ls).reshape(1, -1)[::-1])), cmap=color_scale, extent=[0, len(peptide_seq_list), 0, 10])
+        axs[counter].set_xticks(np.arange(len(peptide_seq_list)))
+        axs[counter].set_xticklabels(peptide_seq_list)
+        axs[counter].set_yticks([])
+        counter = counter + 1
+    fig.colorbar(im, ax=axs)
+    plt.title(f"Gradient plot for {protein_num} - Shows frequent clevage sites")
+    plt.show()
 
