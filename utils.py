@@ -8,6 +8,8 @@ import matplotlib.patches as patches
 import seaborn as sns
 import json
 
+from seaborn.palettes import color_palette
+
 uniprot = 'https://www.uniprot.org/uniprot/'
 
 def heatmap2d(arr: np.ndarray):
@@ -241,14 +243,17 @@ def get_position_of_mass_shift(input_string):
 
 # create modification_types to color mapping
 def get_color_palette_for_modifications ():
-    modification_types = ['Oxidation (M)', 'Phosphorylation (STY)', 'Deamidation (NQ)', 'lal',
-                      'Lactosylation', 'Pyro-glu from Q', 'Glycosylation type b', 'Dioxidation (M)',
-                    'Glycosylation type e', 'Glycosylation type a','Glycosylation type c/d', 'Carbamidomethylation', 'lan']
-    modification_types_to_color = {}
-    color_palette = sns.color_palette("tab10", n_colors=len(modification_types)) 
-    for i in range(len(modification_types)):
-        modification_types_to_color[modification_types[i]] = color_palette[i]
-    return modification_types_to_color
+    mod_type_map = {'Oxidation (M)': '#E6194B' , 'Phosphorylation (STY)': '#F58231', 'Deamidation (NQ)': '#FFE119', 'lal': '#BFEF45',
+                      'Lactosylation': '#3CB44B', 'Pyro-glu from Q': '#42D4F4', 'Glycosylation type b': '#4363D8', 'Dioxidation (M)': '#911EB4',
+                    'Glycosylation type e': '#F032E6', 'Glycosylation type a': '#000000','Glycosylation type c/d': '#800000', 'Carbamidomethylation': '#FABED4', 'lan': '#808000'}
+    # modification_types = ['Oxidation (M)', 'Phosphorylation (STY)', 'Deamidation (NQ)', 'lal',
+    #                   'Lactosylation', 'Pyro-glu from Q', 'Glycosylation type b', 'Dioxidation (M)',
+    #                 'Glycosylation type e', 'Glycosylation type a','Glycosylation type c/d', 'Carbamidomethylation', 'lan']
+    # modification_types_to_color = {}
+    # color_palette = sns.color_palette("tab10", n_colors=len(modification_types)) 
+    # for i in range(len(modification_types)):
+    #     modification_types_to_color[modification_types[i]] = color_palette[i]
+    return mod_type_map
 
 def get_peptide_segments_and_modifications(data, delta=0.5):
     """data is a list of tuples on the form (low,hi, [modifications], [modtypes], [agg intensity], [quintile])"""
@@ -307,6 +312,7 @@ def plot_peptide_segments(segments_patches, modifications_patches, height, _prot
     handles = get_color_legend_mods(modification_types_to_color_map)
     ax.legend(handles=handles)
     # plt.colorbar(modification_types_to_color_map, ticks=list(modification_types_to_color_map.keys()))
+    #plt.gca().invert_yaxis()
     plt.show()
     return ax
 
@@ -340,12 +346,12 @@ def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", size=50):
 
     #concat index1 and protein accession
     start_end_df['Protein_Accession_idx'] = start_end_df['Protein Accession'] +"_" + start_end_df['index1'].astype(str) 
-    start_end_df["(start,end,pos_ms,mod_types, agg_intensity, quintile)"] = start_end_df[["Start", "End", 'Position of Mass Shift', 'Modification_types', 'Agg Intensity', 'quintile']].apply(tuple, axis=1)
+    start_end_df["(start, end, pos_ms, mod_types, agg_intensity, quintile)"] = start_end_df[["Start", "End", 'Position of Mass Shift', 'Modification_types', 'Agg Intensity', 'quintile']].apply(tuple, axis=1)
     start_end_df.drop(["Start", "End", "index1", 'PTM','Modification_types', 'Area Sample 1', 'Area Sample 2', 'Area Sample 3', 'Area Sample 4'], axis=1, inplace=True)
     start_end_df.sort_values('Protein_Accession_idx', inplace=True)
     new = start_end_df.head(size)
 
-    start_end_ms_modtype_list = new['(start,end,pos_ms,mod_types, agg_intensity, quintile)'].tolist()
+    start_end_ms_modtype_list = new['(start, end, pos_ms, mod_types, agg_intensity, quintile)'].tolist()
     return start_end_ms_modtype_list
 
 # get colour palette from y-value distribution
@@ -701,25 +707,53 @@ def get_overlap_pixel_plot(num_overlpas_lists, peptide_seq_list, protein_num, fi
     fig, axs = plt.subplots(len(num_overlpas_lists), 1, figsize=fig_size)
     counter=0
     for ls in num_overlpas_lists:
+        if counter == 0:
+            axs[counter].set_title(f"Frequency of Overlaps for Protein {protein_num} - sample 1,2,3,4")
         im = axs[counter].imshow(np.asarray(ls).reshape(1, -1), cmap=color_scale, extent=[0, len(peptide_seq_list), 0, 10])
         axs[counter].set_xticks(np.arange(len(peptide_seq_list)))
         axs[counter].set_xticklabels(peptide_seq_list)
         axs[counter].set_yticks([])
+        axs[counter].set_ylabel(f"Sample {counter+1}")
+        
         counter = counter + 1
-    fig.colorbar(im, ax=axs)
+    fig.colorbar(im, ax=axs, label = "Percentage of Overlab")
+    plt.show()
+
+def get_overlap_heapmap(num_overlpas_lists, peptide_seq_list, protein_num, fig_size=(30,10), color_scale='YlOrRd'):
+    plt.figure(figsize=fig_size)
     plt.title(f"Frequency of Overlaps for Protein {protein_num} - sample 1,2,3,4")
+    ax = sns.heatmap(num_overlpas_lists, cmap=color_scale)
+    plt.xticks(np.arange(len(peptide_seq_list)), peptide_seq_list, rotation = 0)
+    ylabels = ["Sample 1", "Sample 2", "Sample 3", "Sample 4"]
+    ax.set_yticklabels(ylabels)
+    plt.show()
+
+def get_overlap_gradient_heapmap(num_overlpas_lists, peptide_seq_list, protein_num, fig_size=(30,10), color_scale='YlOrRd'):
+    gradient_list = []
+    for i in range(len(num_overlpas_lists)):
+        gradient_list.append( abs(np.diff(np.asarray(num_overlpas_lists[i]).reshape(1, -1)[::-1])))
+    gradient_list = np.asarray(gradient_list).reshape(4, -1)
+    plt.figure(figsize=fig_size)
+    plt.title(f"Gradient plot for {protein_num} - Shows frequent clevage sites")
+    ax = sns.heatmap(gradient_list , cmap=color_scale)
+    plt.xticks(np.arange(len(peptide_seq_list)), peptide_seq_list, rotation = 0)
+    ylabels = ["Sample 1", "Sample 2", "Sample 3", "Sample 4"]
+    ax.set_yticklabels(ylabels)
     plt.show()
 
 def get_gradient_plot(num_overlpas_lists, peptide_seq_list, protein_num, fig_size=(30,10), color_scale='YlOrRd'):
     fig, axs = plt.subplots(len(num_overlpas_lists), 1, figsize=fig_size)
     counter=0
     for ls in num_overlpas_lists:
+        if counter == 0:
+            axs[counter].set_title(f"Gradient plot for {protein_num} - Shows frequent clevage sites")
         im = axs[counter].imshow(abs(np.diff(np.asarray(ls).reshape(1, -1)[::-1])), cmap=color_scale, extent=[0, len(peptide_seq_list), 0, 10])
         axs[counter].set_xticks(np.arange(len(peptide_seq_list)))
         axs[counter].set_xticklabels(peptide_seq_list)
         axs[counter].set_yticks([])
+        axs[counter].set_ylabel(f"Sample {counter+1}")
         counter = counter + 1
-    fig.colorbar(im, ax=axs)
-    plt.title(f"Gradient plot for {protein_num} - Shows frequent clevage sites")
+    #set label on colorbar
+    fig.colorbar(im, ax=axs, label="Overlab Gradient")
     plt.show()
 
