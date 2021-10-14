@@ -246,59 +246,63 @@ def get_color_palette_for_modifications ():
     mod_type_map = {'Oxidation (M)': '#E6194B' , 'Phosphorylation (STY)': '#F58231', 'Deamidation (NQ)': '#FFE119', 'lal': '#BFEF45',
                       'Lactosylation': '#3CB44B', 'Pyro-glu from Q': '#42D4F4', 'Glycosylation type b': '#4363D8', 'Dioxidation (M)': '#911EB4',
                     'Glycosylation type e': '#F032E6', 'Glycosylation type a': '#000000','Glycosylation type c/d': '#800000', 'Carbamidomethylation': '#FABED4', 'lan': '#808000'}
-    # modification_types = ['Oxidation (M)', 'Phosphorylation (STY)', 'Deamidation (NQ)', 'lal',
-    #                   'Lactosylation', 'Pyro-glu from Q', 'Glycosylation type b', 'Dioxidation (M)',
-    #                 'Glycosylation type e', 'Glycosylation type a','Glycosylation type c/d', 'Carbamidomethylation', 'lan']
-    # modification_types_to_color = {}
-    # color_palette = sns.color_palette("tab10", n_colors=len(modification_types)) 
-    # for i in range(len(modification_types)):
-    #     modification_types_to_color[modification_types[i]] = color_palette[i]
     return mod_type_map
 
-def get_peptide_segments_and_modifications(data, delta=0.5):
+def get_rectangles_for_peptides_and_mods(data):
     """data is a list of tuples on the form (low,hi, [modifications], [modtypes], [agg intensity], [quintile])"""
-    # pos = 0.5
-    yplaces = [.5+i for i in range(len(data))]
     data = sorted(data, key=lambda x: (x[0], -x[1]), reverse=False)
     modification_types_to_color_map = get_color_palette_for_modifications()
-    rectatngles = []
-    modifications = []
-    highest_values_for_index = [0]*len(data)
-    position_idx = 0 #value to keep track of where we should place next rectangle
+    rectangles = []
     for i in range (len(data)):
+        modifications = []
         low, hi, mod_positions, mod_types, intensity, quintile = data[i]
-        low, hi = low-1, hi-1 #convert to zero based index
-        position_idx = i 
-        for j in range (len(data)):
-            if j >= i:
-                break
-            hi_j = highest_values_for_index[j]
-            if hi_j < low:
-                position_idx = j
-                break
-        pos = yplaces[position_idx]
-        highest_values_for_index[position_idx] = hi
-        rectatngles.append(patches.Rectangle((low,pos-delta/2.0),hi-low+1, delta, facecolor = '#add8e6', ec='black', lw=3, alpha=0.5))
-        #add modification type-color to mass shift position
+        width = hi-low+1
+        rec = (low, width)
         if len(mod_positions) > 0:
             for _ms_pos, mod_type in zip(mod_positions, mod_types): #add mass shift color on rectangles if present
                 ms_color = modification_types_to_color_map[mod_type]
-                modifications.append(patches.Rectangle((low+_ms_pos,pos-delta/2.0),1,delta, facecolor= ms_color, edgecolor="black"))
-        # pos = pos + intensity / 2
-    #remove 0's from highest_values_for_index
-    highest_values_for_index = [x for x in highest_values_for_index if x != 0]
-    height = len(highest_values_for_index)
-    return rectatngles, modifications, height
+                modifications.append((_ms_pos, ms_color))
+        rectangles.append((rec, modifications))
+    return rectangles
 
-def plot_peptide_segments(segments_patches, modifications_patches, height, _protein="P02666"):
+def get_stacking_patches(rectangles):
+    last_x = 0
+    last_y = 0
+    last_rec_width = 0
+    y_spaces = [0]*len(rectangles)
+    peptide_patches = []
+    mod_patches = []
+    for rect, mods in rectangles:
+        if(rect[0] != last_x and rect[1] != last_rec_width):
+            x, width = rect
+            patch = None
+            for i in range(len(y_spaces)):
+                if(y_spaces[i] <= x):
+                    patch = patches.Rectangle((x, i), width, 0.5, facecolor = '#add8e6', ec='black', lw=3, alpha=0.5)
+                    y_spaces[i] = x + width
+                    break
+
+            peptide_patches.append(patch)
+            last_x, last_y = patch.get_xy()
+            last_rec_width = width
+
+        for m_pos, m_color in mods:
+            mod_rec = patches.Rectangle((last_x+m_pos,last_y),1,0.5, facecolor= m_color, edgecolor="black")
+            mod_patches.append(mod_rec)
+    height = y_spaces.index(0)
+    return peptide_patches, mod_patches, height
+
+def plot_peptide_segments(peptide_patches, mod_patches, height, _protein="P02666"):
     fig = plt.figure(figsize=(30,25))
     ax = fig.add_subplot(111)
     ax.set_ylim((0,height))
 
-    for rect in segments_patches:
-        ax.add_patch(rect)
-    for mod in modifications_patches:
-        ax.add_patch(mod)
+    for patch in peptide_patches:
+        ax.add_patch(patch)
+
+    for patch in mod_patches:
+        ax.add_patch(patch)
+
     ax.grid(axis='x')
     seqq = get_protein_sequence(_protein)
     ax.set_xlabel("Full Protein Sequence")
