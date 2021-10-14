@@ -8,6 +8,8 @@ import matplotlib.patches as patches
 import seaborn as sns
 import json
 
+from seaborn.palettes import color_palette
+
 uniprot = 'https://www.uniprot.org/uniprot/'
 
 def heatmap2d(arr: np.ndarray):
@@ -339,14 +341,14 @@ def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", size=50):
 
     #concat index1 and protein accession
     start_end_df['Protein_Accession_idx'] = start_end_df['Protein Accession'] +"_" + start_end_df['index1'].astype(str) 
-    start_end_df["(start,end,pos_ms,mod_types, agg_intensity)"] = start_end_df[["Start", "End", 'Position of Mass Shift', 'Modification_types', 'Agg Intensity']].apply(tuple, axis=1)
+    start_end_df["(start,end,pos_ms,mod_types,agg_intensity)"] = start_end_df[["Start", "End", 'Position of Mass Shift', 'Modification_types', 'Agg Intensity']].apply(tuple, axis=1)
     start_end_df.drop(["Start", "End", "index1", 'PTM','Modification_types', 'Area Sample 1', 'Area Sample 2', 'Area Sample 3', 'Area Sample 4'], axis=1, inplace=True)
     start_end_df.sort_values('Protein_Accession_idx', inplace=True)
     new = start_end_df.head(size)
 
     # make dictionary with index as keys and (Start,End) as values
     #data = new.groupby("Protein_Accession_idx").apply(lambda x: x["(start,end,peptide,pos_ms)"].tolist())
-    start_end_ms_modtype_list = new['(start,end,pos_ms,mod_types, agg_intensity)'].tolist()
+    start_end_ms_modtype_list = new['(start,end,pos_ms,mod_types,agg_intensity)'].tolist()
     return start_end_ms_modtype_list
 
 # get colour palette from y-value distribution
@@ -712,7 +714,28 @@ def get_overlap_pixel_plot(num_overlpas_lists, peptide_seq_list, protein_num, fi
         
         counter = counter + 1
     fig.colorbar(im, ax=axs, label = "Percentage of Overlab")
+    plt.show()
+
+def get_overlap_heapmap(num_overlpas_lists, peptide_seq_list, protein_num, fig_size=(30,10), color_scale='YlOrRd'):
+    plt.figure(figsize=fig_size)
     plt.title(f"Frequency of Overlaps for Protein {protein_num} - sample 1,2,3,4")
+    ax = sns.heatmap(num_overlpas_lists, cmap=color_scale)
+    plt.xticks(np.arange(len(peptide_seq_list)), peptide_seq_list, rotation = 0)
+    ylabels = ["Sample 1", "Sample 2", "Sample 3", "Sample 4"]
+    ax.set_yticklabels(ylabels)
+    plt.show()
+
+def get_overlap_gradient_heapmap(num_overlpas_lists, peptide_seq_list, protein_num, fig_size=(30,10), color_scale='YlOrRd'):
+    gradient_list = []
+    for i in range(len(num_overlpas_lists)):
+        gradient_list.append( abs(np.diff(np.asarray(num_overlpas_lists[i]).reshape(1, -1)[::-1])))
+    gradient_list = np.asarray(gradient_list).reshape(4, -1)
+    plt.figure(figsize=fig_size)
+    plt.title(f"Gradient plot for {protein_num} - Shows frequent clevage sites")
+    ax = sns.heatmap(gradient_list , cmap=color_scale)
+    plt.xticks(np.arange(len(peptide_seq_list)), peptide_seq_list, rotation = 0)
+    ylabels = ["Sample 1", "Sample 2", "Sample 3", "Sample 4"]
+    ax.set_yticklabels(ylabels)
     plt.show()
 
 def get_gradient_plot(num_overlpas_lists, peptide_seq_list, protein_num, fig_size=(30,10), color_scale='YlOrRd'):
