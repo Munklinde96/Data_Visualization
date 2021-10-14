@@ -250,18 +250,18 @@ def get_color_palette_for_modifications ():
         modification_types_to_color[modification_types[i]] = color_palette[i]
     return modification_types_to_color
 
-def get_peptide_segments_and_modifications(data, delta=0.5, _protein="P02666"):
-    """data is a list of tuples on the form (low,hi, [modifications], [modtypes], [agg intensity])"""
+def get_peptide_segments_and_modifications(data, delta=0.5):
+    """data is a list of tuples on the form (low,hi, [modifications], [modtypes], [agg intensity], [quintile])"""
     # pos = 0.5
     yplaces = [.5+i for i in range(len(data))]
-    data = sorted(data, key=lambda x: x[0], reverse=False)
+    data = sorted(data, key=lambda x: (x[0], -x[1]), reverse=False)
     modification_types_to_color_map = get_color_palette_for_modifications()
     rectatngles = []
     modifications = []
     highest_values_for_index = [0]*len(data)
     position_idx = 0 #value to keep track of where we should place next rectangle
     for i in range (len(data)):
-        low, hi, mod_positions, mod_types, intensity = data[i]
+        low, hi, mod_positions, mod_types, intensity, quintile = data[i]
         low, hi = low-1, hi-1 #convert to zero based index
         position_idx = i 
         for j in range (len(data)):
@@ -326,23 +326,26 @@ def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", size=50):
     start_end_df = df[["Start", "End", "Protein Accession", "Peptide", 'Position of Mass Shift', 'PTM', 'Modification_types', 'Area Sample 1', 'Area Sample 2', 'Area Sample 3', 'Area Sample 4']]
     #only look at values for protein : P02666
     start_end_df = start_end_df[start_end_df["Protein Accession"] == _protein]
-    start_end_df.sort_values('Start', inplace=True)
+    # start_end_df.sort_values(['Start', 'End'], ascending=[True, False], inplace=True)
     start_end_df['index1'] = start_end_df.index
 
     #Aggregate sample intensity, and normalize it
     start_end_df['Agg Intensity'] = start_end_df['Area Sample 1'] + start_end_df['Area Sample 2'] + start_end_df['Area Sample 3'] + start_end_df['Area Sample 4']
     start_end_df['Agg Intensity'] = start_end_df['Agg Intensity'] / start_end_df['Agg Intensity'].sum()
 
+    start_end_df['quintile'] = pd.qcut(start_end_df['Agg Intensity'], q=5)
+    count = start_end_df['quintile'].value_counts()
+    count_index = count.index
+    count_values = count.values
+
     #concat index1 and protein accession
     start_end_df['Protein_Accession_idx'] = start_end_df['Protein Accession'] +"_" + start_end_df['index1'].astype(str) 
-    start_end_df["(start,end,pos_ms,mod_types, agg_intensity)"] = start_end_df[["Start", "End", 'Position of Mass Shift', 'Modification_types', 'Agg Intensity']].apply(tuple, axis=1)
+    start_end_df["(start,end,pos_ms,mod_types, agg_intensity, quintile)"] = start_end_df[["Start", "End", 'Position of Mass Shift', 'Modification_types', 'Agg Intensity', 'quintile']].apply(tuple, axis=1)
     start_end_df.drop(["Start", "End", "index1", 'PTM','Modification_types', 'Area Sample 1', 'Area Sample 2', 'Area Sample 3', 'Area Sample 4'], axis=1, inplace=True)
     start_end_df.sort_values('Protein_Accession_idx', inplace=True)
     new = start_end_df.head(size)
 
-    # make dictionary with index as keys and (Start,End) as values
-    #data = new.groupby("Protein_Accession_idx").apply(lambda x: x["(start,end,peptide,pos_ms)"].tolist())
-    start_end_ms_modtype_list = new['(start,end,pos_ms,mod_types, agg_intensity)'].tolist()
+    start_end_ms_modtype_list = new['(start,end,pos_ms,mod_types, agg_intensity, quintile)'].tolist()
     return start_end_ms_modtype_list
 
 # get colour palette from y-value distribution
