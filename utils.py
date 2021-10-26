@@ -265,11 +265,14 @@ def get_rectangles_for_peptides_and_mods(data):
         rectangles.append((rec, modifications))
     return rectangles
 
+
+#Adjsut height på baggrund af intensitet - Lav hver index i y_spaces til min højden,
+# hvis et peptid fylder mere, indsæt x + width + spacing i 1, 3, 5, 7, 9 indices af y_spaces
 def get_stacking_patches(rectangles):
     last_x = 0
     last_y = 0
     last_rec_width = 0
-    y_spaces = [0]*len(rectangles)
+    y_spaces = [0]*5*len(rectangles)
     peptide_patches = []
     mod_patches = []
     for rect, mods in rectangles:
@@ -344,9 +347,8 @@ def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", size=50):
     start_end_df['Agg Intensity'] = start_end_df['Agg Intensity'] / start_end_df['Agg Intensity'].sum()
 
     start_end_df['quintile'] = pd.qcut(start_end_df['Agg Intensity'], q=5)
-    count = start_end_df['quintile'].value_counts()
-    count_index = count.index
-    count_values = count.values
+    intervals = pd.unique(start_end_df['quintile'])
+    print(intervals)
 
     #concat index1 and protein accession
     start_end_df['Protein_Accession_idx'] = start_end_df['Protein Accession'] +"_" + start_end_df['index1'].astype(str) 
