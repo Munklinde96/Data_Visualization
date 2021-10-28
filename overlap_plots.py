@@ -4,35 +4,27 @@ from matplotlib import pyplot as plt
 import seaborn as sns
 import numpy as np
 
-def get_overlap_overlaps_by_intensity_and_sample(df, selected_protein= "P02666"):
+def get_overlap_overlaps_by_intensity_and_sample(df, selected_protein= "P02666", sample_column_id='Area'):
     df_new = df[df["Protein Accession"] == selected_protein]
     seq_list = list(get_protein_sequence(selected_protein))
     _len = len(seq_list)
-    overlaps_list_1 = [0]*_len
-    overlaps_list_2 = [0]*_len
-    overlaps_list_3 = [0]*_len
-    overlaps_list_4 = [0]*_len
+    overlap_lists = []
+    overlap_dataframes = []
+    area_cols = [col for col in df.columns if sample_column_id in col]
 
-    # add intensity into all positions where there is an overlap
-    for i in range(len(df_new)):
+    for _ in area_cols:
+        overlap_lists.append([0]*_len)
+
+    for i in range (len(df_new)):
         row = df_new.iloc[i]
         for j in range(row['Start'], row['End']):
-            if not pd.isnull(row["Area Sample 1"]):
-                overlaps_list_1[j] += row['Area Sample 1']
-            if not pd.isnull(row["Area Sample 2"]):
-                overlaps_list_2[j] += row['Area Sample 2']
-            if not pd.isnull(row["Area Sample 3"]):
-                overlaps_list_3[j] += row['Area Sample 3']            
-            if not pd.isnull(row["Area Sample 4"]):
-                overlaps_list_4[j] += row['Area Sample 4']
+            for k in range(len(area_cols)):
+                if not pd.isnull(row[area_cols[k]]):
+                    overlap_lists[k][j] += row[area_cols[k]]
 
-    df_overlaps1 = pd.DataFrame(list(zip(range(_len), overlaps_list_1)), columns=['Position', 'Overlaps'])
-    df_overlaps2 = pd.DataFrame(list(zip(range(_len), overlaps_list_2)), columns=['Position', 'Overlaps'])
-    df_overlaps3 = pd.DataFrame(list(zip(range(_len), overlaps_list_3)), columns=['Position', 'Overlaps'])
-    df_overlaps4 = pd.DataFrame(list(zip(range(_len), overlaps_list_4)), columns=['Position', 'Overlaps'])
-
-    overlap_lists = (overlaps_list_1, overlaps_list_2, overlaps_list_3, overlaps_list_4)
-    overlap_dataframes = (df_overlaps1, df_overlaps2, df_overlaps3, df_overlaps4)
+    for overlap_list in overlap_lists:
+        df_overlaps = pd.DataFrame(list(zip(range(_len), overlap_list)), columns=['Position', 'Overlaps'])
+        overlap_dataframes.append(df_overlaps)
 
     return overlap_lists, overlap_dataframes
 
@@ -62,9 +54,9 @@ def get_overlap_gradient_heapmap(num_overlpas_lists, peptide_seq_list, protein_n
     ax.set_yticklabels(ylabels)
     plt.show()
 
-def create_and_plot_overlap_plot(df, _protein="P02666"):
-    df = normalize_intensities_by_protein_intensity(df)
-    lists, dataframes = get_overlap_overlaps_by_intensity_and_sample(df, _protein)
+def create_and_plot_overlap_plot(df, _protein="P02666", sample_column_id='Area'):
+    df = normalize_intensities_by_protein_intensity(df, sample_column_id=sample_column_id)
+    lists, dataframes = get_overlap_overlaps_by_intensity_and_sample(df, _protein, sample_column_id=sample_column_id)
 
     seq_list = list(get_protein_sequence(_protein))
     fig, ax = plt.subplots(figsize = (30, 10))
@@ -79,7 +71,7 @@ def create_and_plot_overlap_plot(df, _protein="P02666"):
     ax.set_title('Overlaps by Position and Sample')
     ax.legend()
 
-def create_and_plot_overlap_heat_map_and_gradient_heatmap(df, _protein="P02666"):
+def create_and_plot_overlap_heat_map_and_gradient_heatmap(df, _protein="P02666", sample_column_id='Area'):
     seq_list = list(get_protein_sequence(_protein))
     df = normalize_intensities_by_protein_intensity(df)
     lists, dataframes = get_overlap_overlaps_by_intensity_and_sample(df, _protein)
