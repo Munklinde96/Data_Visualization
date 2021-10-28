@@ -3,10 +3,6 @@ import matplotlib.patches as patches
 from matplotlib import pyplot as plt
 from refactored_utils import get_position_of_mass_shift, get_color_palette_for_modifications, get_protein_sequence, get_color_legend_mods
 
-######################################
-############ SEGMENT PLOT ############
-######################################
-
 def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", size=50):
     # get position of mass shift in "peptide" for each row
     df["Position of Mass Shift"] = df["Peptide"].apply(get_position_of_mass_shift)

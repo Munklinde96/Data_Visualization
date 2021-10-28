@@ -86,7 +86,7 @@ def get_and_prepare_data():
 ##############################################
 
 # nomalize peptide intensity(per sample) over protetin intensity
-def normalize_intensities_by_protein_intensity(df):
+def normalize_intensities_by_protein_intensity(df, sample_column_id='Area'):
     protein_start = [0]
     protein_end = []
     protein_id = ""
@@ -106,14 +106,10 @@ def normalize_intensities_by_protein_intensity(df):
     for i in range(len(protein_start)):
         protein_df = df.iloc[protein_start[i] : protein_end[i]]
         protein_df = protein_df.copy()
-        intensity_sum1 = protein_df['Area Sample 1'].sum()
-        intensity_sum2 = protein_df['Area Sample 2'].sum()
-        intensity_sum3 = protein_df['Area Sample 3'].sum()
-        intensity_sum4 = protein_df['Area Sample 4'].sum()
-        protein_df['Area Sample 1'] = protein_df['Area Sample 1'].divide(intensity_sum1)
-        protein_df['Area Sample 2'] = protein_df['Area Sample 2'].divide(intensity_sum2)
-        protein_df['Area Sample 3'] = protein_df['Area Sample 3'].divide(intensity_sum3)
-        protein_df['Area Sample 4'] = protein_df['Area Sample 4'].divide(intensity_sum4)
+        area_cols = [col for col in protein_df.columns if sample_column_id in col]
+        for col_name in area_cols:
+            intensity_sum = protein_df[col_name].sum()
+            protein_df[col_name] = protein_df[col_name].divide(intensity_sum)
 
         dataframes.append(protein_df)
     
