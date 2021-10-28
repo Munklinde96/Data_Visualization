@@ -37,11 +37,15 @@ def get_overlap_overlaps_by_intensity_and_sample(df, selected_protein= "P02666")
     return overlap_lists, overlap_dataframes
 
 def get_overlap_heapmap(num_overlpas_lists, peptide_seq_list, protein_num, fig_size=(30,10), color_scale='YlOrRd'):
+    # make string, with 1,2,3,... 
+    title_samples_ennumeration = [str(i) for i in range(1, len(num_overlpas_lists)+1)]
+    title_samples_ennumeration = ','.join(title_samples_ennumeration)
+
     plt.figure(figsize=fig_size)
-    plt.title(f"Frequency of Overlaps for Protein {protein_num} - sample 1,2,3,4")
+    plt.title(f"Frequency of Overlaps for Protein {protein_num} - sample "+title_samples_ennumeration)
     ax = sns.heatmap(num_overlpas_lists, cmap=color_scale)
     plt.xticks(np.arange(len(peptide_seq_list)), peptide_seq_list, rotation = 0)
-    ylabels = ["Sample 1", "Sample 2", "Sample 3", "Sample 4"]
+    ylabels = [ 'Sample '+ str(i) for i in range(1, len(num_overlpas_lists)+1)]
     ax.set_yticklabels(ylabels)
     plt.show()
 
@@ -54,7 +58,7 @@ def get_overlap_gradient_heapmap(num_overlpas_lists, peptide_seq_list, protein_n
     plt.title(f"Gradient plot for {protein_num} - Shows frequent clevage sites")
     ax = sns.heatmap(gradient_list , cmap=color_scale)
     plt.xticks(np.arange(len(peptide_seq_list)), peptide_seq_list, rotation = 0)
-    ylabels = ["Sample 1", "Sample 2", "Sample 3", "Sample 4"]
+    ylabels = [ 'Sample '+ str(i) for i in range(1, len(num_overlpas_lists)+1)]    
     ax.set_yticklabels(ylabels)
     plt.show()
 

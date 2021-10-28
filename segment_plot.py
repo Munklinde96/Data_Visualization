@@ -7,37 +7,33 @@ from refactored_utils import get_position_of_mass_shift, get_color_palette_for_m
 ############ SEGMENT PLOT ############
 ######################################
 
-def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", size=50):
+def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", size=50, sample_column_id = 'Area'):
+    df = df.copy()
     # get position of mass shift in "peptide" for each row
     df["Position of Mass Shift"] = df["Peptide"].apply(get_position_of_mass_shift)
     # get list of modification for each PTM
     df["Modification_types"] = df["PTM"].apply(lambda x: x if pd.isnull(x) else [s.strip() for s in x.split(";")])
-
-    # this is the main script, note that we have imported pyplot as plt
-    start_end_df = df[["Start", "End", "Protein Accession", "Peptide", 'Position of Mass Shift', 'PTM', 'Modification_types', 'Area Sample 1', 'Area Sample 2', 'Area Sample 3', 'Area Sample 4']]
-    #only look at values for protein : P02666
-    start_end_df = start_end_df[start_end_df["Protein Accession"] == _protein]
-    # start_end_df.sort_values(['Start', 'End'], ascending=[True, False], inplace=True)
-    start_end_df['index1'] = start_end_df.index
-
+    sample_columns = [col for col in df.columns if sample_column_id in col]
+    
+    selected_columns = ["Start", "End", "Protein Accession", "Peptide", 'Position of Mass Shift', 'PTM', 'Modification_types'] + sample_columns
+    df = df[selected_columns]
+    df = df[df["Protein Accession"] == _protein] #only look at values for protein : P02666
+    df['index1'] = df.index
     #make Area samples Nan values 0
-    start_end_df['Area Sample 1'] = start_end_df['Area Sample 1'].fillna(0) #TODO refactor this
-    start_end_df['Area Sample 2'] = start_end_df['Area Sample 2'].fillna(0)
-    start_end_df['Area Sample 3'] = start_end_df['Area Sample 3'].fillna(0)
-    start_end_df['Area Sample 4'] = start_end_df['Area Sample 4'].fillna(0)
-    # drop rows where all area samples are 0
-    start_end_df = start_end_df[(start_end_df['Area Sample 1'] != 0) | (start_end_df['Area Sample 2'] != 0) | (start_end_df['Area Sample 3'] != 0) | (start_end_df['Area Sample 4'] != 0)]
+    for col in sample_columns:
+        df[col] = df[col].fillna(0)
+    df = df[df[sample_columns].sum(axis=1) > 0]   # drop rows where all sample_columns are 0
 
     #Aggregate sample intensity, and normalize it
-    start_end_df['Agg Intensity'] = start_end_df['Area Sample 1'] + start_end_df['Area Sample 2'] + start_end_df['Area Sample 3'] + start_end_df['Area Sample 4']
-    start_end_df['Agg Intensity'] = start_end_df['Agg Intensity'] / start_end_df['Agg Intensity'].sum()
+    df["Agg Intensity"] = df[sample_columns].sum(axis=1)
+    df['Agg Intensity'] = df['Agg Intensity'] / df['Agg Intensity'].sum()
 
-    #concat index1 and protein accession
-    start_end_df['Protein_Accession_idx'] = start_end_df['Protein Accession'] +"_" + start_end_df['index1'].astype(str) 
-    start_end_df["(start, end, pos_ms, mod_types, agg_intensity)"] = start_end_df[["Start", "End", 'Position of Mass Shift', 'Modification_types', 'Agg Intensity']].apply(tuple, axis=1)
-    start_end_df.drop(["Start", "End", "index1", 'PTM','Modification_types', 'Area Sample 1', 'Area Sample 2', 'Area Sample 3', 'Area Sample 4'], axis=1, inplace=True)
-    start_end_df.sort_values('Protein_Accession_idx', inplace=True)
-    new = start_end_df.head(size)
+    df['Protein_Accession_idx'] = df['Protein Accession'] +"_" + df['index1'].astype(str) 
+    df["(start, end, pos_ms, mod_types, agg_intensity)"] = df[["Start", "End", 'Position of Mass Shift', 'Modification_types', 'Agg Intensity']].apply(tuple, axis=1)
+    drop_columns = ["Start", "End", "index1", 'PTM','Modification_types']+ sample_columns
+    df.drop(drop_columns, axis=1, inplace=True)
+    df.sort_values('Protein_Accession_idx', inplace=True)
+    new = df.head(size)
 
     start_end_ms_modtype_list = new['(start, end, pos_ms, mod_types, agg_intensity)'].tolist()
     return start_end_ms_modtype_list
