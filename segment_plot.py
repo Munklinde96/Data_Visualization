@@ -1,11 +1,20 @@
 import pandas as pd
+import numpy as np
 import matplotlib.patches as patches
 from matplotlib import pyplot as plt
-from refactored_utils import get_position_of_mass_shift, get_color_palette_for_modifications, get_protein_sequence, get_color_legend_mods
+from matplotlib import colors
+from refactored_utils import get_position_of_mass_shift, get_color_palette_for_modifications, get_protein_sequence, get_color_legend_mods 
+from utils import colors_from_values
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 ######################################
 ############ SEGMENT PLOT ############
 ######################################
+def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
+    new_cmap = colors.LinearSegmentedColormap.from_list(
+        'trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, a=minval, b=maxval),
+        cmap(np.linspace(minval, maxval, n)))
+    return new_cmap
 
 def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", size=50, sample_column_id = 'Area'):
     df = df.copy()
@@ -64,6 +73,33 @@ def get_intervals(agg_intensities: list, no_intervals = 5):
     intervals = {intervals[i]: (i+1)/interval_len for i in range(interval_len)}
     return intervals
 
+def make_continous_color_scale(intervals: dict):
+    """
+    intervals is a dict with keys as quantiles and values as colors
+    """
+    #make continuous grey color scale
+
+def colors_(values: list , color_scale = 'Greys', is_log_scaled = True):
+    values = np.array(values)
+    if is_log_scaled:
+        values = np.log(values)
+    # normalize values to between 0.1 and 1
+    values = (values - min(values)) / (max(values) - min(values))
+    normalized = values * 0.8 + 0.2
+    #normalized = (values - min(values)) / (max(values) - min(values))
+    cmap = plt.cm.get_cmap(color_scale)
+    color_list = [colors.rgb2hex(cmap(i)) for i in normalized]
+    return color_list
+    
+def map_to_colors(res_intensities, res_rectangles_and_mods, color_scale = 'Greys', is_log_scaled = True):
+    rects = [r[0] for r in res_rectangles_and_mods]
+    color_values = colors_(res_intensities, color_scale=color_scale, is_log_scaled=is_log_scaled)
+    rects = [(r[0],r[1]) for r in rects]
+    rects_and_colors = list(zip(rects, color_values))
+    mods = [r[1] for r in res_rectangles_and_mods]
+    rects_and_colors_mods = list(zip(rects_and_colors, mods))
+    return rects_and_colors_mods
+
 def map_to_intervals(res_intensities, res_rectangles_and_mods, predefined_intervals: dict = None):
     if predefined_intervals is None:
         intervals = get_intervals(res_intensities)
@@ -78,7 +114,7 @@ def map_to_intervals(res_intensities, res_rectangles_and_mods, predefined_interv
     rects_and_quantiles_mods = list(zip(rects_and_quantiles, mods))
     return rects_and_quantiles_mods
 
-def stack_recs(rectangles_and_mods: list):
+def stack_recs(rectangles_and_mods: list, colors = True, color_scale = 'Greys', is_log_scaled = True):
     """
     rectangles_and_mods is a tuple list of (rectangle, modifications)
     a rectangle is tuples on the form (low, width, agg_intensity)
@@ -105,41 +141,62 @@ def stack_recs(rectangles_and_mods: list):
             res_rectangles_and_mods[-1] = ((last_rect_low, last_rect_width, new_intensity), new_mods)
             res_intensities[-1] = new_intensity
 
-    rects_and_quantiles_mods = map_to_intervals( res_intensities, res_rectangles_and_mods)
-    return rects_and_quantiles_mods
+    if colors:
+        res = map_to_colors(res_intensities, res_rectangles_and_mods, color_scale = color_scale, is_log_scaled=is_log_scaled)
+    else:
+        res = map_to_intervals(res_intensities, res_rectangles_and_mods)
 
-def get_stacking_patches(rectangles, spacing=0.2):
+    return res
+
+# standard height only used if colors is True
+def get_stacking_patches(rectangles, spacing=0.2, colors = True, standard_height= 0.5):
     last_x = 0
     last_y = 0
     y_spaces = [0]*10*len(rectangles) #10 indicates a division into heights of 0.1
     peptide_patches = []
     mod_patches = []
+    mod_patches = []
     for rect, mods in rectangles:
-        rect_info, quantile = rect
+        rect_info, attribute = rect #attribute is either color or height depepnding on the colors parameter
         x, width = rect_info
         for i in range(len(y_spaces)):
-            is_available = True
-            for k in range(int(quantile*10)): 
-                if y_spaces[i+k] > x:
-                    is_available = False
+            if colors: # Encode intensities as COLOR
+                is_available = True
+                for k in range(int(standard_height*10)): 
+                    if y_spaces[i+k] > x:
+                        is_available = False
+                        break
+                if is_available: 
+                    patch = patches.Rectangle((x, i/10), width, standard_height, facecolor = attribute, ec='black', lw=1, alpha=1)
+                    for j in range(i, i + int(standard_height * 10) + int(spacing*10)):
+                        y_spaces[j] = x + width
                     break
-            if is_available: 
-                patch = patches.Rectangle((x, i/10), width, quantile, facecolor = '#add8e6', ec='black', lw=1, alpha=0.5)
-                for j in range(i, i + int(quantile * 10) + int(spacing*10)):
-                    y_spaces[j] = x + width
-                break
+            else: # Encode intensities as HEIGHT
+                is_available = True
+                for k in range(int(attribute*10)): 
+                    if y_spaces[i+k] > x:
+                        is_available = False
+                        break
+                if is_available: 
+                    patch = patches.Rectangle((x, i/10), width, attribute, facecolor = '#add8e6', ec='black', lw=1, alpha=0.5)
+                    for j in range(i, i + int(attribute * 10) + int(spacing*10)):
+                        y_spaces[j] = x + width
+                    break
 
         peptide_patches.append(patch)
         last_x, last_y = patch.get_xy()
 
         for m_pos, m_color in mods:
-            mod_rec = patches.Rectangle((last_x+m_pos,last_y), 1, quantile, facecolor= m_color, edgecolor="black")
+            if colors:
+                mod_rec = patches.Rectangle((last_x+m_pos,last_y), 1, standard_height, facecolor= m_color, edgecolor="black")
+            else:
+                mod_rec = patches.Rectangle((last_x+m_pos,last_y), 1, attribute, facecolor= m_color, edgecolor="black")
             mod_patches.append(mod_rec)
     height = y_spaces.index(0)
     return peptide_patches, mod_patches, height/10
 
 
-def plot_peptide_segments(peptide_patches, mod_patches, height, _protein="P02666"):
+def plot_peptide_segments(peptide_patches, mod_patches, height, _protein="P02666", color_scale = 'Greys', is_log_scaled = True):
     fig = plt.figure(figsize=(30,25))
     ax = fig.add_subplot(111)
     ax.set_ylim((0,height))
@@ -160,18 +217,33 @@ def plot_peptide_segments(peptide_patches, mod_patches, height, _protein="P02666
     ax.get_yaxis().set_visible(False)
     modification_types_to_color_map = get_color_palette_for_modifications()
     # create legend based on modification_types_to_color_map
+    # create 2 legends and place them next to each other
+    
     handles = get_color_legend_mods(modification_types_to_color_map)
-    ax.legend(handles=handles)
-    # plt.colorbar(modification_types_to_color_map, ticks=list(modification_types_to_color_map.keys()))
-    #plt.gca().invert_yaxis()
+    cmap = plt.cm.get_cmap(color_scale)
+    new_cmap = truncate_colormap(cmap, 0.2, 1)
+    if is_log_scaled:
+        sm = plt.cm.ScalarMappable(cmap=new_cmap, norm=colors.LogNorm(vmin=0.00001, vmax=1))
+        sm._A = []
+        label_ = 'Normalized and logscaled intensity'
+    else: 
+        sm = plt.cm.ScalarMappable(cmap=new_cmap, norm=colors.Normalize(vmin=0, vmax=1))
+        sm._A = []
+        label_ = 'Normalized intensity'
+
+    cbaxes = inset_axes(ax, width="2%", height="15%", loc=2)
+    cbar = plt.colorbar(sm, cax=cbaxes, orientation='vertical')
+    cbar.set_label(label_)
+    leg1 = ax.legend(handles=handles, loc='upper left', bbox_to_anchor=(0.1, 1), ncol=1)
+        
     plt.show()
     return ax
 
 
-def create_and_plot_segment_plot(df, _protein="P02666", size=50, spacing=0):
+def create_and_plot_segment_plot(df, _protein="P02666", size=50, spacing=0, colors = True, color_scale='Greys', is_log_scaled = True):
     data = preprocess_data_for_peptide_segment_plot(df, _protein, size)
     rectangles_and_mods = get_rectangles_for_peptides_and_mods(data)
-    rectangles_and_mods = stack_recs(rectangles_and_mods)
-    peptide_patches, mod_patches, height = get_stacking_patches(rectangles_and_mods, spacing)
-    plot_peptide_segments(peptide_patches, mod_patches, height)
+    rectangles_and_mods = stack_recs(rectangles_and_mods, colors=colors, color_scale=color_scale, is_log_scaled=is_log_scaled)
+    peptide_patches, mod_patches, height = get_stacking_patches(rectangles_and_mods, spacing = spacing, colors=colors)
+    plot_peptide_segments(peptide_patches, mod_patches, height, color_scale=color_scale, is_log_scaled=is_log_scaled)
 

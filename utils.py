@@ -138,7 +138,9 @@ def get_position_of_mass_shifts(input_string):
     return indices, before_ms, after_ms
 
 # get colour palette from y-value distribution
-def colors_from_values(values, palette_name):
+def colors_from_values(values, palette_name, is_log_scale = False):
+    if is_log_scale:
+        values = np.log10(values)
     # normalize the values to range [0, 1]
     normalized = (values - min(values)) / (max(values) - min(values))
     # convert to indices
