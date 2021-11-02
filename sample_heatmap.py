@@ -21,6 +21,7 @@ def combine_and_aggregate_intensity(dataframes: list, sample_column_id='Area'):
     sample_columns = [col for col in dataframes[0].columns if sample_column_id in col]
     df_collection = []
     for i in range(len(dataframes)):
+        df = dataframes[i]
         df = df[df["PTM"].notnull()]
         df = df.copy()
         df['Intensity'] = df[sample_columns[i]].divide(df['#modifications'])

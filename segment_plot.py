@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.patches as patches
 from matplotlib import pyplot as plt
-from matplotlib import colors
+from matplotlib import colors as cls
 from refactored_utils import get_position_of_mass_shift, get_color_palette_for_modifications, get_protein_sequence, get_color_legend_mods 
 from utils import colors_from_values
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
@@ -11,7 +11,7 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 ############ SEGMENT PLOT ############
 ######################################
 def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
-    new_cmap = colors.LinearSegmentedColormap.from_list(
+    new_cmap = cls.LinearSegmentedColormap.from_list(
         'trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, a=minval, b=maxval),
         cmap(np.linspace(minval, maxval, n)))
     return new_cmap
@@ -91,7 +91,7 @@ def colors_(values: list , color_scale = 'Greys', is_log_scaled = True):
     normalized = normalize(values, is_log_scaled,  min_val=0.2)
     #normalized = (values - min(values)) / (max(values) - min(values))
     cmap = plt.cm.get_cmap(color_scale)
-    color_list = [colors.rgb2hex(cmap(i)) for i in normalized]
+    color_list = [cls.rgb2hex(cmap(i)) for i in normalized]
     return color_list
     
 def map_to_colors(res_intensities, res_rectangles_and_mods, color_scale = 'Greys', is_log_scaled = True):
@@ -194,7 +194,7 @@ def get_stacking_patches(rectangles, spacing=0.2, colors = True, standard_height
     return peptide_patches, mod_patches, height/10
 
 
-def plot_peptide_segments(peptide_patches, mod_patches, height, _protein="P02666", color_scale = 'Greys', is_log_scaled = True):
+def plot_peptide_segments(peptide_patches, mod_patches, height, _protein="P02666", colors = True, color_scale = 'Greys', is_log_scaled = True):
     fig = plt.figure(figsize=(30,25))
     ax = fig.add_subplot(111)
     ax.set_ylim((0,height))
@@ -220,19 +220,21 @@ def plot_peptide_segments(peptide_patches, mod_patches, height, _protein="P02666
     handles = get_color_legend_mods(modification_types_to_color_map)
     cmap = plt.cm.get_cmap(color_scale)
     new_cmap = truncate_colormap(cmap, 0.2, 1)
-    if is_log_scaled:
-        sm = plt.cm.ScalarMappable(cmap=new_cmap, norm=colors.LogNorm(vmin=0.00001, vmax=1))
-        sm._A = []
-        label_ = 'Normalized and logscaled intensity'
+    if colors:
+        if is_log_scaled:
+            sm = plt.cm.ScalarMappable(cmap=new_cmap, norm=cls.LogNorm(vmin=0.00001, vmax=1))
+            sm._A = []
+            label_ = 'Normalized and logscaled intensity'
+        else: 
+            sm = plt.cm.ScalarMappable(cmap=new_cmap, norm=cls.Normalize(vmin=0, vmax=1))
+            sm._A = []
+            label_ = 'Normalized intensity'
+        cbaxes = inset_axes(ax, width="2%", height="15%", loc=2)
+        cbar = plt.colorbar(sm, cax=cbaxes, orientation='vertical')
+        cbar.set_label(label_)
+        leg1 = ax.legend(handles=handles, loc='upper left', bbox_to_anchor=(0.1, 1), ncol=1)
     else: 
-        sm = plt.cm.ScalarMappable(cmap=new_cmap, norm=colors.Normalize(vmin=0, vmax=1))
-        sm._A = []
-        label_ = 'Normalized intensity'
-
-    cbaxes = inset_axes(ax, width="2%", height="15%", loc=2)
-    cbar = plt.colorbar(sm, cax=cbaxes, orientation='vertical')
-    cbar.set_label(label_)
-    leg1 = ax.legend(handles=handles, loc='upper left', bbox_to_anchor=(0.1, 1), ncol=1)
+        leg1 = ax.legend(handles=handles, loc='upper left')
         
     plt.show()
     return ax
@@ -242,6 +244,6 @@ def create_and_plot_segment_plot(df, _protein="P02666", size=50, spacing=0, colo
     data = preprocess_data_for_peptide_segment_plot(df, _protein, size)
     rectangles_and_mods = get_rectangles_for_peptides_and_mods(data)
     rectangles_and_mods = stack_recs(rectangles_and_mods, colors=colors, color_scale=color_scale, is_log_scaled=is_log_scaled)
-    peptide_patches, mod_patches, height = get_stacking_patches(rectangles_and_mods, spacing = spacing, colors=colors)
-    plot_peptide_segments(peptide_patches, mod_patches, height, color_scale=color_scale, is_log_scaled=is_log_scaled)
+    peptide_patches, mod_patches, height = get_stacking_patches(rectangles_and_mods, spacing = spacing, colors = colors)
+    plot_peptide_segments(peptide_patches, mod_patches, height, colors = colors, color_scale=color_scale, is_log_scaled=is_log_scaled)
 
