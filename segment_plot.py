@@ -79,13 +79,16 @@ def make_continous_color_scale(intervals: dict):
     """
     #make continuous grey color scale
 
-def colors_(values: list , color_scale = 'Greys', is_log_scaled = True):
-    values = np.array(values)
+def normalize(res_intensities, is_log_scaled,  min_val=0):
+    values = np.array(res_intensities)
     if is_log_scaled:
         values = np.log(values)
-    # normalize values to between 0.1 and 1
-    values = (values - min(values)) / (max(values) - min(values))
-    normalized = values * 0.8 + 0.2
+    values = (values - min(values)) / (max(values) - min(values)) # normalize
+    normalized = values * (1 - min_val) + min_val
+    return normalized
+
+def colors_(values: list , color_scale = 'Greys', is_log_scaled = True):
+    normalized = normalize(values, is_log_scaled,  min_val=0.2)
     #normalized = (values - min(values)) / (max(values) - min(values))
     cmap = plt.cm.get_cmap(color_scale)
     color_list = [colors.rgb2hex(cmap(i)) for i in normalized]
@@ -100,14 +103,9 @@ def map_to_colors(res_intensities, res_rectangles_and_mods, color_scale = 'Greys
     rects_and_colors_mods = list(zip(rects_and_colors, mods))
     return rects_and_colors_mods
 
-def map_to_intervals(res_intensities, res_rectangles_and_mods, predefined_intervals: dict = None):
-    if predefined_intervals is None:
-        intervals = get_intervals(res_intensities)
-    
+def map_to_intervals(res_intensities, res_rectangles_and_mods, is_log_scaled = True):
+    res_intensities = normalize(res_intensities, is_log_scaled)
     rects = [r[0] for r in res_rectangles_and_mods]
-    res_intensities = pd.Series(res_intensities)
-    #map res_intensities to quantiles
-    res_intensities = res_intensities.map(intervals)
     rects = [(r[0],r[1]) for r in rects]
     rects_and_quantiles = list(zip(rects, res_intensities))
     mods = [r[1] for r in res_rectangles_and_mods]
@@ -173,7 +171,7 @@ def get_stacking_patches(rectangles, spacing=0.2, colors = True, standard_height
                     break
             else: # Encode intensities as HEIGHT
                 is_available = True
-                for k in range(int(attribute*10)): 
+                for k in range(int((attribute + spacing)*10)): 
                     if y_spaces[i+k] > x:
                         is_available = False
                         break
