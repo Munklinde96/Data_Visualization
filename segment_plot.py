@@ -6,6 +6,7 @@ from matplotlib import colors as cls
 from refactored_utils import get_position_of_mass_shift, get_color_palette_for_modifications, get_protein_sequence, get_color_legend_mods 
 from utils import colors_from_values
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+from sklearn.preprocessing import normalize as norm
 
 ######################################
 ############ SEGMENT PLOT ############
@@ -60,7 +61,7 @@ def get_rectangles_for_peptides_and_mods(data):
         if len(mod_positions) > 0:
             for _ms_pos, mod_type in zip(mod_positions, mod_types): #add mass shift color on rectangles if present
                 ms_color = modification_types_to_color_map[mod_type]
-                modifications.append((_ms_pos, ms_color))
+                modifications.append((_ms_pos, ms_color, agg_intensity))
         rectangles_and_mods.append((rec, modifications))
         
     return rectangles_and_mods
@@ -79,7 +80,7 @@ def make_continous_color_scale(intervals: dict):
     """
     #make continuous grey color scale
 
-def normalize(res_intensities, is_log_scaled,  min_val=0):
+def normalize(res_intensities, is_log_scaled = False,  min_val=0):
     values = np.array(res_intensities)
     if is_log_scaled:
         values = np.log(values)
@@ -89,7 +90,6 @@ def normalize(res_intensities, is_log_scaled,  min_val=0):
 
 def colors_(values: list , color_scale = 'Greys', is_log_scaled = True):
     normalized = normalize(values, is_log_scaled,  min_val=0.2)
-    #normalized = (values - min(values)) / (max(values) - min(values))
     cmap = plt.cm.get_cmap(color_scale)
     color_list = [cls.rgb2hex(cmap(i)) for i in normalized]
     return color_list
@@ -97,20 +97,18 @@ def colors_(values: list , color_scale = 'Greys', is_log_scaled = True):
 def map_to_colors(res_intensities, res_rectangles_and_mods, color_scale = 'Greys', is_log_scaled = True):
     rects = [r[0] for r in res_rectangles_and_mods]
     color_values = colors_(res_intensities, color_scale=color_scale, is_log_scaled=is_log_scaled)
-    rects = [(r[0],r[1]) for r in rects]
     rects_and_colors = list(zip(rects, color_values))
     mods = [r[1] for r in res_rectangles_and_mods]
     rects_and_colors_mods = list(zip(rects_and_colors, mods))
     return rects_and_colors_mods
 
-def map_to_intervals(res_intensities, res_rectangles_and_mods, is_log_scaled = True):
+def map_to_norm_intensities(res_intensities, res_rectangles_and_mods, is_log_scaled = True):
     res_intensities = normalize(res_intensities, is_log_scaled)
     rects = [r[0] for r in res_rectangles_and_mods]
-    rects = [(r[0],r[1]) for r in rects]
-    rects_and_quantiles = list(zip(rects, res_intensities))
+    rects_and_intensities = list(zip(rects, res_intensities))
     mods = [r[1] for r in res_rectangles_and_mods]
-    rects_and_quantiles_mods = list(zip(rects_and_quantiles, mods))
-    return rects_and_quantiles_mods
+    rects_and_intensities = list(zip(rects_and_intensities, mods))
+    return rects_and_intensities
 
 def stack_recs(rectangles_and_mods: list, colors = True, color_scale = 'Greys', is_log_scaled = True):
     """
@@ -140,11 +138,11 @@ def stack_recs(rectangles_and_mods: list, colors = True, color_scale = 'Greys', 
             res_intensities[-1] = new_intensity
 
     if colors:
-        res = map_to_colors(res_intensities, res_rectangles_and_mods, color_scale = color_scale, is_log_scaled=is_log_scaled)
+        rects_and_attribute = map_to_colors(res_intensities, res_rectangles_and_mods, color_scale = color_scale, is_log_scaled=is_log_scaled)
     else:
-        res = map_to_intervals(res_intensities, res_rectangles_and_mods)
+        rects_and_attribute = map_to_norm_intensities(res_intensities, res_rectangles_and_mods)
 
-    return res
+    return rects_and_attribute
 
 # standard height only used if colors is True
 def get_stacking_patches(rectangles, spacing=0.2, colors = True, standard_height= 0.5):
@@ -156,7 +154,7 @@ def get_stacking_patches(rectangles, spacing=0.2, colors = True, standard_height
     mod_patches = []
     for rect, mods in rectangles:
         rect_info, attribute = rect #attribute is either color or height depepnding on the colors parameter
-        x, width = rect_info
+        x, width, intensity = rect_info
         for i in range(len(y_spaces)):
             if colors: # Encode intensities as COLOR
                 is_available = True
@@ -183,15 +181,69 @@ def get_stacking_patches(rectangles, spacing=0.2, colors = True, standard_height
 
         peptide_patches.append(patch)
         last_x, last_y = patch.get_xy()
-
-        for m_pos, m_color in mods:
-            if colors:
-                mod_rec = patches.Rectangle((last_x+m_pos,last_y), 1, standard_height, facecolor= m_color, edgecolor="black")
-            else:
-                mod_rec = patches.Rectangle((last_x+m_pos,last_y), 1, attribute, facecolor= m_color, edgecolor="black")
-            mod_patches.append(mod_rec)
+        if mods != []:
+            mods_list_list = get_mods_height_distribution(mods)
+        else: 
+            mods_list_list = []
+        for mods_list in mods_list_list:
+            intensities = [m[2] for m in mods_list]
+            #normalize intensities with numpy
+            normalized_intensities_mods = np.asarray(intensities) / intensity
+            y_pos = last_y
+            for i in range(len(mods_list)):
+                m_pos, m_color, _ = mods_list[i]
+                if colors:
+                    mod_height = standard_height * normalized_intensities_mods[i]
+                    mod_rec = patches.Rectangle((last_x+m_pos,y_pos), 1, mod_height, facecolor= m_color, edgecolor="black")
+                else:
+                    mod_height =  attribute * normalized_intensities_mods[i]
+                    mod_rec = patches.Rectangle((last_x+m_pos,y_pos), 1, mod_height, facecolor= m_color, edgecolor="black")
+                y_pos = y_pos + mod_height
+                mod_patches.append(mod_rec)
     height = y_spaces.index(0)
     return peptide_patches, mod_patches, height/10
+
+def get_mods_height_distribution(mods):
+    #sort by first pos then color
+    mods = sorted(mods, key=lambda x: (x[0], x[1]))
+    mods_list_list = []
+    mods_list = [mods[0]]
+    mods_list_list.append(mods_list)
+    pos = mods[0][0]
+    color = mods[0][1]
+    for i in range(1, len(mods)):
+        mod = mods[i]
+        if mod[0] == pos and mod[1] == color:
+            mods_list[-1] = (mods_list[-1][0], mods_list[-1][1], mods_list[-1][2] + mod[2])
+        elif mod[0] == pos and mod[1] != color:
+            mods_list.append(mod)
+            color = mod[1]
+        else:
+            mods_list = []
+            mods_list.append(mod)
+            mods_list_list.append(mods_list)
+            pos = mod[0]
+            color = mod[1]
+    return mods_list_list
+
+
+
+def get_mods_heights(mods: list, total_height: float, use_intensity = False):
+    """
+    mods is a list of tuples of the form (mod_pos, mod_color, intensity)
+    total_height is the total height of the peptide
+    use_intensity is a boolean that indicates whether the intensity should be used to determine the height of the mod
+    """
+    height_list = []
+    if use_intensity:
+        pass
+    else:
+    
+        mods_set = set(mods)
+        # get size of mods_set
+        num_unique = len(mods_set)
+        # get count for each color in mods
+        color_counts = [mods.count(tup[1]) for tup in mods]
 
 
 def plot_peptide_segments(peptide_patches, mod_patches, height, _protein="P02666", colors = True, color_scale = 'Greys', is_log_scaled = True):
