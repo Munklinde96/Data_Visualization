@@ -18,7 +18,7 @@ def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
         cmap(np.linspace(minval, maxval, n)))
     return new_cmap
 
-def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", size=50, sample_column_id = 'Area', selected_samples = ['Area Sample 1', 'Area Sample 2']):
+def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", size=50, sample_column_id = 'Area', selected_samples = []):
     df = df.copy()
     df["Position of Mass Shift"] = df["Peptide"].apply(get_position_of_mass_shift)
     # get list of modification for each PTM
@@ -361,6 +361,10 @@ def create_and_plot_segment_plot(df, _protein="P02666", size=50, spacing=0, colo
     end = time.time()
     print("get_stacking_patches time: ", end - start)
     start = time.time()
+    peptide_patches, mod_patches, height = get_stacking_patch_attributes(rectangles_and_mods, spacing=0.2, colors = True, standard_height= 0.5)
+    print(len(peptide_patches))
+    print(len(mod_patches))
+    print(mod_patches)
     plot_peptide_segments(peptide_patches, mod_patches, height, colors = colors, color_scale=color_scale, is_log_scaled=is_log_scaled)
     end = time.time()
     print("plot_peptide_segments time: ", end - start)
