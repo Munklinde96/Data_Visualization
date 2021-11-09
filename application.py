@@ -81,10 +81,15 @@ def homepage():
     data.SampleModData = json.loads(sampleModJson)
 
     # Create SegmentPlotData
-    #peptide_patches = create_data_for_segment_plot(df)
-    #print(peptide_patches)
-    #segmentPlotJson = json.dumps(peptide_patches)
-    #data.SegmentPlotData = segmentPlotJson
+    peptide_patches, mod_patches, height = create_data_for_segment_plot(df)
+    segmentObject = {
+        'peptide_patches': peptide_patches,
+        'mod_patches': mod_patches,
+        'height': height
+    }
+    print(segmentObject)
+    segmentPlotJson = json.dumps(segmentObject)
+    data.SegmentPlotData = segmentPlotJson
 
 
     # Return data to frontend

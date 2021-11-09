@@ -18,7 +18,7 @@ def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
         cmap(np.linspace(minval, maxval, n)))
     return new_cmap
 
-def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", size=50, sample_column_id = 'Area', selected_samples = ['Area Sample 1', 'Area Sample 2']):
+def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", size=50, sample_column_id = 'Area', selected_samples = []):
     df = df.copy()
     df["Position of Mass Shift"] = df["Peptide"].apply(get_position_of_mass_shift)
     # get list of modification for each PTM
@@ -350,13 +350,7 @@ def create_and_plot_segment_plot(df, _protein="P02666", size=50, spacing=0, colo
 
 def create_data_for_segment_plot(df, _protein="P02666", size=50, spacing=0, colors = True, color_scale='Greys', is_log_scaled = True):
     data = preprocess_data_for_peptide_segment_plot(df, _protein, size)
-    end = time.time()
-    print("preprocessing time: ", end - start)
-    start = time.time()
     rectangles_and_mods = get_rectangles_for_peptides_and_mods(data)
-    end = time.time()
-    print("get_rectangles_for_peptides_and_mods time: ", end - start)
-    start = time.time()
     rectangles_and_mods = stack_recs(rectangles_and_mods, colors=colors, color_scale=color_scale, is_log_scaled=is_log_scaled)
-    peptide_patches, mod_patches, height = get_stacking_patches(rectangles_and_mods)
+    peptide_patches, mod_patches, height = get_stacking_patch_attributes(rectangles_and_mods)
     return peptide_patches, mod_patches, height
