@@ -37,14 +37,14 @@ def combine_and_aggregate_intensity(dataframes: list, sample_column_id='Area'):
 
 
 def create_and_plot_sample_heatmap(df, _protein='P02666'):
+    data = get_sample_heatmap_data(df, _protein)
+    sns.heatmap(data, cmap='viridis')
+
+def get_sample_heatmap_data(df, _protein='P02666'):
     df = normalize_intensities_by_protein_intensity(df)
     df = df[df['Protein Accession'] == _protein]
     df_list = split_data_in_samples(df)
     combined = combine_and_aggregate_intensity(df_list).sort_values(by=['PTM'])
 
     data = pd.pivot_table(data = combined, index = 'PTM', values = 'Intensity', columns='Sample')
-    sns.heatmap(data, cmap='viridis')
-
-
-
-        
+    return data

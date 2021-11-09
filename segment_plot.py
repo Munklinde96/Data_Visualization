@@ -293,9 +293,13 @@ def plot_peptide_segments(peptide_patches, mod_patches, height, _protein="P02666
 
 
 def create_and_plot_segment_plot(df, _protein="P02666", size=50, spacing=0, colors = True, color_scale='Greys', is_log_scaled = True):
+    create_data_for_segment_plot(df, _protein, size=size, spacing=spacing, colors=colors, color_scale=color_scale, is_log_scaled=is_log_scaled)
+    plot_peptide_segments(peptide_patches, mod_patches, height, colors = colors, color_scale=color_scale, is_log_scaled=is_log_scaled)
+
+
+def create_data_for_segment_plot(df, _protein="P02666", size=50, spacing=0, colors = True, color_scale='Greys', is_log_scaled = True):
     data = preprocess_data_for_peptide_segment_plot(df, _protein, size)
     rectangles_and_mods = get_rectangles_for_peptides_and_mods(data)
     rectangles_and_mods = stack_recs(rectangles_and_mods, colors=colors, color_scale=color_scale, is_log_scaled=is_log_scaled)
-    peptide_patches, mod_patches, height = get_stacking_patches(rectangles_and_mods, spacing = spacing, colors = colors)
-    plot_peptide_segments(peptide_patches, mod_patches, height, colors = colors, color_scale=color_scale, is_log_scaled=is_log_scaled)
-
+    peptide_patches, mod_patches, height = get_stacking_patches(rectangles_and_mods)
+    return peptide_patches, mod_patches, height

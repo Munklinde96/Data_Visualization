@@ -8,7 +8,6 @@ import matplotlib.patches as patches
 import seaborn as sns
 import json
 from refactored_utils import get_protein_sequence, clean_peptide
-
 from seaborn.palettes import color_palette
 
 
