@@ -18,7 +18,7 @@ def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
         cmap(np.linspace(minval, maxval, n)))
     return new_cmap
 
-def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", size=50, sample_column_id = 'Area', selected_samples = []):
+def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", sample_column_id = 'Area', selected_samples = []):
     df = df.copy()
     df["Position of Mass Shift"] = df["Peptide"].apply(get_position_of_mass_shift)
     # get list of modification for each PTM
@@ -39,9 +39,8 @@ def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", size=50, sam
     df['Agg Intensity'] = df['Agg Intensity'] / df['Agg Intensity'].sum()
 
     df["tuple"] = df[["Start", "End", 'Position of Mass Shift', 'Modification_types', 'Agg Intensity']].apply(tuple, axis=1)
-    new = df.head(size)
 
-    start_end_ms_modtype_list = new['tuple'].tolist()
+    start_end_ms_modtype_list = df['tuple'].tolist()
     return start_end_ms_modtype_list
 
 def get_rectangles_for_peptides_and_mods(data):
@@ -89,7 +88,8 @@ def colors_(values: list , color_scale = 'Greys', is_log_scaled = True):
     cmap = plt.cm.get_cmap(color_scale)
     color_list = [cls.rgb2hex(cmap(i)) for i in normalized]
     return color_list
-    
+
+
 def map_to_colors(res_intensities, res_rectangles_and_mods, color_scale = 'Greys', is_log_scaled = True):
     rects = [r[0] for r in res_rectangles_and_mods]
     color_values = colors_(res_intensities, color_scale=color_scale, is_log_scaled=is_log_scaled)
@@ -98,6 +98,11 @@ def map_to_colors(res_intensities, res_rectangles_and_mods, color_scale = 'Greys
     rects_and_colors_mods = list(zip(rects_and_colors, mods))
     return rects_and_colors_mods
 
+#documentation:
+"""
+res_intensities: list of intensities
+res_rectangles_and_mods: list of tuples of the form (((low, width), agg_intensity), [(mod_pos, mod_color, agg_intensity), ...])
+"""
 def map_to_norm_intensities(res_intensities, res_rectangles_and_mods, is_log_scaled = True):
     res_intensities = normalize(res_intensities, is_log_scaled)
     rects = [r[0] for r in res_rectangles_and_mods]
@@ -342,29 +347,21 @@ def plot_peptide_segments(peptide_patches, mod_patches, height, _protein="P02666
     plt.show()
     return ax
 
-
-def create_and_plot_segment_plot(df, _protein="P02666", size=50, spacing=0, colors = True, color_scale='Greys', is_log_scaled = True):
-    start = time.time()
-    data = preprocess_data_for_peptide_segment_plot(df, _protein, size)
-    end = time.time()
-    print("preprocessing time: ", end - start)
-    start = time.time()
-    rectangles_and_mods = get_rectangles_for_peptides_and_mods(data)
-    end = time.time()
-    print("get_rectangles_for_peptides_and_mods time: ", end - start)
-    start = time.time()
-    rectangles_and_mods = stack_recs(rectangles_and_mods, colors=colors, color_scale=color_scale, is_log_scaled=is_log_scaled)
-    end = time.time()
-    print("stack_recs time: ", end - start)
-    start = time.time()
-    peptide_patches, mod_patches, height = get_stacking_patches(rectangles_and_mods, spacing = spacing, colors = colors)
-    end = time.time()
-    print("get_stacking_patches time: ", end - start)
-    start = time.time()
-    peptide_patches, mod_patches, height = get_stacking_patch_attributes(rectangles_and_mods, spacing=0.2, colors = True, standard_height= 0.5)
-    print(len(peptide_patches))
-    print(len(mod_patches))
-    print(mod_patches)
+"""
+   Poetry. slam poetry. Slam Poetry is a collection of poems written by the poet, slam poet.
+    The poems are collected in the slam poetry collection.
+"""
+def create_and_plot_segment_plot(df, _protein="P02666", spacing=0, colors = True, color_scale='Greys', is_log_scaled = True):
+    peptide_patches, mod_patches, height = create_data_for_segment_plot(df, _protein, spacing=spacing, colors=colors, color_scale=color_scale, is_log_scaled=is_log_scaled)
     plot_peptide_segments(peptide_patches, mod_patches, height, colors = colors, color_scale=color_scale, is_log_scaled=is_log_scaled)
-    end = time.time()
-    print("plot_peptide_segments time: ", end - start)
+
+
+def create_data_for_segment_plot(df, _protein="P02666", spacing=0.2, colors = True, color_scale='Greys', is_log_scaled = True):
+    data = preprocess_data_for_peptide_segment_plot(df, _protein)
+    rectangles_and_mods = get_rectangles_for_peptides_and_mods(data)
+    rectangles_and_mods = stack_recs(rectangles_and_mods, colors=colors, color_scale=color_scale, is_log_scaled=is_log_scaled)
+    # peptide_patches, mod_patches, height = get_stacking_patch_attributes(rectangles_and_mods, spacing = spacing)
+    peptide_patches, mod_patches, height = get_stacking_patches(rectangles_and_mods, spacing = spacing)
+    seqq = get_protein_sequence(_protein)
+
+    return peptide_patches, mod_patches, height, seqq
