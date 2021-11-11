@@ -1,0 +1,13 @@
+(node:39140) UnhandledPromiseRejectionWarning: ReferenceError: fetch is not defined
+    at Object.json (/Users/oscarorellana/uni/1-semester/viz/Data_Visualization/my-electron-app/node_modules/d3-node/node_modules/d3-fetch/dist/d3-fetch.js:72:3)
+    at initializeModProteinHeatmap (/Users/oscarorellana/uni/1-semester/viz/Data_Visualization/my-electron-app/index.js:13:8)
+    at /Users/oscarorellana/uni/1-semester/viz/Data_Visualization/my-electron-app/index.js:40:13
+    at processTicksAndRejections (node:internal/process/task_queues:96:5)
+(Use `Electron --trace-warnings ...` to show where the warning was created)
+(node:39140) UnhandledPromiseRejectionWarning: Unhandled promise rejection. This error originated either by throwing inside of an async function without a catch block, or by rejecting a promise which was not handled with .catch(). To terminate the node process on unhandled promise rejection, use the CLI flag `--unhandled-rejections=strict` (see https://nodejs.org/api/cli.html#cli_unhandled_rejections_mode). (rejection id: 1)
+(node:39140) UnhandledPromiseRejectionWarning: ReferenceError: fetch is not defined
+    at Object.json (/Users/oscarorellana/uni/1-semester/viz/Data_Visualization/my-electron-app/node_modules/d3-node/node_modules/d3-fetch/dist/d3-fetch.js:72:3)
+    at initializeModProteinHeatmap (/Users/oscarorellana/uni/1-semester/viz/Data_Visualization/my-electron-app/index.js:13:8)
+    at /Users/oscarorellana/uni/1-semester/viz/Data_Visualization/my-electron-app/index.js:40:13
+    at processTicksAndRejections (node:internal/process/task_queues:96:5)
+(node:39140) UnhandledPromiseRejectionWarning: Unhandled promise rejection. This error originated either by throwing inside of an async function without a catch block, or by rejecting a promise which was not handled with .catch(). To terminate the node process on unhandled promise rejection, use the CLI flag `--unhandled-rejections=strict` (see https://nodejs.org/api/cli.html#cli_unhandled_rejections_mode). (rejection id: 2)

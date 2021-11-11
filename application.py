@@ -8,8 +8,6 @@ from segment_plot import create_data_for_segment_plot
 
 from flask_cors import CORS, cross_origin
 import json
-import mpld3
-from mpld3 import plugins
 
 #0. Helpers
 def df_to_map(df):
@@ -87,7 +85,6 @@ def homepage():
         'mod_patches': mod_patches,
         'height': height
     }
-    print(segmentObject)
     segmentPlotJson = json.dumps(segmentObject)
     data.SegmentPlotData = segmentPlotJson
 
@@ -99,18 +96,21 @@ def homepage():
 @application.route("/get-protein-mod-data",methods=["GET","POST"])
 @cross_origin()
 def returnProteinModData():
+    print("received get-protein-mode-data request")
     f=data.ProteinModData
     return f
 
 @application.route("/get-sample-mod-data",methods=["GET","POST"])
 @cross_origin()
 def reutrnSampleModData():
+    print("received get-sample-mod-data request")
     f=data.SampleModData
     return f
 
 @application.route("/get-segment-data",methods=["GET","POST"])
 @cross_origin()
 def reutrnSegmentData():
+    print("received get-segment-data request")
     f=data.SegmentPlotData
     return f
 
