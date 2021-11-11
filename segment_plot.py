@@ -20,16 +20,19 @@ def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
 
 def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", sample_column_id = 'Area', selected_samples = []):
     df = df.copy()
+    df = df[df["Protein Accession"] == _protein]
+
     df["Position of Mass Shift"] = df["Peptide"].apply(get_position_of_mass_shift)
     # get list of modification for each PTM
-    df["Modification_types"] = df["PTM"].apply(lambda x: x if pd.isnull(x) else [s.strip() for s in x.split(";")])
+    df["Modification_types"] = df["PTM"].apply(lambda x: x if pd.isnull(x) else [s.strip() for s in x.split(";")])    
     if len(selected_samples) == 0:
         selected_samples = [col for col in df.columns if sample_column_id in col]
-    
+    ##SHOULD be deleted
     selected_columns = ["Start", "End", "Protein Accession", 'Position of Mass Shift', 'Modification_types'] + selected_samples
     df = df[selected_columns]
-    df = df[df["Protein Accession"] == _protein] #only look at values for protein : P02666
-   
+    
+    unique_mod_types = get_unique_modification_types(df)
+
     for col in selected_samples:  #make Area samples Nan values 0
         df[col] = df[col].fillna(0)
     df = df[df[selected_samples].sum(axis=1) > 0]   # drop rows where all sample_columns are 0
@@ -41,25 +44,35 @@ def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", sample_colum
     df["tuple"] = df[["Start", "End", 'Position of Mass Shift', 'Modification_types', 'Agg Intensity']].apply(tuple, axis=1)
 
     start_end_ms_modtype_list = df['tuple'].tolist()
-    return start_end_ms_modtype_list
+    return start_end_ms_modtype_list, unique_mod_types
 
-def get_rectangles_for_peptides_and_mods(data):
+def get_unique_modification_types(df):
+    ls = df.Modification_types.tolist()
+    mod_types = []
+    for l in ls :
+        if type(l) is list:
+            mod_types.extend(l)
+    return list(set(mod_types))
+
+def get_rectangles_for_peptides_and_mods(data, modtypes_color_map):
     """data is a list of tuples on the form (low,hi, [modifications],[modtypes], [agg_intensity])"""
     data = sorted(data, key=lambda x: (x[0], -x[1]), reverse=False)
-    modification_types_to_color_map = get_color_palette_for_modifications()
+    
     rectangles_and_mods = []
+    res_intensities = []
     for i in range (len(data)):
         modifications = []
         low, hi, mod_positions, mod_types, agg_intensity = data[i]
         width = hi-low+1
-        rec = ((low, width), agg_intensity)
+        rec = (low, width, agg_intensity)
+        res_intensities.append(agg_intensity)
         if len(mod_positions) > 0:
             for _ms_pos, mod_type in zip(mod_positions, mod_types): #add mass shift color on rectangles if present
-                ms_color = modification_types_to_color_map[mod_type]
+                ms_color = modtypes_color_map[mod_type]
                 modifications.append((_ms_pos, ms_color, agg_intensity))
         rectangles_and_mods.append((rec, modifications))
         
-    return rectangles_and_mods
+    return res_intensities, rectangles_and_mods
 
 def get_intervals(agg_intensities: list, no_intervals = 5):
     intervals = pd.qcut(agg_intensities, q=no_intervals)
@@ -111,6 +124,13 @@ def map_to_norm_intensities(res_intensities, res_rectangles_and_mods, is_log_sca
     rects_and_intensities = list(zip(rects_and_intensities, mods))
     return rects_and_intensities
 
+def map_to_attribute(colors, color_scale, is_log_scaled, res_intensities, rectangles_and_mods):
+    if colors:
+        rects_and_attribute = map_to_colors(res_intensities, rectangles_and_mods, color_scale = color_scale, is_log_scaled=is_log_scaled)
+    else:
+        rects_and_attribute = map_to_norm_intensities(res_intensities, rectangles_and_mods)
+    return rects_and_attribute
+
 def stack_recs(rectangles_and_mods: list, colors = True, color_scale = 'Greys', is_log_scaled = True):
     """
     rectangles_and_mods is a tuple list of (rectangle, modifications)
@@ -123,87 +143,48 @@ def stack_recs(rectangles_and_mods: list, colors = True, color_scale = 'Greys', 
     res_rectangles_and_mods = []
 
     for rect, mods in rectangles_and_mods:
-        rect_info, intensity = rect
-        low, width = rect_info
-        if low != last_x and width != last_rec_width:
-            res_rectangles_and_mods.append(((low, width, intensity), mods))
-            res_intensities.append(intensity)
-            last_x = low
-            last_rec_width = width
-        else:
+        low, width, intensity = rect
+        if low == last_x and width == last_rec_width:
             last_rect, last_mods = res_rectangles_and_mods[-1]
             last_rect_low, last_rect_width, last_intensity = last_rect
             new_intensity = last_intensity + intensity
             new_mods = last_mods + mods
             res_rectangles_and_mods[-1] = ((last_rect_low, last_rect_width, new_intensity), new_mods)
             res_intensities[-1] = new_intensity
-
-    if colors:
-        rects_and_attribute = map_to_colors(res_intensities, res_rectangles_and_mods, color_scale = color_scale, is_log_scaled=is_log_scaled)
-    else:
-        rects_and_attribute = map_to_norm_intensities(res_intensities, res_rectangles_and_mods)
-
-    return rects_and_attribute
-
-
-# standard height only used if colors is True
-def get_stacking_patches(rectangles, spacing=0.2, colors = True, standard_height= 0.5):
-    y_spaces = [0]*10*len(rectangles) #10 indicates a division into heights of 0.1
-    peptide_patches = []
-    mod_patches = []
-    for rect, mods in rectangles:
-        rect_info, attribute = rect #attribute is either color or height depepnding on the colors parameter
-        x, width, intensity = rect_info
-        for i in range(len(y_spaces)):
-            if colors: # Encode intensities as COLOR
-                is_available = True
-                for k in range(int(standard_height*10)): 
-                    if y_spaces[i+k] > x:
-                        is_available = False
-                        break
-                if is_available: 
-                    patch = patches.Rectangle((x, i/10), width, standard_height, facecolor = attribute, ec='black', lw=1, alpha=1)
-                    for j in range(i, i + int(standard_height * 10) + int(spacing*10)):
-                        y_spaces[j] = x + width
-                    break
-            else: # Encode intensities as HEIGHT
-                is_available = True
-                for k in range(int((attribute + spacing)*10)): 
-                    if y_spaces[i+k] > x:
-                        is_available = False
-                        break
-                if is_available: 
-                    patch = patches.Rectangle((x, i/10), width, attribute, facecolor = '#add8e6', ec='black', lw=1, alpha=0.5)
-                    for j in range(i, i + int(attribute * 10) + int(spacing*10)):
-                        y_spaces[j] = x + width
-                    break
-        
-        peptide_patches.append(patch)
-        last_x, last_y = patch.get_xy()
-        if mods != []:
-            mods_list_list = get_mods_height_distribution(mods)
         else: 
-            mods_list_list = []
-        for mods_list in mods_list_list:
-            intensities = [m[2] for m in mods_list]
-            #normalize intensities with numpy
-            normalized_intensities_mods = np.asarray(intensities) / intensity
-            y_pos = last_y
-            for i in range(len(mods_list)):
-                m_pos, m_color, _ = mods_list[i]
-                if colors:
-                    mod_height = standard_height * normalized_intensities_mods[i]
-                    mod_rec = patches.Rectangle((last_x+m_pos,y_pos), 1, mod_height, facecolor= m_color, edgecolor="black")
-                else:
-                    mod_height =  attribute * normalized_intensities_mods[i]
-                    mod_rec = patches.Rectangle((last_x+m_pos,y_pos), 1, mod_height, facecolor= m_color, edgecolor="black")
-                y_pos = y_pos + mod_height
-                mod_patches.append(mod_rec)
-    height = y_spaces.index(0)
-    return peptide_patches, mod_patches, height/10
+            res_rectangles_and_mods.append(((low, width, intensity), mods))
+            res_intensities.append(intensity)
+            last_x = low
+            last_rec_width = width
+    
+    return res_intensities, res_rectangles_and_mods
+
+
+def get_mods_height_distribution(mods):
+    #sort by first pos then color
+    mods = sorted(mods, key=lambda x: (x[0], x[1]))
+    mods_list_list = []
+    mods_list = [mods[0]]
+    mods_list_list.append(mods_list)
+    pos = mods[0][0]
+    color = mods[0][1]
+    for i in range(1, len(mods)):
+        mod = mods[i]
+        if mod[0] == pos and mod[1] == color:
+            mods_list[-1] = (mods_list[-1][0], mods_list[-1][1], mods_list[-1][2] + mod[2])
+        elif mod[0] == pos and mod[1] != color:
+            mods_list.append(mod)
+            color = mod[1]
+        else:
+            mods_list = []
+            mods_list.append(mod)
+            mods_list_list.append(mods_list)
+            pos = mod[0]
+            color = mod[1]
+    return mods_list_list
 
 # standard height only used if colors is True
-def get_stacking_patch_attributes(rectangles, spacing=0.2, colors = True, standard_height= 0.5):
+def get_patch_attributes(rectangles, spacing=0.2, colors = True, standard_height= 0.5):
     y_spaces = [0]*10*len(rectangles) #10 indicates a division into heights of 0.1
     peptide_patches = []
     mod_patches = []
@@ -243,7 +224,6 @@ def get_stacking_patch_attributes(rectangles, spacing=0.2, colors = True, standa
             mods_list_list = []
         for mods_list in mods_list_list:
             intensities = [m[2] for m in mods_list]
-            #normalize intensities with numpy
             normalized_intensities_mods = np.asarray(intensities) / intensity
             y_pos = last_y
             for i in range(len(mods_list)):
@@ -259,50 +239,20 @@ def get_stacking_patch_attributes(rectangles, spacing=0.2, colors = True, standa
     height = y_spaces.index(0)
     return peptide_patches, mod_patches, height/10
 
-def get_mods_height_distribution(mods):
-    #sort by first pos then color
-    mods = sorted(mods, key=lambda x: (x[0], x[1]))
-    mods_list_list = []
-    mods_list = [mods[0]]
-    mods_list_list.append(mods_list)
-    pos = mods[0][0]
-    color = mods[0][1]
-    for i in range(1, len(mods)):
-        mod = mods[i]
-        if mod[0] == pos and mod[1] == color:
-            mods_list[-1] = (mods_list[-1][0], mods_list[-1][1], mods_list[-1][2] + mod[2])
-        elif mod[0] == pos and mod[1] != color:
-            mods_list.append(mod)
-            color = mod[1]
-        else:
-            mods_list = []
-            mods_list.append(mod)
-            mods_list_list.append(mods_list)
-            pos = mod[0]
-            color = mod[1]
-    return mods_list_list
+def get_patches_from_patch_attributes(peptide_patches, mod_patches):
+    peptide_patches_list = []
+    mod_patches_list = []
+    for i in range(len(peptide_patches)):
+        x, y, width, height, color = peptide_patches[i]
+        patch = patches.Rectangle((x, y), width, height, facecolor = color, ec='black', lw=1, alpha=1)
+        peptide_patches_list.append(patch)
+    for i in range(len(mod_patches)):
+        x, y, width, height, color = mod_patches[i]
+        patch = patches.Rectangle((x, y), width, height, facecolor = color, ec='black', lw=1, alpha=1)
+        mod_patches_list.append(patch)
+    return peptide_patches_list, mod_patches_list
 
-
-
-def get_mods_heights(mods: list, total_height: float, use_intensity = False):
-    """
-    mods is a list of tuples of the form (mod_pos, mod_color, intensity)
-    total_height is the total height of the peptide
-    use_intensity is a boolean that indicates whether the intensity should be used to determine the height of the mod
-    """
-    height_list = []
-    if use_intensity:
-        pass
-    else:
-    
-        mods_set = set(mods)
-        # get size of mods_set
-        num_unique = len(mods_set)
-        # get count for each color in mods
-        color_counts = [mods.count(tup[1]) for tup in mods]
-
-
-def plot_peptide_segments(peptide_patches, mod_patches, height, _protein="P02666", colors = True, color_scale = 'Greys', is_log_scaled = True):
+def plot_peptide_segments(peptide_patches, mod_patches, height, modification_color_map, _protein="P02666", colors = True, color_scale = 'Greys', is_log_scaled = True):
     fig = plt.figure(figsize=(30,25))
     ax = fig.add_subplot(111)
     ax.set_ylim((0,height))
@@ -313,7 +263,7 @@ def plot_peptide_segments(peptide_patches, mod_patches, height, _protein="P02666
     for patch in mod_patches:
         ax.add_patch(patch)
 
-    ax.grid(axis='x')
+    #ax.grid(axis='x')
     seqq = get_protein_sequence(_protein)
     ax.set_xlabel("Full Protein Sequence")
     ax.set_xticks(range(0,len(seqq)))
@@ -321,9 +271,7 @@ def plot_peptide_segments(peptide_patches, mod_patches, height, _protein="P02666
     protein_seq_list = list(seqq)
     ax.set_xticklabels(protein_seq_list)
     ax.get_yaxis().set_visible(False)
-    modification_types_to_color_map = get_color_palette_for_modifications()
-    # create legend based on modification_types_to_color_map
-    # create 2 legends and place them next to each other
+    modification_types_to_color_map = modification_color_map
     
     handles = get_color_legend_mods(modification_types_to_color_map)
     cmap = plt.cm.get_cmap(color_scale)
@@ -352,16 +300,21 @@ def plot_peptide_segments(peptide_patches, mod_patches, height, _protein="P02666
     The poems are collected in the slam poetry collection.
 """
 def create_and_plot_segment_plot(df, _protein="P02666", spacing=0, colors = True, color_scale='Greys', is_log_scaled = True):
-    peptide_patches, mod_patches, height = create_data_for_segment_plot(df, _protein, spacing=spacing, colors=colors, color_scale=color_scale, is_log_scaled=is_log_scaled)
-    plot_peptide_segments(peptide_patches, mod_patches, height, colors = colors, color_scale=color_scale, is_log_scaled=is_log_scaled)
+    peptide_patches, mod_patches, height, seqq, modification_color_map = create_data_for_segment_plot(df, _protein, spacing=spacing, colors=colors, color_scale=color_scale, is_log_scaled=is_log_scaled)
+    peptide_patches, mod_patches = get_patches_from_patch_attributes(peptide_patches, mod_patches)
+    plot_peptide_segments(peptide_patches, mod_patches, height, modification_color_map, colors = colors, color_scale=color_scale, is_log_scaled=is_log_scaled, _protein = _protein)
 
 
 def create_data_for_segment_plot(df, _protein="P02666", spacing=0.2, colors = True, color_scale='Greys', is_log_scaled = True):
-    data = preprocess_data_for_peptide_segment_plot(df, _protein)
-    rectangles_and_mods = get_rectangles_for_peptides_and_mods(data)
-    rectangles_and_mods = stack_recs(rectangles_and_mods, colors=colors, color_scale=color_scale, is_log_scaled=is_log_scaled)
+    data, unique_mod_types= preprocess_data_for_peptide_segment_plot(df, _protein)
+    modtypes_color_map = get_color_palette_for_modifications(unique_mod_types)
+    res_intensities, rectangles_and_mods = get_rectangles_for_peptides_and_mods(data, modtypes_color_map)
+    res_intensities, rectangles_and_mods = stack_recs(rectangles_and_mods, colors=colors, color_scale=color_scale, is_log_scaled=is_log_scaled)
+    rects_and_attribute = map_to_attribute(colors, color_scale, is_log_scaled, res_intensities, rectangles_and_mods)
+
     # peptide_patches, mod_patches, height = get_stacking_patch_attributes(rectangles_and_mods, spacing = spacing)
-    peptide_patches, mod_patches, height = get_stacking_patches(rectangles_and_mods, spacing = spacing)
+    peptide_patches, mod_patches, height = get_patch_attributes(rects_and_attribute, spacing = spacing)
     seqq = get_protein_sequence(_protein)
 
-    return peptide_patches, mod_patches, height, seqq
+    return peptide_patches, mod_patches, height, seqq, modtypes_color_map
+

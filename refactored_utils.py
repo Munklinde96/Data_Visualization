@@ -16,17 +16,14 @@ def count_no_of_modifications(ptm_str):
     if pd.isnull(ptm_str):
         return None
     return 1 + ptm_str.count(';')
+    
 
-def get_data_and_remove_unwanted_columns():
+def get_data_and_remove_unwanted_columns(wanted_columns, data_path = 'UHT milk P036.csv', sample_column_id = "Area"):
     # df = pd.read_csv('UHT milk P036.csv')
-    df = pd.read_csv('UHT milk P036.csv')
-    df.drop('Protein ID', inplace=True, axis=1)
-    df.drop('Unique', inplace=True, axis=1)
-    df.drop('m/z', inplace=True, axis=1)
-    df.drop('Scan', inplace=True, axis=1)
-    df.drop('Source File', inplace=True, axis=1)
-    df.drop('Found By', inplace=True, axis=1)
-    #apply count_no_of_modifications to each PTM column
+    df = pd.read_csv(data_path)
+    sample_columns = [col for col in df.columns if sample_column_id in col]
+    # only use wanted columns and sample colulmns 
+    df = df[wanted_columns + sample_columns]
     df['#modifications'] = df['PTM'].apply(count_no_of_modifications)
 
     return df
@@ -47,6 +44,8 @@ def clean_peptide(peptide):
     return clean_peptide
 
 def get_protein_sequence(protein):
+    if '|' in protein:
+        protein = protein.split('|')[0]
     url = uniprot + protein + '.fasta'
     response = requests.get(url).text
     if(response):
@@ -75,8 +74,8 @@ def sanitize_data(df):
             df.drop(index)
         return df
 
-def get_and_prepare_data():
-    df = get_data_and_remove_unwanted_columns()
+def get_and_prepare_data(data_path = 'UHT milk P036.csv', wanted_columns = ['Protein Accession', 'Peptide', 'PTM', 'Start', 'End', 'Length'], sample_column_id = 'Area'):
+    df = get_data_and_remove_unwanted_columns(wanted_columns, data_path, sample_column_id = sample_column_id)
     df = sanitize_data(df)
     return df
 
@@ -128,10 +127,21 @@ def get_position_of_mass_shift(input_string):
         indices[i] -= i
     return indices
 
-def get_color_palette_for_modifications ():
-    mod_type_map = {'Oxidation (M)': '#E6194B' , 'Phosphorylation (STY)': '#F58231', 'Deamidation (NQ)': '#FFE119', 'lal': '#BFEF45',
-                      'Lactosylation': '#3CB44B', 'Pyro-glu from Q': '#42D4F4', 'Glycosylation type b': '#4363D8', 'Dioxidation (M)': '#911EB4',
-                    'Glycosylation type e': '#F032E6', 'Glycosylation type a': '#000000','Glycosylation type c/d': '#800000', 'Carbamidomethylation': '#FABED4', 'lan': '#808000'}
+def get_color_palette_for_modifications(modification_types = []):
+    if modification_types == []:
+        # use keys from mod_type map harcoded 
+        modification_types = ['lal', 'Glycosylation type e', 'lan', 'Glycosylation type a', 'Glycosylation type b', 'Glycosylation type c/d', 'Phosphorylation (STY)', 'Dioxidation (M)', 'Oxidation (M)', 'Lactosylation', 'Carbamidomethylation', 'Deamidation (NQ)', 'Pyro-glu from Q']
+    COLORS = ['#3CB44B',  '#FFE119', '#F032E6', '#808000', '#000000','#BFEF45','#42D4F4', '#4363D8','#FABED4', '#800000', '#F58231', '#911EB4', '#E6194B']
+    
+    mod_type_map = {}
+    for i in range(len(modification_types)):
+        mod_type_map[modification_types[i]] = COLORS[i]
+    # mod_type_map = {'Oxidation (M)': '#E6194B' , 'Phosphorylation (STY)': '#F58231', 'Deamidation (NQ)': '#FFE119', 'lal': '#BFEF45',
+    #                   'Lactosylation': '#3CB44B', 'Pyro-glu from Q': '#42D4F4', 'Glycosylation type b': '#4363D8', 'Dioxidation (M)': '#911EB4',
+    #                  'Glycosylation type e': '#F032E6', 'Glycosylation type a': '#000000','Glycosylation type c/d': '#800000', 'Carbamidomethylation': '#FABED4', 'lan': '#808000'}
+    colors = []
+    
+
     return mod_type_map
 
 def get_color_legend_mods(modification_types_to_color_map):
