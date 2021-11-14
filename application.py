@@ -34,6 +34,7 @@ class DataStore():
     ProteinModData=None
     SampleModData=None
     SegmentPlotData=None
+    DataFrame=None
 data=DataStore()
 
 def buildProteinModData(df, count, normalization):
@@ -58,12 +59,13 @@ def homepage():
     # Get data and build dataframe
     path = r"UHT milk P036.csv"
     df = pd.read_csv(path)
+    data.DataFrame = df
     #df1, df2, df3, df4 = split_data_in_samples(df)
     
     # Create initial configuration
-    data.Normalization = request.form.get('Normalization_field','protein_intensity')
+    data.Normalization = "protein_intensity"
+    data.MinCount = 0
     Normalization=data.Normalization
-    data.MinCount = request.form.get('Min_count_field', 0)
     MinCount=data.MinCount
 
     # Get JSON data for protein mod viz
@@ -102,6 +104,10 @@ def homepage():
 @cross_origin()
 def returnProteinModData():
     print("received get-protein-mode-data request")
+    minModCount = request.args.get('min_mod_count', default = 0, type = int)
+    normalization = request.args.get('normalization_type', default = "", type = str)
+    proteinModJson = buildProteinModData(data.DataFrame, minModCount, normalization)
+    data.ProteinModData = json.loads(proteinModJson)
     f=data.ProteinModData
     return f
 

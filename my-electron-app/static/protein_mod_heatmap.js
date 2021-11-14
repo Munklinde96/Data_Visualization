@@ -13,7 +13,7 @@ $('document').ready(function(){
         .attr("transform",
             "translate(" + margin.left + "," + margin.top + ")");
     //Read the data
-    d3.json("http://127.0.0.1:5000/get-protein-mod-data", function(error, data) {
+    d3.json("http://127.0.0.1:5000/get-protein-mod-data?min_mod_count="+minModificationCount+"&normalization_type="+normalizationType, function(error, data) {
         // validate request
         if (error) throw error;
         // build modification and protein categories
