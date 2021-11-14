@@ -48,7 +48,9 @@ def buildProteinModData(df, count, normalization):
     # Convert to json
     return modData.to_json()
 
-def buildSampleModData(df):
+def buildSampleModData(df, count):
+    df['#modifications'] = df['PTM'].apply(count_no_of_modifications)
+    df[df['#modifications'] > count]
     data = get_sample_heatmap_data(df)
     return data.to_json()
 
@@ -75,7 +77,7 @@ def homepage():
     data.ProteinModData = json.loads(proteinModJson)
 
     # Get JSON data for protein mod viz
-    sampleModJson = buildSampleModData(df)
+    sampleModJson = buildSampleModData(df, data.MinCount)
 
     # Save to datastore
     data.SampleModData = json.loads(sampleModJson)
@@ -115,6 +117,11 @@ def returnProteinModData():
 @cross_origin()
 def reutrnSampleModData():
     print("received get-sample-mod-data request")
+    minModCount = request.args.get('min_mod_count', default = 0, type = int)
+    # Get JSON data for protein mod viz
+    sampleModJson = buildSampleModData(data.DataFrame, minModCount)
+    # Save to datastore
+    data.SampleModData = json.loads(sampleModJson)
     f=data.SampleModData
     return f
 
