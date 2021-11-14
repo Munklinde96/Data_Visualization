@@ -38,6 +38,12 @@ function init() {
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     // Add X axis with labels from top
+    //make random list of chars of lenth 100
+    var random_charlist= [];
+    for (var i = 0; i < 100; i++) {
+        random_charlist.push(String.fromCharCode(Math.floor(Math.random() * 26) + 97));
+    }
+
     var peptide_chars = peptide_seq.split("");
     var peptide_length = peptide_seq.length;
     var x = d3.scaleBand()
