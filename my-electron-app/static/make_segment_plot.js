@@ -93,11 +93,9 @@ $('document').ready(function(){
         .attr("stroke", "black")
         .attr("stroke-width", 0.2 *scale_factor);
 
-    //  get keys from modication color map https://www.d3-graph-gallery.com/graph/custom_legend.html
+    // Inspired by: https://www.d3-graph-gallery.com/graph/custom_legend.html
     keys = Object.keys(modification_color_map);
-    values = Object.values(modification_color_map);
     var size = 10
-    // make color legend from modification_color map
     var legend = svg.selectAll("legend")
         .data(keys)
         .enter()
