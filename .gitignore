@@ -134,3 +134,5 @@ my-electron-app/node_modules/
 my-electron-app/package-lock.json
 
 
+/.DS_Store
+.DS_Store

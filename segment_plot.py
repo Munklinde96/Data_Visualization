@@ -299,21 +299,21 @@ def plot_peptide_segments(peptide_patches, mod_patches, height, modification_col
    Poetry. slam poetry. Slam Poetry is a collection of poems written by the poet, slam poet.
     The poems are collected in the slam poetry collection.
 """
-def create_and_plot_segment_plot(df, _protein="P02666", spacing=0, colors = True, color_scale='Greys', is_log_scaled = True):
-    peptide_patches, mod_patches, height, seqq, modification_color_map = create_data_for_segment_plot(df, _protein, spacing=spacing, colors=colors, color_scale=color_scale, is_log_scaled=is_log_scaled)
-    peptide_patches, mod_patches = get_patches_from_patch_attributes(peptide_patches, mod_patches)
+def create_and_plot_segment_plot(df, _protein="P02666", spacing=0.2, colors = True, color_scale='Blues', is_log_scaled = True, standard_height = 2):
+    peptide_patches, mod_patches, height, seqq, modification_color_map = create_data_for_segment_plot(df, _protein, spacing=spacing, colors=colors, color_scale=color_scale, is_log_scaled=is_log_scaled, standard_height=standard_height)
+    #peptide_patches, mod_patches = get_patches_from_patch_attributes(peptide_patches, mod_patches)
     plot_peptide_segments(peptide_patches, mod_patches, height, modification_color_map, colors = colors, color_scale=color_scale, is_log_scaled=is_log_scaled, _protein = _protein)
 
 
-def create_data_for_segment_plot(df, _protein="P02666", spacing=0.2, colors = True, color_scale='Greys', is_log_scaled = True):
+def create_data_for_segment_plot(df, _protein="P02666", spacing=0.2, colors = True, color_scale='Blues', is_log_scaled = True, standard_height = 2):
     data, unique_mod_types= preprocess_data_for_peptide_segment_plot(df, _protein)
     modtypes_color_map = get_color_palette_for_modifications(unique_mod_types)
     res_intensities, rectangles_and_mods = get_rectangles_for_peptides_and_mods(data, modtypes_color_map)
     res_intensities, rectangles_and_mods = stack_recs(rectangles_and_mods, colors=colors, color_scale=color_scale, is_log_scaled=is_log_scaled)
     rects_and_attribute = map_to_attribute(colors, color_scale, is_log_scaled, res_intensities, rectangles_and_mods)
 
-    # peptide_patches, mod_patches, height = get_stacking_patch_attributes(rectangles_and_mods, spacing = spacing)
-    peptide_patches, mod_patches, height = get_patch_attributes(rects_and_attribute, spacing = spacing)
+    #peptide_patches, mod_patches, height = get_stacking_patch_attributes(rectangles_and_mods, spacing = spacing)
+    peptide_patches, mod_patches, height = get_patch_attributes(rects_and_attribute, spacing = spacing, standard_height=standard_height)
     seqq = get_protein_sequence(_protein)
 
     return peptide_patches, mod_patches, height, seqq, modtypes_color_map
