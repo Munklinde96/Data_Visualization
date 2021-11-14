@@ -129,3 +129,9 @@ dmypy.json
 .pyre/
 
 .DS_Store
+
+/my-electron-app/node_modules/
+/my-electron-app/package-lock.json
+/my-electron-app/package.json
+
+
