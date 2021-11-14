@@ -63,7 +63,7 @@ def homepage():
     # Create initial configuration
     data.Normalization = request.form.get('Normalization_field','protein_intensity')
     Normalization=data.Normalization
-    data.MinCount = request.form.get('Min_count_field', 100)
+    data.MinCount = request.form.get('Min_count_field', 0)
     MinCount=data.MinCount
 
     # Get JSON data for protein mod viz

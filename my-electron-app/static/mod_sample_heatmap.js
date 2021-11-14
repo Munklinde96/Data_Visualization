@@ -1,4 +1,5 @@
 $('document').ready(function(){
+    console.log(minModificationCount);
     // set the dimensions and margins of the graph
     var margin = {top: 30, right: 130, bottom: 30, left: 130},
         width = 900 - margin.left - margin.right,
