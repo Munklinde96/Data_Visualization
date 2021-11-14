@@ -117,7 +117,6 @@ def reutrnSampleModData():
 def returnSegmentData():
     print("received get-segment-data request")
     f=data.SegmentPlotData
-    print(f)
     return f
 
 

@@ -15,11 +15,12 @@ function initializeBackend(){
 const loadMainWindow = () => {
     initializeBackend().onreadystatechange = (e) => {
             const mainWindow = new BrowserWindow({
+                width : 1200,
+                height: 800,
                 webPreferences: {
                     nodeIntegration: true
                 }
             });
-            mainWindow.maximize();
             mainWindow.loadFile(path.join(__dirname, "index.html")).then((_) => {
                 console.log("size is ready");
             }).then((_) => {
@@ -28,7 +29,7 @@ const loadMainWindow = () => {
     }
 }
 
-//app.on("ready", loadMainWindow);
+app.on("ready", loadMainWindow);
 
 app.on("window-all-closed", () => {
     if (process.platform !== "darwin") {
