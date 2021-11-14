@@ -1,0 +1,40 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
+// https://github.com/microsoft/vscode-dev-containers/tree/v0.205.2/containers/docker-existing-dockerfile
+{
+	// Update the 'dockerFile' property if you aren't using the standard 'Dockerfile' filename.
+	"dockerFile": "../Dockerfile",
+	"build": {
+		"args": {
+			"WORKSPACE": "{containerWorkspaceFolder}"
+		}
+	},
+	"remoteUser": "vscode",
+	"runArgs": [
+		"--network=host",
+		"--ipc=host",
+		"--pid=host",
+		"--cap-add=SYS_PTRACE",
+		"--security-opt", 
+		"seccomp=unconfined" ],
+	"containerEnv": {
+		"DISPLAY": "${127.0.0.1:0.0}"
+	},
+	// Set *default* container specific settings.json values on container create.
+	"settings": {
+		"terminal.integrated.profiles.linux": {
+			"bash": {
+				"path": "bash"
+			},
+		},
+		"terminal.integrated.defaultProfile.linux": "bash"
+	},
+	
+	// Add the IDs of extensions you want installed when the container is created.
+	"extensions": ["gitHub.copilot",
+				   "ecmel.vscode-html-css",
+				   "ms-vsliveshare.vsliveshare",
+				   "ms-python.python",
+				   "ms-python.vscode-pylance",
+				   "coenraads.bracket-pair-colorizer-2",
+					],
+}
