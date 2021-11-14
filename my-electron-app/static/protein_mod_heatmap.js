@@ -1,12 +1,15 @@
-$('document').ready(function(){
+function renderProteinModPlot(){
     console.log("drawing mod heatap")
     // set the dimensions and margins of the graph
     var margin = {top: 30, right: 130, bottom: 30, left: 130},
         width = 900 - margin.left - margin.right,
         height = 500 - margin.top - margin.bottom;
+    // remove old svg
+    d3.select("#mod_heatmap").select("svg").remove();
+    
     // append the svg object to the body of the page
     var svg = d3.select("#mod_heatmap")
-    .append("svg")
+        .append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
         .append("g")
@@ -108,4 +111,8 @@ $('document').ready(function(){
             .on("mousemove", mousemove)
             .on("mouseleave", mouseleave)
     });
+}
+
+$('document').ready(function(){
+    renderProteinModPlot();
 });
