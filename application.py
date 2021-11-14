@@ -82,17 +82,16 @@ def homepage():
     # Save to datastore
     data.SampleModData = json.loads(sampleModJson)
 
-    #print(df.shape)
     # Create SegmentPlotData
-    peptide_patches, mod_patches, height, seqq, modification_color_map = create_data_for_segment_plot(df)
-    #print(peptide_patches)
-    #print(mod_patches)
+    peptide_patches, mod_patches, height, seqq, modification_color_map, min_peptide, max_peptide = create_data_for_segment_plot(df)
     segmentObject = {
         'peptide_patches': peptide_patches,
         'mod_patches': mod_patches,
         'height': height,
         'seqq': seqq,
         'modification_color_map': modification_color_map,
+        'min_peptide': min_peptide,
+        'max_peptide': max_peptide
     }
     segmentPlotJson = json.dumps(segmentObject)
     data.SegmentPlotData = segmentPlotJson

@@ -10,7 +10,7 @@ function renderSampleModPlot(){
     
     // append the svg object to the body of the page
     var svg = d3.select("#graphDiv2")
-    .append("svg")
+        .append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
         .append("g")
@@ -87,7 +87,7 @@ function renderSampleModPlot(){
 
         // Three function that change the tooltip when user hover / move / leave a cell
         var mouseover = function(d) {
-        tooltip.style("opacity", 1)
+            tooltip.style("opacity", 1)
         }
         var mousemove = function(d) {
         tooltip

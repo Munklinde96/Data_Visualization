@@ -96,8 +96,9 @@ def normalize(res_intensities, is_log_scaled = False,  min_val=0):
     normalized = values * (1 - min_val) + min_val
     return normalized
 
-def colors_(values: list , color_scale = 'Greys', is_log_scaled = True):
-    normalized = normalize(values, is_log_scaled,  min_val=0.2)
+def colors_(values: list , color_scale = 'Greys', is_log_scaled = True, is_normalized = True):
+    if is_normalized:
+        normalized = normalize(values, is_log_scaled,  min_val=0.2)
     cmap = plt.cm.get_cmap(color_scale)
     color_list = [cls.rgb2hex(cmap(i)) for i in normalized]
     return color_list
@@ -300,8 +301,8 @@ def plot_peptide_segments(peptide_patches, mod_patches, height, modification_col
     The poems are collected in the slam poetry collection.
 """
 def create_and_plot_segment_plot(df, _protein="P02666", spacing=0.2, colors = True, color_scale='Blues', is_log_scaled = True, standard_height = 2):
-    peptide_patches, mod_patches, height, seqq, modification_color_map = create_data_for_segment_plot(df, _protein, spacing=spacing, colors=colors, color_scale=color_scale, is_log_scaled=is_log_scaled, standard_height=standard_height)
-    #peptide_patches, mod_patches = get_patches_from_patch_attributes(peptide_patches, mod_patches)
+    peptide_patches, mod_patches, height, seqq, modification_color_map, min_ind, max_ind = create_data_for_segment_plot(df, _protein, spacing=spacing, colors=colors, color_scale=color_scale, is_log_scaled=is_log_scaled, standard_height=standard_height)
+    # peptide_patches, mod_patches = get_patches_from_patch_attributes(peptide_patches, mod_patches)
     plot_peptide_segments(peptide_patches, mod_patches, height, modification_color_map, colors = colors, color_scale=color_scale, is_log_scaled=is_log_scaled, _protein = _protein)
 
 
@@ -312,9 +313,16 @@ def create_data_for_segment_plot(df, _protein="P02666", spacing=0.2, colors = Tr
     res_intensities, rectangles_and_mods = stack_recs(rectangles_and_mods, colors=colors, color_scale=color_scale, is_log_scaled=is_log_scaled)
     rects_and_attribute = map_to_attribute(colors, color_scale, is_log_scaled, res_intensities, rectangles_and_mods)
 
-    #peptide_patches, mod_patches, height = get_stacking_patch_attributes(rectangles_and_mods, spacing = spacing)
     peptide_patches, mod_patches, height = get_patch_attributes(rects_and_attribute, spacing = spacing, standard_height=standard_height)
     seqq = get_protein_sequence(_protein)
 
-    return peptide_patches, mod_patches, height, seqq, modtypes_color_map
+
+    min_ind = np.argmin(res_intensities)
+    max_ind = np.argmax(res_intensities)
+    min_intensity = res_intensities[min_ind]
+    max_intensity = res_intensities[max_ind]
+    min_color = peptide_patches[min_ind][4]
+    max_color = peptide_patches[max_ind][4]
+
+    return peptide_patches, mod_patches, height, seqq, modtypes_color_map, (min_intensity, min_color), (max_intensity, max_color)
 

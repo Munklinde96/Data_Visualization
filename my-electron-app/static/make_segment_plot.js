@@ -10,6 +10,15 @@ $('document').ready(function(){
         var plot_height = data.height;
         var peptide_seq = data.seqq;
         var modification_color_map = data.modification_color_map;
+        var min_peptide = data.min_peptide;
+        var max_peptide = data.max_peptide;
+        var min_intensity = min_peptide[0];
+        var max_intensity = max_peptide[0];
+        var min_color = min_peptide[1];
+        var max_color = max_peptide[1];
+        var color = d3.scaleLinear().range([min_color, max_color]).domain([1, 2, 3, 4, 5]);
+
+
     
     // set the dimensions and margins of the graph
     var margin = {top: 30, right: 130, bottom: 30, left: 130},
@@ -79,14 +88,41 @@ $('document').ready(function(){
         .attr("height", d=> d[3]*scale_factor)
         .attr("fill", d=> d[4])
         .attr("stroke", "black")
-        .attr("stroke-width", 0.2 *scale_factor);
+        .attr("stroke-width", 0.2 *scale_factor)
+        .on("mouseover", mouseover)
+        .on("mousemove", mousemove)
+        .on("mouseleave", mouseleave);
+
+    var tooltip = d3.select("#graphDiv3")
+        .append("div")
+        .style("opacity", 0)
+        .attr("class", "tooltip")
+        .style("background-color", "white")
+        .style("border", "solid")
+        .style("border-width", "2px")
+        .style("border-radius", "5px")
+        .style("padding", "5px")
+
+    // Three function that change the tooltip when user hover / move / leave a cell
+    var mouseover = function(d) {
+        tooltip.style("opacity", 1)
+    }
+    var mousemove = function(d) {
+        tooltip
+        .html("The exact value of<br>this cell is: " + d[3])
+        .style("left", (d3.mouse(d)[0]*scale_factor) + "px")
+        .style("top", (d3.mouse(d)[1]*scale_factor) + "px")
+    }
+    var mouseleave = function(d) {
+        tooltip.style("opacity", 0)
+    }
 
     var mod_rects = svg.selectAll("boo")
         .data(mod_patches)
         .enter()
         .append("rect")
         .attr("x", d => d[0]*scale_factor)
-        .attr("y", d=> d[1]*scale_factor)
+        .attr("y", d=> (d[1])*scale_factor)
         .attr("width", d=> d[2]*scale_factor)
         .attr("height", d=> d[3]*scale_factor)
         .attr("fill", d=> d[4])
@@ -101,10 +137,10 @@ $('document').ready(function(){
         .enter()
         .append("rect")
         .attr("x", 100)
-        .attr("y", function(d,i){ console.log(d); return 100 + i*(size+5)}) // 100 is where the first dot appears. 25 is the distance between dots
+        .attr("y", function(d,i){ return 100 + i*(size+5)}) // 100 is where the first dot appears. 25 is the distance between dots
         .attr("width", size)
         .attr("height", size)
-        .style("fill", function(d, i){ console.log(d) ;return modification_color_map[d]})
+        .style("fill", function(d, i){ return modification_color_map[d]})
     
     // Add one dot in the legend for each name.
     legend_text = svg.selectAll("myLabels")
@@ -121,7 +157,45 @@ $('document').ready(function(){
     legend.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top) + ")");
     legend_text.attr("transform", "translate(" + 0+ "," + (height/2 - margin.top) + ")");
     
+    var defs = svg.append("defs");
+    var linearGradient = defs.append("linearGradient")
+        .attr("id", "linear-gradient")
+        .attr("x1", "0%")
+        .attr("y1", "0%")
+        .attr("x2", "0%")
+        .attr("y2", "100%");
 
+    linearGradient.append("stop")
+        .attr("offset", "0%")
+        .attr("stop-color", color(2))
 
+    linearGradient.append("stop")
+        .attr("offset", "100%")
+        .attr("stop-color", color(1))
+
+    var rect = svg.append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", 20)
+        .attr("height", 170)
+        .style("fill", "url(#linear-gradient)");
+
+    rect.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top + 100) + ")");
+    //add text to top and bottom of rect
+    svg.append("text")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("text-anchor", "middle")
+        .style("alignment-baseline", "ideographic")
+        .text(String(max_intensity))
+        .attr("transform", "translate(" + 0 + "," + (height/2 - margin.top + 100) + ")");
+
+    svg.append("text")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("text-anchor", "middle")
+        .style("alignment-baseline", "hanging")
+        .text(String(min_intensity))
+        .attr("transform", "translate(" + 0 + "," + (height/2 - margin.top + 100 + 170) + ")");
     });
 });
