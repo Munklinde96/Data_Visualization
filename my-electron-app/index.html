@@ -26,29 +26,31 @@
   <body>
     <h2 class="m-4">Protein Visualization Dashboard</h2>
     <p class="m-4">Our project described methods for...</p>
+
+      <form class="m-2" method="post" onSubmit="showCountry()" style="width: 250px;">
+        <label for="exampleInputEmail1">Normalization</label>
+        <select class="form-select m-1" aria-label="Default select example"value={{Normalization}} >
+            <option value="">No normalization</option>
+            <option value="protein_intensity">Intensity</option>
+            <option value="protein_total_mod_count">Total modification count</option>
+          </select>
+        <input class="m-1 form-control" type="number" value={{MinCount}}  name="Min_count_field" placeholder="Enter minimum modificaiton count" >
+        <input class="m-1 btn btn-primary" type="submit" value="Submit" >
+      </form>
+
+  </card>
     <div class="row show-grid m-2" style="bottom:0"}>
-        <div class="col-md-2">
-          <form method="post" onSubmit="showCountry()">
-            <select class="form-select m-1" aria-label="Default select example"value={{Normalization}} >
-                <option value="">No normalization</option>
-                <option value="protein_intensity">Intensity</option>
-                <option value="protein_total_mod_count">Total modification count</option>
-              </select>
-            <input class="m-1 form-control" type="number" value={{MinCount}}  name="Min_count_field" placeholder="Enter minimum modificaiton count" >
-            <input class="m-1 btn btn-primary" type="submit" value="Submit" >
-        </form>
-        </div>
-        <div
+      <div
         id="mod_heatmap"
-        class="col-md-5"
+        class="col-md-6">
         <p><b><i> Distribution of modifications for each protein.</b><br>
             <br>
             Filter normalization or minimum total modification count.
             </i>
         </p>
-        </div>
+      </div>
 
-        <div class="col-md-5" id="graphDiv2">
+        <div class="col-md-6" id="graphDiv2">
         <p><b><i> Distribution of modifications for each sample.</b></br>
             </br>
             Select onr or more samples below to to filter. </i> </p>

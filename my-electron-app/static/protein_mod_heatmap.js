@@ -2,7 +2,7 @@ $('document').ready(function(){
     console.log("drawing mod heatap")
     // set the dimensions and margins of the graph
     var margin = {top: 30, right: 130, bottom: 30, left: 130},
-        width = 700 - margin.left - margin.right,
+        width = 900 - margin.left - margin.right,
         height = 500 - margin.top - margin.bottom;
     // append the svg object to the body of the page
     var svg = d3.select("#mod_heatmap")
