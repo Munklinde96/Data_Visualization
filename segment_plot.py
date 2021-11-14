@@ -312,7 +312,7 @@ def create_data_for_segment_plot(df, _protein="P02666", spacing=0.2, colors = Tr
     res_intensities, rectangles_and_mods = stack_recs(rectangles_and_mods, colors=colors, color_scale=color_scale, is_log_scaled=is_log_scaled)
     rects_and_attribute = map_to_attribute(colors, color_scale, is_log_scaled, res_intensities, rectangles_and_mods)
 
-    # peptide_patches, mod_patches, height = get_stacking_patch_attributes(rectangles_and_mods, spacing = spacing)
+    #peptide_patches, mod_patches, height = get_stacking_patch_attributes(rectangles_and_mods, spacing = spacing)
     peptide_patches, mod_patches, height = get_patch_attributes(rects_and_attribute, spacing = spacing)
     seqq = get_protein_sequence(_protein)
 
