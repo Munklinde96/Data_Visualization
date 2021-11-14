@@ -78,16 +78,17 @@ def homepage():
     # Save to datastore
     data.SampleModData = json.loads(sampleModJson)
 
-    print(df.shape)
+    #print(df.shape)
     # Create SegmentPlotData
-    peptide_patches, mod_patches, height, seqq = create_data_for_segment_plot(df)
-    print(peptide_patches)
-    print(mod_patches)
+    peptide_patches, mod_patches, height, seqq, modification_color_map = create_data_for_segment_plot(df)
+    #print(peptide_patches)
+    #print(mod_patches)
     segmentObject = {
         'peptide_patches': peptide_patches,
         'mod_patches': mod_patches,
         'height': height,
-        'seqq': seqq
+        'seqq': seqq,
+        'modification_color_map': modification_color_map,
     }
     segmentPlotJson = json.dumps(segmentObject)
     data.SegmentPlotData = segmentPlotJson
@@ -113,9 +114,10 @@ def reutrnSampleModData():
 
 @application.route("/get-segment-data",methods=["GET","POST"])
 @cross_origin()
-def reutrnSegmentData():
+def returnSegmentData():
     print("received get-segment-data request")
     f=data.SegmentPlotData
+    print(f)
     return f
 
 
