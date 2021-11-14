@@ -89,7 +89,6 @@ def homepage():
         'height': height,
         'seqq': seqq
     }
-    print(segmentObject)
     segmentPlotJson = json.dumps(segmentObject)
     data.SegmentPlotData = segmentPlotJson
 
@@ -101,18 +100,21 @@ def homepage():
 @application.route("/get-protein-mod-data",methods=["GET","POST"])
 @cross_origin()
 def returnProteinModData():
+    print("received get-protein-mode-data request")
     f=data.ProteinModData
     return f
 
 @application.route("/get-sample-mod-data",methods=["GET","POST"])
 @cross_origin()
 def reutrnSampleModData():
+    print("received get-sample-mod-data request")
     f=data.SampleModData
     return f
 
 @application.route("/get-segment-data",methods=["GET","POST"])
 @cross_origin()
 def reutrnSegmentData():
+    print("received get-segment-data request")
     f=data.SegmentPlotData
     return f
 
