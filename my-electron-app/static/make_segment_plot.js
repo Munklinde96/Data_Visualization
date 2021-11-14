@@ -38,42 +38,92 @@ $('document').ready(function(){
     // for (var i = 0; i < 100; i++) {
     //     random_charlist.push(String.fromCharCode(Math.floor(Math.random() * 26) + 97));
     // }
+    var scale_factor = (width - margin.left - margin.right)/peptide_length;
 
     var peptide_chars = peptide_seq.split("");
     var peptide_length = peptide_seq.length;
-    var x = d3.scaleBand()
-        .domain(peptide_chars)
-        .range([0, peptide_length]); // find matching length
-    svg.append("g")
-        .attr("transform", "translate(0," + margin.top + ")")
-        .call(d3.axisTop(x));
-        
-    // sample data for rectangles
+    var peptide_chars_with_numbers = peptide_chars.map(function(d,i){return d+i;});
+    
+    var xScale = d3.scaleBand()
+        .domain(peptide_chars_with_numbers.map(function(d) {return [d];}))
+        .range([0, peptide_length*scale_factor]); // find matching length
 
+    var xAxis = d3.axisTop()
+        .scale(xScale)
+        .tickFormat(function (d) {
+            return peptide_chars_with_numbers[d];
+        });
+
+    svg.append("g")
+        .attr("transform", "translate(" + 0 + ")")
+        .call(xAxis);
+        
+        // var xAxis = d3.axisTop(xScale)
+        //     .tickFormat(function(d) {return d[0];});
+    // var xAxis = svg.append("g")
+    //     .attr("transform", "translate(" + margin.left + ")")
+    //     .call(d3.axisTop(xScale).tickSize(0))
+    //     .selectAll("text")
+        
+    //calculate the scale factor to multiple size of each rectangle
+    var scale_factor = (width - margin.left - margin.right)/peptide_length;
+
+    // sample data for rectangles
     var rects = svg.selectAll("foo")
         .data(rect_patches)
         .enter()
         .append("rect")
-        .attr("x", d => d[0])
-        .attr("y", d=> d[1])
-        .attr("width", d=> d[2])
-        .attr("height", d=> d[3])
+        .attr("x", d => d[0]*scale_factor)
+        .attr("y", d=> d[1]*scale_factor)
+        .attr("width", d=> d[2]*scale_factor)
+        .attr("height", d=> d[3]*scale_factor)
         .attr("fill", d=> d[4])
         .attr("stroke", "black")
-        .attr("stroke-width", 2)
-        .attr("fill", "teal");
+        .attr("stroke-width", 0.2 *scale_factor);
 
-    // var mod_rects = svg.selectAll("boo")
-    //     .data(mod_patches)
-    //     .enter()
-    //     .append("rect")
-    //     .attr("x", d => d[0])
-    //     .attr("y", d=> d[1])
-    //     .attr("width", d=> d[2])
-    //     .attr("height", d=> d[3])
-    //     .attr("fill", d=> d[4])
-    //     .attr("stroke", "black")
-    //     .attr("stroke-width", 2)
-    //     .attr("fill", "red");
-});
+    var mod_rects = svg.selectAll("boo")
+        .data(mod_patches)
+        .enter()
+        .append("rect")
+        .attr("x", d => d[0]*scale_factor)
+        .attr("y", d=> d[1]*scale_factor)
+        .attr("width", d=> d[2]*scale_factor)
+        .attr("height", d=> d[3]*scale_factor)
+        .attr("fill", d=> d[4])
+        .attr("stroke", "black")
+        .attr("stroke-width", 0.2 *scale_factor);
+
+    //  get keys from modication color map https://www.d3-graph-gallery.com/graph/custom_legend.html
+    keys = Object.keys(modification_color_map);
+    values = Object.values(modification_color_map);
+    var size = 10
+    // make color legend from modification_color map
+    var legend = svg.selectAll("legend")
+        .data(keys)
+        .enter()
+        .append("rect")
+        .attr("x", 100)
+        .attr("y", function(d,i){ console.log(d); return 100 + i*(size+5)}) // 100 is where the first dot appears. 25 is the distance between dots
+        .attr("width", size)
+        .attr("height", size)
+        .style("fill", function(d, i){ console.log(d) ;return modification_color_map[d]})
+    
+    // Add one dot in the legend for each name.
+    legend_text = svg.selectAll("myLabels")
+        .data(keys)
+        .enter()
+        .append("text")
+        .attr("x", 100 + size*1.2)
+        .attr("y", function(d,i){ return 100 + i*(size+5) + (size/2)}) // 100 is where the first dot appears. 25 is the distance between dots
+        .text(function(d){ return d})
+        .attr("text-anchor", "left")
+        .style("alignment-baseline", "middle")
+
+    // move legend and legend_text  to Center LEFT 
+    legend.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top) + ")");
+    legend_text.attr("transform", "translate(" + 0+ "," + (height/2 - margin.top) + ")");
+    
+
+
+    });
 });
