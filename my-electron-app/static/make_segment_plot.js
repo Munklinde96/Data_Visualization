@@ -47,21 +47,26 @@ $('document').ready(function(){
     // for (var i = 0; i < 100; i++) {
     //     random_charlist.push(String.fromCharCode(Math.floor(Math.random() * 26) + 97));
     // }
-    var scale_factor = (width - margin.left - margin.right)/peptide_length;
+    // make scale factor based on window size
+    var scale_factor = width/peptide_seq.length;
+
+    // var scale_factor = (width - margin.left - margin.right)/peptide_length;
 
     var peptide_chars = peptide_seq.split("");
     var peptide_length = peptide_seq.length;
     var peptide_chars_with_numbers = peptide_chars.map(function(d,i){return d+i;});
     
-    var xScale = d3.scaleBand()
-        .domain(peptide_chars_with_numbers.map(function(d) {return [d];}))
-        .range([0, peptide_length*scale_factor]); // find matching length
+    var xScale = d3.scaleLinear()
+        .domain([0, peptide_length])
+        .range([0, width]);
 
-    var xAxis = d3.axisTop()
-        .scale(xScale)
-        .tickFormat(function (d) {
-            return peptide_chars_with_numbers[d];
-        });
+    // set ticks to be chars of peptide seqq
+    // based on width of window calculate tick_values_distance
+    var tick_values_distance = Math.floor(width/peptide_length);
+    var xAxis = d3.axisTop(xScale)
+        .tickValues(d3.range(0, peptide_length, tick_values_distance))
+        .tickFormat(function(d,i){console.log(d); return peptide_chars[d];});
+        // TODO: adjust when zooming
 
     svg.append("g")
         .attr("transform", "translate(" + 0 + ")")
@@ -89,9 +94,10 @@ $('document').ready(function(){
         .attr("fill", d=> d[4])
         .attr("stroke", "black")
         .attr("stroke-width", 0.2 *scale_factor)
-        .on("mouseover", mouseover)
-        .on("mousemove", mousemove)
-        .on("mouseleave", mouseleave);
+        .on("mouseover",mouseover)
+        .on("mousemove", mousemove_segments)
+        .on("mouseout", mouseleave);
+        
 
     var tooltip = d3.select("#graphDiv3")
         .append("div")
@@ -104,16 +110,21 @@ $('document').ready(function(){
         .style("padding", "5px")
 
     // Three function that change the tooltip when user hover / move / leave a cell
-    var mouseover = function(d) {
+    function mouseover(d) {
         tooltip.style("opacity", 1)
     }
-    var mousemove = function(d) {
-        tooltip
-        .html("The exact value of<br>this cell is: " + d[3])
-        .style("left", (d3.mouse(d)[0]*scale_factor) + "px")
-        .style("top", (d3.mouse(d)[1]*scale_factor) + "px")
+    function mousemove_modification(d) {
+        tooltip.html("<p>Peptide: " + d[0] + "</p><p>Intensity: " + d[1] + "</p><p>Modtype: " + d[3] + "</p>")
+            .style("left", (d3.event.pageX + 10) + "px")
+            .style("top", (d3.event.pageY - 10) + "px");
     }
-    var mouseleave = function(d) {
+    function mousemove_segments(d) {
+        tooltip.html("<p>Peptide: " + d[0] + "</p><p>Intensity: " + d[1] + "</p>")
+            .style("left", (d3.event.pageX + 10) + "px")
+            .style("top", (d3.event.pageY - 10) + "px");
+    }
+    
+    function mouseleave(d) {
         tooltip.style("opacity", 0)
     }
 
@@ -127,7 +138,10 @@ $('document').ready(function(){
         .attr("height", d=> d[3]*scale_factor)
         .attr("fill", d=> d[4])
         .attr("stroke", "black")
-        .attr("stroke-width", 0.2 *scale_factor);
+        .attr("stroke-width", 0.2 *scale_factor)
+        .on("mouseover",mouseover)
+        .on("mousemove", mousemove_modification)
+        .on("mouseout", mouseleave);
 
     // Inspired by: https://www.d3-graph-gallery.com/graph/custom_legend.html
     keys = Object.keys(modification_color_map);
@@ -152,6 +166,9 @@ $('document').ready(function(){
         .text(function(d){ return d})
         .attr("text-anchor", "left")
         .style("alignment-baseline", "middle")
+        
+       
+
 
     // move legend and legend_text  to Center LEFT 
     legend.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top) + ")");
