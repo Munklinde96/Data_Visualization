@@ -42,13 +42,15 @@ $('document').ready(function(){
     var peptide_length = peptide_seq.length;
     var peptide_chars_with_numbers = peptide_chars.map(function(d,i){return d+i;});
     
-    
+    // on click segment rectatngle
+
+
     var xScale = d3.scaleLinear()
         .domain([0, peptide_length])
         .range([0, width]);
     // based on width of window calculate tick_values_distance
     // var tick_values_distance = Math.floor(width/peptide_length);
-    var tick_values_distance = 2;
+    var tick_values_distance = 3;
     var xAxis = d3.axisTop(xScale)
         // .tickValues(d3.range(0, peptide_length, tick_values_distance))
         .tickValues(d3.range(0, peptide_length))
@@ -116,6 +118,13 @@ $('document').ready(function(){
     
     function mouseleave(d) {
         tooltip.style("opacity", 0)
+    }
+
+    function onclick(d) {
+        // make smallview on top
+
+
+
     }
 
     var mod_rects = svg.selectAll("boo")
