@@ -1,8 +1,7 @@
-//start file
-
 
 $('document').ready(function(){
     d3.json("http://127.0.0.1:5000/get-segment-data", function(error, data) {
+
         if (error) throw error;
         console.log(data);
         var rect_patches = data.peptide_patches;
@@ -34,53 +33,40 @@ $('document').ready(function(){
     .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
     
-    // // add box around everything without margin
-    // svg.append("rect")
-    //     .attr("width", width)
-    //     .attr("height", height)
-    //     .attr("fill", "none")
-    //     .attr("stroke", "black")
-    //     .attr("stroke-width", 1);
-    // Add X axis with labels from top
-    //make random list of chars of lenth 100
-    // var random_charlist= [];
-    // for (var i = 0; i < 100; i++) {
-    //     random_charlist.push(String.fromCharCode(Math.floor(Math.random() * 26) + 97));
-    // }
-    // make scale factor based on window size
     var scale_factor = width/peptide_seq.length;
-
     // var scale_factor = (width - margin.left - margin.right)/peptide_length;
 
     var peptide_chars = peptide_seq.split("");
     var peptide_length = peptide_seq.length;
     var peptide_chars_with_numbers = peptide_chars.map(function(d,i){return d+i;});
     
+    
     var xScale = d3.scaleLinear()
         .domain([0, peptide_length])
         .range([0, width]);
-
-    // set ticks to be chars of peptide seqq
     // based on width of window calculate tick_values_distance
-    var tick_values_distance = Math.floor(width/peptide_length);
+    // var tick_values_distance = Math.floor(width/peptide_length);
+    var tick_values_distance = 2;
     var xAxis = d3.axisTop(xScale)
-        .tickValues(d3.range(0, peptide_length, tick_values_distance))
-        .tickFormat(function(d,i){console.log(d); return peptide_chars[d];});
-        // TODO: adjust when zooming
+        // .tickValues(d3.range(0, peptide_length, tick_values_distance))
+        .tickValues(d3.range(0, peptide_length))
+        .tickFormat(function(d,i){
+            if (i%tick_values_distance == 0){
+                return peptide_chars[d];
+            }
+            else{
+                return "";
+            }
+        })
+        // make every 2nd tick invissible in xAxis
+    
 
+
+        // TODO: adjust when zooming
     svg.append("g")
         .attr("transform", "translate(" + 0 + ")")
         .call(xAxis);
-        
-        // var xAxis = d3.axisTop(xScale)
-        //     .tickFormat(function(d) {return d[0];});
-    // var xAxis = svg.append("g")
-    //     .attr("transform", "translate(" + margin.left + ")")
-    //     .call(d3.axisTop(xScale).tickSize(0))
-    //     .selectAll("text")
-        
-    //calculate the scale factor to multiple size of each rectangle
-    var scale_factor = (width - margin.left - margin.right)/peptide_length;
+          
 
     // sample data for rectangles
     var rects = svg.selectAll("foo")
@@ -214,5 +200,6 @@ $('document').ready(function(){
         .style("alignment-baseline", "hanging")
         .text(String(min_intensity))
         .attr("transform", "translate(" + 0 + "," + (height/2 - margin.top + 100 + 170) + ")");
+    
     });
 });
