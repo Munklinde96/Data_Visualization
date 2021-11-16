@@ -189,6 +189,7 @@ $('document').ready(function(){
         log_steps.push(Math.exp(Math.log(min_intensity) + i * step));
     }
     
+    
     //floor log_steps to nearest power of 10
     var log_steps_floor = [];
     for (var i = 0; i < log_steps.length; i++) {
