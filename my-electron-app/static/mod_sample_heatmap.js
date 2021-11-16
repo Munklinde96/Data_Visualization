@@ -1,5 +1,4 @@
 function renderSampleModPlot(){
-    console.log(minModificationCount);
     // set the dimensions and margins of the graph
     var margin = {top: 30, right: 130, bottom: 30, left: 130},
         width = 900 - margin.left - margin.right,
@@ -23,7 +22,7 @@ function renderSampleModPlot(){
         // build modification and sample categories
         var maxValue = null;
         var minValue = null;
-        structData = null;
+        var modStructData = null;
         for (const [sample, mods] of Object.entries(data)) {
             for (const [mod, value] of Object.entries(mods)){
                 if(maxValue == null || value > maxValue){
@@ -33,14 +32,14 @@ function renderSampleModPlot(){
                     minValue =  value
                 }
                 if(mod && sample && value){
-                    if(structData == null){
-                        structData = [{
+                    if(modStructData == null){
+                        modStructData = [{
                         sample: sample,
                         mod: mod,
                         value: value,
                     }];
                     } else {
-                        structData.push({
+                        modStructData.push({
                         sample: sample,
                         mod: mod,
                         value: value,
@@ -52,11 +51,11 @@ function renderSampleModPlot(){
         // Build color scale
         var myColor = d3.scaleSequential()
         .domain([minValue,maxValue])
-        .interpolator(d3.interpolateViridis);
+        .interpolator(d3.interpolatePlasma);
 
         // Labels of row and columns
-        var myGroups = d3.map(structData, function(d){return d.sample;}).keys()
-        var myVars = d3.map(structData, function(d){return d.mod;}).keys();
+        var myGroups = d3.map(modStructData, function(d){return d.sample;}).keys()
+        var myVars = d3.map(modStructData, function(d){return d.mod;}).keys();
                 
         // Build X scales and axis:
         var x = d3.scaleBand()
@@ -99,18 +98,41 @@ function renderSampleModPlot(){
         tooltip.style("opacity", 0)
         }
 
+        var mouseclick = function(d, i){
+            for(let n = 0; n < modStructData.length; n++){
+                // remove old if clicked on one it already contains
+                if(modStructData[n].sample === d.sample && selectedSample.includes(Number(d.sample))){
+                    let target = d3.select("#sample_id_heatmap_"+n);
+                    target.style('stroke', 'none');
+                } else if(Number(d.sample) === Number(modStructData[n].sample)){
+                    let target = d3.select("#sample_id_heatmap_"+n);
+                    target.style('stroke', 'red');
+                    target.style('stroke-width', 2);
+                }
+            }
+            if(selectedSample.includes(Number(d.sample)) === false){
+                selectedSample.push(Number(d.sample));
+            } else {
+                selectedSample = selectedSample.filter(function(val, index, err){
+                    return val != d.sample;
+                });
+            }
+        }
+
         svg.selectAll()
-            .data(structData, function(d){ return d.sample+":"+d.mod })
+            .data(modStructData, function(d){ return d.sample+":"+d.mod })
             .enter()
             .append("rect")
             .attr("x", function(d) {return x(d.sample) })
             .attr("y", function(d) { return y(d.mod) })
+            .attr("id", function(d, i){return "sample_id_heatmap_"+i })
             .attr("width", x.bandwidth() )
             .attr("height", y.bandwidth() )
             .style("fill", function(d) { return myColor(d.value)} )
             .on("mouseover", mouseover)
             .on("mousemove", mousemove)
             .on("mouseleave", mouseleave)
+            .on("click", mouseclick)
     });
 }
 

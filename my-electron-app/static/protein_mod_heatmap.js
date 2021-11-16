@@ -13,8 +13,8 @@ function renderProteinModPlot(){
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
         .append("g")
-        .attr("transform",
-            "translate(" + margin.left + "," + margin.top + ")");
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
     //Read the data
     d3.json("http://127.0.0.1:5000/get-protein-mod-data?min_mod_count="+minModificationCount+"&normalization_type="+normalizationType, function(error, data) {
         // validate request
@@ -22,7 +22,7 @@ function renderProteinModPlot(){
         // build modification and protein categories
         var maxValue = null;
         var minValue = null;
-        structData = null;
+        var proteinStructData = null;
         for (const [protein, mods] of Object.entries(data)) {
             for (const [mod, value] of Object.entries(mods)){
                 if(maxValue == null || value > maxValue){
@@ -32,14 +32,14 @@ function renderProteinModPlot(){
                     minValue =  value
                 }
                 if(mod && protein && value){
-                    if(structData == null){
-                        structData = [{
+                    if(proteinStructData == null){
+                        proteinStructData = [{
                         protein: protein,
                         mod: mod,
                         value: value,
                     }];
                     } else {
-                        structData.push({
+                        proteinStructData.push({
                         protein: protein,
                         mod: mod,
                         value: value,
@@ -54,17 +54,21 @@ function renderProteinModPlot(){
         .interpolator(d3.interpolateViridis);
 
         // Labels of row and columns
-        var myGroups = d3.map(structData, function(d){return d.protein;}).keys()
-        var myVars = d3.map(structData, function(d){return d.mod;}).keys();
+        var myGroups = d3.map(proteinStructData, function(d){return d.protein;}).keys()
+        var myVars = d3.map(proteinStructData, function(d){return d.mod;}).keys();
                 
         // Build X scales and axis:
         var x = d3.scaleBand()
         .range([ 0, width ])
         .domain(myGroups)
-        .padding(0.01);
         svg.append("g")
         .attr("transform", "translate(0," + height + ")")
         .call(d3.axisBottom(x))
+        .selectAll("text")  
+        .style("text-anchor", "end")
+        .attr("dx", "-.8em")
+        .attr("dy", ".15em")
+        .attr("transform", "rotate(-45)");    
 
         // Build Y scales and axis:
         var y = d3.scaleBand()
@@ -98,18 +102,52 @@ function renderProteinModPlot(){
         tooltip.style("opacity", 0)
         }
 
+        var mouseclick = function(d, i){
+            for(let n = 0; n < proteinStructData.length; n++){
+                // remove old
+                if(selectedProtein == proteinStructData[n].protein){
+                    let target = d3.select("#mod_prot_id_heatmap_"+n);
+                    target.style('stroke', 'none');
+                }
+                if(d.protein === proteinStructData[n].protein && d.protein !== selectedProtein){
+                    let target = d3.select("#mod_prot_id_heatmap_"+n);
+                    target.style('stroke', 'red');
+                    target.style('stroke-width', 2);
+                }
+            }
+            if(selectedProtein !== d.protein){
+                selectedProtein = d.protein;
+            } else {
+                selectedProtein = "";
+            }
+        }
+
         svg.selectAll()
-            .data(structData, function(d){ return d.protein+":"+d.mod })
+            .data(proteinStructData, function(d){ return d.protein+":"+d.mod })
             .enter()
             .append("rect")
             .attr("x", function(d) {return x(d.protein) })
             .attr("y", function(d) { return y(d.mod) })
-            .attr("width", x.bandwidth() )
-            .attr("height", y.bandwidth() )
-            .style("fill", function(d) { return myColor(d.value)})
+            .attr("width", x.bandwidth())
+            .attr("height", y.bandwidth())
+            .attr("id", function(d, i){return "mod_prot_id_heatmap_"+i })
+            .style("fill", function(d) {return myColor(d.value)})
+            .style("stroke", function(d){
+                if(d.protein === selectedProtein){
+                    return "red";
+                }
+                return "none";
+            })
+            .style("stroke-width", function(d){
+                if(d.protein === selectedProtein){
+                    return 2;
+                }
+                return 0;
+            })
             .on("mouseover", mouseover)
             .on("mousemove", mousemove)
             .on("mouseleave", mouseleave)
+            .on("click", mouseclick)
     });
 }
 

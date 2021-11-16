@@ -4,7 +4,6 @@
 $('document').ready(function(){
     d3.json("http://127.0.0.1:5000/get-segment-data", function(error, data) {
         if (error) throw error;
-        console.log(data);
         var rect_patches = data.peptide_patches;
         var mod_patches = data.mod_patches;
         var plot_height = data.height;
