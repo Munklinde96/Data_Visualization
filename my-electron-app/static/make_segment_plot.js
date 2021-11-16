@@ -55,6 +55,8 @@ $('document').ready(function(){
                 return peptide_chars[d];
             }
             else{
+                // set tick size
+                
                 return "";
             }
         })
