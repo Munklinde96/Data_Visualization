@@ -13,12 +13,14 @@ $('document').ready(function(){
         var max_peptide = data.max_peptide;
         var min_intensity = min_peptide[0];
         var max_intensity = max_peptide[0];
+        //round min_intensity and max_intensity to 10 decimals
+        min_intensity = Math.round(min_intensity * 100000000) / 100000000;
+        max_intensity = Math.round(max_intensity * 100000000) / 100000000;
+
         var min_color = min_peptide[1];
         var max_color = max_peptide[1];
-        var color = d3.scaleLinear().range([min_color, max_color]).domain([1, 2, 3, 4, 5]);
-
-
-    
+        var color = d3.scaleLinear().range([min_color, max_color]).domain([1, 2]);
+        
     // set the dimensions and margins of the graph
     var margin = {top: 30, right: 130, bottom: 30, left: 130},
         width = screen.width - margin.left - margin.right,
@@ -56,10 +58,9 @@ $('document').ready(function(){
             }
             else{
                 // set tick size
-                
                 return "";
             }
-        })
+        });        
         // make every 2nd tick invissible in xAxis
     
 
@@ -69,6 +70,7 @@ $('document').ready(function(){
         .attr("transform", "translate(" + 0 + ")")
         .call(xAxis);
           
+        
 
     // sample data for rectangles
     var rects = svg.selectAll("foo")
@@ -138,7 +140,7 @@ $('document').ready(function(){
         .data(keys)
         .enter()
         .append("rect")
-        .attr("x", 100)
+        .attr("x", 0)
         .attr("y", function(d,i){ return 100 + i*(size+5)}) // 100 is where the first dot appears. 25 is the distance between dots
         .attr("width", size)
         .attr("height", size)
@@ -149,7 +151,7 @@ $('document').ready(function(){
         .data(keys)
         .enter()
         .append("text")
-        .attr("x", 100 + size*1.2)
+        .attr("x", 0 + size*1.2)
         .attr("y", function(d,i){ return 100 + i*(size+5) + (size/2)}) // 100 is where the first dot appears. 25 is the distance between dots
         .text(function(d){ return d})
         .attr("text-anchor", "left")
@@ -160,7 +162,36 @@ $('document').ready(function(){
 
     // move legend and legend_text  to Center LEFT 
     legend.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top) + ")");
-    legend_text.attr("transform", "translate(" + 0+ "," + (height/2 - margin.top) + ")");
+    legend_text.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top) + ")");
+
+    color_bar_width = 20;
+    color_bar_height = 180;
+
+    var steps = 5;
+    var step = (Math.log(max_intensity) - Math.log(min_intensity)) / (steps - 1);
+    log_steps = [];
+    for (var i = 0; i < steps; i++) {
+        log_steps.push(Math.exp(Math.log(min_intensity) + i * step));
+    }
+    
+    //floor log_steps to nearest power of 10
+    var log_steps_floor = [];
+    for (var i = 0; i < log_steps.length; i++) {
+        log_steps_floor.push(Math.pow(10, Math.floor(Math.log(log_steps[i]) / Math.log(10))));
+    }
+
+    //parse log_steps to string
+    var log_steps_string = [];
+    for (var i = 0; i < log_steps.length; i++) {
+        log_steps_string.push(parseFloat(log_steps_floor[i]).toPrecision(1));
+    }
+
+    //add max_intensity to log_steps_floor
+    log_steps_string.push(max_intensity);
+    log_steps_string.unshift(min_intensity);
+    
+
+
     
     var defs = svg.append("defs");
     var linearGradient = defs.append("linearGradient")
@@ -179,29 +210,24 @@ $('document').ready(function(){
         .attr("stop-color", color(1))
 
     var rect = svg.append("rect")
-        .attr("x", 0)
+        .attr("x", 200)
         .attr("y", 0)
-        .attr("width", 20)
-        .attr("height", 170)
+        .attr("width", color_bar_width)
+        .attr("height", color_bar_height)
         .style("fill", "url(#linear-gradient)");
 
-    rect.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top + 100) + ")");
-    //add text to top and bottom of rect
-    svg.append("text")
-        .attr("x", 0)
-        .attr("y", 0)
-        .attr("text-anchor", "middle")
-        .style("alignment-baseline", "ideographic")
-        .text(String(max_intensity))
-        .attr("transform", "translate(" + 0 + "," + (height/2 - margin.top + 100) + ")");
+    color_legend_text = svg.selectAll("colorLabels")
+        .data(log_steps_string)
+        .enter()
+        .append("text")
+        .attr("x", 220)
+        .attr("y", function(d,i){ return color_bar_height - i*(color_bar_height/6)})
+        .text(function(d){ return "-" +d})
+        .attr("text-anchor", "right")
+        .style("alignment-baseline", "middle")
 
-    svg.append("text")
-        .attr("x", 0)
-        .attr("y", 0)
-        .attr("text-anchor", "middle")
-        .style("alignment-baseline", "hanging")
-        .text(String(min_intensity))
-        .attr("transform", "translate(" + 0 + "," + (height/2 - margin.top + 100 + 170) + ")");
-    
+        //move color_legend_text next to rect
+    color_legend_text.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top + 100) + ")");
+    rect.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top + 100) + ")");
     });
 });
