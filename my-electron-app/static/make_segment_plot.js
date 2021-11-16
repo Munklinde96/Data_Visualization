@@ -103,12 +103,12 @@ $('document').ready(function(){
         tooltip.style("opacity", 1)
     }
     function mousemove_modification(d) {
-        tooltip.html("<p>Peptide: " + d[0] + "</p><p>Intensity: " + d[1] + "</p><p>Modtype: " + d[3] + "</p>")
+        tooltip.html("</p><p>Intensity: " + d[5] + "</p><p>Modtype: " + d[3] + "</p>")
             .style("left", (d3.event.pageX + 10) + "px")
             .style("top", (d3.event.pageY - 10) + "px");
     }
     function mousemove_segments(d) {
-        tooltip.html("<p>Peptide: " + d[0] + "</p><p>Intensity: " + d[1] + "</p>")
+        tooltip.html("<p>Peptide: " + peptide_seq.substring(d[0]-1,  d[0] + d[2]-1) + "</p><p>Intensity: " + d[5] + "</p>")
             .style("left", (d3.event.pageX + 10) + "px")
             .style("top", (d3.event.pageY - 10) + "px");
     }
