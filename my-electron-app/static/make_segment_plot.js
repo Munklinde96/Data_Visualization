@@ -3,7 +3,6 @@ $('document').ready(function(){
     d3.json("http://127.0.0.1:5000/get-segment-data", function(error, data) {
 
         if (error) throw error;
-        console.log(data);
         var rect_patches = data.peptide_patches;
         var mod_patches = data.mod_patches;
         var plot_height = data.height;
@@ -110,7 +109,7 @@ $('document').ready(function(){
         tooltip.style("opacity", 1)
     }
     function mousemove_modification(d) {
-        tooltip.html("</p><p>Intensity: " + expo(d[5], 3) + "</p><p>Modtype: " + d[3] + "</p>")
+        tooltip.html("<p>Intensity: " + expo(d[5], 3) + "</p><p>Modtype: " + d[3] + "</p>")
             .style("left", (d3.event.pageX + 10) + "px")
             .style("top", (d3.event.pageY - 10) + "px");
     }
@@ -189,7 +188,7 @@ $('document').ready(function(){
         log_steps.push(Math.exp(Math.log(min_intensity) + i * step));
     }
     
-    
+
     //floor log_steps to nearest power of 10
     var log_steps_floor = [];
     for (var i = 0; i < log_steps.length; i++) {
