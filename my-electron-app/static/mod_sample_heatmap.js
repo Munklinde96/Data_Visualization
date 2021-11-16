@@ -16,7 +16,7 @@ function renderSampleModPlot(){
         .attr("transform",
             "translate(" + margin.left + "," + margin.top + ")");
     //Read the data
-    d3.json("http://127.0.0.1:5000/get-sample-mod-data?min_mod_count="+minModificationCount, function(error, data) {
+    d3.json("http://127.0.0.1:5000/get-sample-mod-data?protein="+selectedProtein, function(error, data) {
         // validate request
         if (error) throw error;
         // build modification and sample categories
@@ -51,7 +51,7 @@ function renderSampleModPlot(){
         // Build color scale
         var myColor = d3.scaleSequential()
         .domain([minValue,maxValue])
-        .interpolator(d3.interpolatePlasma);
+        .interpolator(d3.interpolateCool);
 
         // Labels of row and columns
         var myGroups = d3.map(modStructData, function(d){return d.sample;}).keys()

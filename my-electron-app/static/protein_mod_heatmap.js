@@ -120,6 +120,7 @@ function renderProteinModPlot(){
             } else {
                 selectedProtein = "";
             }
+            renderSampleModPlot();
         }
 
         svg.selectAll()
