@@ -18,9 +18,14 @@ def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
         cmap(np.linspace(minval, maxval, n)))
     return new_cmap
 
-def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", sample_column_id = 'Area', selected_samples = []):
+def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", sample_column_id = 'Area', selected_samples = [], start_end_indices =None):
     df = df.copy()
     df = df[df["Protein Accession"] == _protein]
+    if start_end_indices is not None:
+        df = df[df['Start'] == start_end_indices[0]]
+        df = df[df['End'] == start_end_indices[1]]
+    print(df.head())
+
 
     df["Position of Mass Shift"] = df["Peptide"].apply(get_position_of_mass_shift)
     # get list of modification for each PTM
@@ -186,7 +191,7 @@ def get_mods_height_distribution(mods):
 
 # standard height only used if colors is True
 def get_patch_attributes(rectangles, spacing=0.2, colors = True, standard_height= 0.5):
-    y_spaces = [0]*10*len(rectangles) #10 indicates a division into heights of 0.1
+    y_spaces = [0]*int(10*len(rectangles)*standard_height + len(rectangles)*10*spacing + 1) #10 indicates a division into heights of 0.1
     peptide_patches = []
     mod_patches = []
     for rect, mods in rectangles:
@@ -196,11 +201,13 @@ def get_patch_attributes(rectangles, spacing=0.2, colors = True, standard_height
             if colors: # Encode intensities as COLOR
                 is_available = True
                 for k in range(int(standard_height*10)): 
+                    print("len of y spaces" + str(len(y_spaces)))
+                    print("i+k" + str(i+k))
                     if y_spaces[i+k] > x:
                         is_available = False
                         break
                 if is_available:
-                    patch_attributes = (x, i/10, width, standard_height, attribute) # add in d3.js ec='black', lw=1, alpha=1
+                    patch_attributes = (x, i/10, width, standard_height, attribute, intensity) # add in d3.js ec='black', lw=1, alpha=1
                     for j in range(i, i + int(standard_height * 10) + int(spacing*10)):
                         y_spaces[j] = x + width
                     break
@@ -211,7 +218,7 @@ def get_patch_attributes(rectangles, spacing=0.2, colors = True, standard_height
                         is_available = False
                         break
                 if is_available: 
-                    patch_attributes = (x, i/10, width, attribute, '#add8e6') # add in d3.js ec='black', lw=1, alpha=1
+                    patch_attributes = (x, i/10, width, attribute, '#add8e6', intensity) # add in d3.js ec='black', lw=1, alpha=1
                     for j in range(i, i + int(attribute * 10) + int(spacing*10)):
                         y_spaces[j] = x + width
                     break
@@ -231,10 +238,10 @@ def get_patch_attributes(rectangles, spacing=0.2, colors = True, standard_height
                 m_pos, m_color, _ = mods_list[i]
                 if colors:
                     mod_height = standard_height * normalized_intensities_mods[i]
-                    mod_attributes = (last_x+m_pos,y_pos, 1, mod_height, m_color) # add in d3.js ec='black', lw=1, alpha=1
+                    mod_attributes = (last_x+m_pos,y_pos, 1, mod_height, m_color, intensities[i]) # add in d3.js ec='black', lw=1, alpha=1
                 else:
                     mod_height =  attribute * normalized_intensities_mods[i]
-                    mod_attributes = (last_x+m_pos, y_pos, 1, mod_height, m_color) # add in d3.js ec='black', lw=1, alpha=1
+                    mod_attributes = (last_x+m_pos, y_pos, 1, mod_height, m_color, intensities[i]) # add in d3.js ec='black', lw=1, alpha=1
                 y_pos = y_pos + mod_height
                 mod_patches.append(mod_attributes)
     height = y_spaces.index(0)
@@ -244,11 +251,11 @@ def get_patches_from_patch_attributes(peptide_patches, mod_patches):
     peptide_patches_list = []
     mod_patches_list = []
     for i in range(len(peptide_patches)):
-        x, y, width, height, color = peptide_patches[i]
+        x, y, width, height, color, intensity = peptide_patches[i]
         patch = patches.Rectangle((x, y), width, height, facecolor = color, ec='black', lw=1, alpha=1)
         peptide_patches_list.append(patch)
     for i in range(len(mod_patches)):
-        x, y, width, height, color = mod_patches[i]
+        x, y, width, height, color, intensity = mod_patches[i]
         patch = patches.Rectangle((x, y), width, height, facecolor = color, ec='black', lw=1, alpha=1)
         mod_patches_list.append(patch)
     return peptide_patches_list, mod_patches_list
@@ -300,22 +307,21 @@ def plot_peptide_segments(peptide_patches, mod_patches, height, modification_col
    Poetry. slam poetry. Slam Poetry is a collection of poems written by the poet, slam poet.
     The poems are collected in the slam poetry collection.
 """
-def create_and_plot_segment_plot(df, _protein="P02666", spacing=0.2, colors = True, color_scale='Blues', is_log_scaled = True, standard_height = 2):
-    peptide_patches, mod_patches, height, seqq, modification_color_map, min_ind, max_ind = create_data_for_segment_plot(df, _protein, spacing=spacing, colors=colors, color_scale=color_scale, is_log_scaled=is_log_scaled, standard_height=standard_height)
-    # peptide_patches, mod_patches = get_patches_from_patch_attributes(peptide_patches, mod_patches)
+def create_and_plot_segment_plot(df, _protein="P02666", spacing=0.2, colors = True, color_scale='Blues', is_log_scaled = True, standard_height = 2, start_end_indices = None, is_stacked = True):
+    peptide_patches, mod_patches, height, seqq, modification_color_map, min_ind, max_ind = create_data_for_segment_plot(df, _protein, spacing=spacing, colors=colors, color_scale=color_scale, is_log_scaled=is_log_scaled, standard_height=standard_height, start_end_indices=start_end_indices, is_stacked=is_stacked)
+    peptide_patches, mod_patches = get_patches_from_patch_attributes(peptide_patches, mod_patches)
     plot_peptide_segments(peptide_patches, mod_patches, height, modification_color_map, colors = colors, color_scale=color_scale, is_log_scaled=is_log_scaled, _protein = _protein)
 
 
-def create_data_for_segment_plot(df, _protein="P02666", spacing=0.2, colors = True, color_scale='Blues', is_log_scaled = True, standard_height = 2):
-    data, unique_mod_types= preprocess_data_for_peptide_segment_plot(df, _protein)
+def create_data_for_segment_plot(df, _protein="P02666", spacing=0.2, colors = True, color_scale='Blues', is_log_scaled = True, standard_height = 2, start_end_indices = None, is_stacked = True, sample_column_id = 'Area' , selected_samples = []):
+    data, unique_mod_types= preprocess_data_for_peptide_segment_plot(df, _protein, sample_column_id=sample_column_id, selected_samples=selected_samples, start_end_indices=start_end_indices)
     modtypes_color_map = get_color_palette_for_modifications(unique_mod_types)
     res_intensities, rectangles_and_mods = get_rectangles_for_peptides_and_mods(data, modtypes_color_map)
-    res_intensities, rectangles_and_mods = stack_recs(rectangles_and_mods, colors=colors, color_scale=color_scale, is_log_scaled=is_log_scaled)
+    if(is_stacked):
+        res_intensities, rectangles_and_mods = stack_recs(rectangles_and_mods)
     rects_and_attribute = map_to_attribute(colors, color_scale, is_log_scaled, res_intensities, rectangles_and_mods)
-
     peptide_patches, mod_patches, height = get_patch_attributes(rects_and_attribute, spacing = spacing, standard_height=standard_height)
     seqq = get_protein_sequence(_protein)
-
 
     min_ind = np.argmin(res_intensities)
     max_ind = np.argmax(res_intensities)
