@@ -20,6 +20,14 @@ $('document').ready(function(){
         var max_color = max_peptide[1];
         var color = d3.scaleLinear().range([min_color, max_color]).domain([1, 2]);
         
+        modification_color_map_keys = Object.keys(modification_color_map);
+        modification_color_map_values = Object.values(modification_color_map);
+        // create map from values to keys
+        var colors_to_mod_map = new Map();
+        for (var i = 0; i < modification_color_map_keys.length; i++) {
+            colors_to_mod_map.set(modification_color_map_values[i], modification_color_map_keys[i]);
+        }
+
     // set the dimensions and margins of the graph
     var margin = {top: 30, right: 30, bottom: 30, left: 30},
         width = screen.width - margin.left - margin.right,
@@ -63,11 +71,11 @@ $('document').ready(function(){
             //     return "";
             // }
         });        
+        xAxis.tickSizeOuter(12);
         // adjust size of tick font
         // xAxis.tickSize(10);
-        xAxis.tickPadding(10);
+        // xAxis.tickPadding(10);
         // xAxis.ticks(peptide_length);
-        xAxis.tickSizeOuter(12);
         // xAxis.tickSizeInner(0);
         // make every 2nd tick invissible in xAxis
     
@@ -109,7 +117,9 @@ $('document').ready(function(){
         tooltip.style("opacity", 1)
     }
     function mousemove_modification(d) {
-        tooltip.html("<p>Intensity: " + expo(d[5], 3) + "</p><p>Modtype: " + d[3] + "</p>")
+        // get modification type from colors_to_mod_map map
+        var mod_type = colors_to_mod_map.get(d[4]);
+        tooltip.html("<p>Intensity: " + expo(d[5], 3) + "</p><p>Modtype: " + mod_type + "</p>")
             .style("left", (d3.event.pageX + 10) + "px")
             .style("top", (d3.event.pageY - 10) + "px");
     }
@@ -148,10 +158,10 @@ $('document').ready(function(){
         .on("mouseout", mouseleave);
 
     // Inspired by: https://www.d3-graph-gallery.com/graph/custom_legend.html
-    keys = Object.keys(modification_color_map);
+   
     var size = 10
     var legend = svg.selectAll("legend")
-        .data(keys)
+        .data(modification_color_map_keys)
         .enter()
         .append("rect")
         .attr("x", 0)
@@ -162,7 +172,7 @@ $('document').ready(function(){
     
     // Add one dot in the legend for each name.
     legend_text = svg.selectAll("myLabels")
-        .data(keys)
+        .data(modification_color_map_keys)
         .enter()
         .append("text")
         .attr("x", 0 + size*1.2)
