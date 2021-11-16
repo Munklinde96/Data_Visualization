@@ -83,7 +83,7 @@ def homepage():
     data.SampleModData = json.loads(sampleModJson)
 
     # Create SegmentPlotData
-    peptide_patches, mod_patches, height, seqq, modification_color_map, min_peptide, max_peptide = create_data_for_segment_plot(df, start_end_indices=(16, 40))
+    peptide_patches, mod_patches, height, seqq, modification_color_map, min_peptide, max_peptide = create_data_for_segment_plot(df)
     segmentObject = {
         'peptide_patches': peptide_patches,
         'mod_patches': mod_patches,

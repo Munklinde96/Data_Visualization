@@ -104,7 +104,7 @@ $('document').ready(function(){
         tooltip.style("opacity", 1)
     }
     function mousemove_modification(d) {
-        tooltip.html("<p>Peptide: " + d[0] + "</p><p>Intensity: " + d[5] + "</p><p>Modtype: " + d[3] + "</p>")
+        tooltip.html("</p><p>Intensity: " + d[5] + "</p><p>Modtype: " + d[3] + "</p>")
             .style("left", (d3.event.pageX + 10) + "px")
             .style("top", (d3.event.pageY - 10) + "px");
     }

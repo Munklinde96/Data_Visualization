@@ -24,7 +24,6 @@ def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", sample_colum
     if start_end_indices is not None:
         df = df[df['Start'] == start_end_indices[0]]
         df = df[df['End'] == start_end_indices[1]]
-    print(df.head())
 
 
     df["Position of Mass Shift"] = df["Peptide"].apply(get_position_of_mass_shift)
@@ -201,8 +200,6 @@ def get_patch_attributes(rectangles, spacing=0.2, colors = True, standard_height
             if colors: # Encode intensities as COLOR
                 is_available = True
                 for k in range(int(standard_height*10)): 
-                    print("len of y spaces" + str(len(y_spaces)))
-                    print("i+k" + str(i+k))
                     if y_spaces[i+k] > x:
                         is_available = False
                         break
