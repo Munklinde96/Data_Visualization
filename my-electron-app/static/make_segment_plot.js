@@ -22,7 +22,7 @@ $('document').ready(function(){
         var color = d3.scaleLinear().range([min_color, max_color]).domain([1, 2]);
         
     // set the dimensions and margins of the graph
-    var margin = {top: 30, right: 130, bottom: 30, left: 130},
+    var margin = {top: 30, right: 30, bottom: 30, left: 30},
         width = screen.width - margin.left - margin.right,
         height = 700 - margin.top - margin.bottom;
     
@@ -54,24 +54,28 @@ $('document').ready(function(){
     var xAxis = d3.axisTop(xScale)
         // .tickValues(d3.range(0, peptide_length, tick_values_distance))
         .tickValues(d3.range(0, peptide_length))
-        .tickFormat(function(d,i){
-            if (i%tick_values_distance == 0){
-                return peptide_chars[d];
-            }
-            else{
-                // set tick size
-                return "";
-            }
+    
+        .tickFormat(function(d,i){ return peptide_chars[d];
+            // if (i%tick_values_distance == 0){
+            //     return peptide_chars[d];
+            // }
+            // else{
+            //     // set tick size
+            //     return "";
+            // }
         });        
+        // adjust size of tick font
+        // xAxis.tickSize(10);
+        xAxis.tickPadding(10);
+        // xAxis.ticks(peptide_length);
+        xAxis.tickSizeOuter(12);
+        // xAxis.tickSizeInner(0);
         // make every 2nd tick invissible in xAxis
     
-
-
         // TODO: adjust when zooming
     svg.append("g")
         .attr("transform", "translate(" + 0 + ")")
-        .call(xAxis);
-          
+        .call(xAxis);    
         
 
     // sample data for rectangles
@@ -106,12 +110,12 @@ $('document').ready(function(){
         tooltip.style("opacity", 1)
     }
     function mousemove_modification(d) {
-        tooltip.html("</p><p>Intensity: " + d[5] + "</p><p>Modtype: " + d[3] + "</p>")
+        tooltip.html("</p><p>Intensity: " + expo(d[5], 3) + "</p><p>Modtype: " + d[3] + "</p>")
             .style("left", (d3.event.pageX + 10) + "px")
             .style("top", (d3.event.pageY - 10) + "px");
     }
     function mousemove_segments(d) {
-        tooltip.html("<p>Peptide: " + peptide_seq.substring(d[0]-1,  d[0] + d[2]-1) + "</p><p>Intensity: " + d[5] + "</p>")
+        tooltip.html("<p>Peptide: " + peptide_seq.substring(d[0]-1,  d[0] + d[2]-1) + "</p><p>Intensity: " + expo(d[5], 3) + "</p>")
             .style("left", (d3.event.pageX + 10) + "px")
             .style("top", (d3.event.pageY - 10) + "px");
     }
@@ -121,11 +125,13 @@ $('document').ready(function(){
     }
 
     function onclick(d) {
-        // make smallview on top
-
-
-
+        // make smallview on to
     }
+
+    function expo(x, f) {
+        return Number.parseFloat(x).toExponential(f);
+      }
+
 
     var mod_rects = svg.selectAll("boo")
         .data(mod_patches)
@@ -192,12 +198,12 @@ $('document').ready(function(){
     //parse log_steps to string
     var log_steps_string = [];
     for (var i = 0; i < log_steps.length; i++) {
-        log_steps_string.push(parseFloat(log_steps_floor[i]).toPrecision(1));
+        log_steps_string.push(expo(parseFloat(log_steps_floor[i]).toPrecision(1),1));
     }
 
     //add max_intensity to log_steps_floor
-    log_steps_string.push(max_intensity);
-    log_steps_string.unshift(min_intensity);
+    log_steps_string.push(expo(max_intensity,3));
+    log_steps_string.unshift(expo(min_intensity,3));
     
 
 
