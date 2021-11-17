@@ -123,7 +123,7 @@ $('document').ready(function(){
             .style("top", (d3.event.pageY - 10) + "px");
     }
     function mousemove_segments(d) {
-        tooltip.html("<p>Peptide: " + peptide_seq.substring(d[0]-1,  d[0] + d[2]-1) + "</p><p>Intensity: " + expo(d[5], 3) + "</p>")
+        tooltip.html("<p>Peptide: " + peptide_seq.substring(d[0],  d[0] + d[2]) + "</p><p>Intensity: " + expo(d[5], 3) + "</p>")
             .style("left", (d3.event.pageX + 10) + "px")
             .style("top", (d3.event.pageY - 10) + "px");
     }
@@ -220,6 +220,12 @@ $('document').ready(function(){
     var log_steps_string = [];
     for (var i = 0; i < log_steps.length; i++) {
         log_steps_string.push(expo(parseFloat(log_steps_floor[i]).toPrecision(1),1));
+    }
+
+        //parse log_steps to string
+    var log_steps_string = [];
+        for (var i = 0; i < log_steps.length; i++) {
+            log_steps_string.push(expo(parseFloat(log_steps_floor[i]).toPrecision(1),1));
     }
 
     //add max_intensity to log_steps_floor
