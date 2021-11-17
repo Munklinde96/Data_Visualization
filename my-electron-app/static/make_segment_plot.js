@@ -32,7 +32,6 @@ $('document').ready(function(){
     var margin = {top: 30, right: 30, bottom: 30, left: 30},
         width = screen.width - margin.left - margin.right,
         height = 700 - margin.top - margin.bottom;
-    
         
     // append the svg object to the body of the page
     var svg = d3.select("#graphDiv3")
@@ -49,8 +48,6 @@ $('document').ready(function(){
     var peptide_length = peptide_seq.length;
     var peptide_chars_with_numbers = peptide_chars.map(function(d,i){return d+i;});
     
-    // on click segment rectatngle
-
 
     var xScale = d3.scaleLinear()
         .domain([0, peptide_length])
@@ -135,9 +132,21 @@ $('document').ready(function(){
         tooltip.style("opacity", 0)
     }
 
-    function onclick(d) {
-        // make smallview on to
-    }
+    // function onclick(d) {
+    //     // make tooltip that opens new html file
+    //     // make rectangle inside tooltip
+    //     tooltip.style("opacity", 1)
+    //         .style("background-color", "white")
+    //         .style("border", "solid")
+    //         .style("border-width", "2px")
+    //         .style("border-radius", "5px")
+    //         .style("padding", "5px")
+    //         // insert html code from document  /Users/sebastianloeschcke/Desktop/visualization_project/proj/Data_Visualization/my-electron-app/static/custom-tooltip.html
+    //         // html_doc = document.getElementById("html_doc");
+    //         // .html("<p>Peptide: " + peptide_seq.substring(d[0]-1,  d[0] + d[2]-1) + "</p><p>Intensity: " + expo(d[5], 3) + "</p>")
+               
+    //     // make smallview on to
+    // }
 
     function expo(x, f) {
         return Number.parseFloat(x).toExponential(f);
