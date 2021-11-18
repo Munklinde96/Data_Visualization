@@ -136,3 +136,5 @@ my-electron-app/package-lock.json
 
 /.DS_Store
 .DS_Store
+
+../.DS_Store

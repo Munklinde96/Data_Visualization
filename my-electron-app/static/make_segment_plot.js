@@ -135,23 +135,6 @@ function renderSegmentPlot(){
     function mouseleave(d) {
         tooltip.style("opacity", 0)
     }
-
-    // function onclick(d) {
-    //     // make tooltip that opens new html file
-    //     // make rectangle inside tooltip
-    //     tooltip.style("opacity", 1)
-    //         .style("background-color", "white")
-    //         .style("border", "solid")
-    //         .style("border-width", "2px")
-    //         .style("border-radius", "5px")
-    //         .style("padding", "5px")
-    //         // insert html code from document  /Users/sebastianloeschcke/Desktop/visualization_project/proj/Data_Visualization/my-electron-app/static/custom-tooltip.html
-    //         // html_doc = document.getElementById("html_doc");
-    //         // .html("<p>Peptide: " + peptide_seq.substring(d[0]-1,  d[0] + d[2]-1) + "</p><p>Intensity: " + expo(d[5], 3) + "</p>")
-               
-    //     // make smallview on to
-    // }
-
     function expo(x, f) {
         return Number.parseFloat(x).toExponential(f);
       }
@@ -173,7 +156,7 @@ function renderSegmentPlot(){
         .on("mouseout", mouseleave);
 
     // Inspired by: https://www.d3-graph-gallery.com/graph/custom_legend.html
-   
+    //   modification labels
     var size = 10
     var legend = svg.selectAll("legend")
         .data(modification_color_map_keys)
@@ -194,9 +177,26 @@ function renderSegmentPlot(){
         .attr("y", function(d,i){ return 100 + i*(size+5) + (size/2)}) // 100 is where the first dot appears. 25 is the distance between dots
         .text(function(d){ return d})
         .attr("text-anchor", "left")
+        .style("fill", "black")
         .style("alignment-baseline", "middle")
-        
-       
+        .on("mouseover", function(d,i){
+            d3.select(this).style("font-weight", "bold");
+        })
+        .on("mouseout", function(d,i){
+            d3.select(this).style("font-weight", "normal");
+        })
+        .on("click", function(d,i){
+            // switch between color in color map and standard color 
+            var current_color = d3.select(this).style("fill");  
+            if (current_color == "black"){ 
+                d3.select(this).style("fill", modification_color_map[d]);
+                d3.select(this).style("font-weight", "bold");
+            }
+            else{
+                d3.select(this).style("fill", "black");
+                d3.select(this).style("font-weight", "normal");
+            }
+            })
 
 
     // move legend and legend_text  to Center LEFT 
