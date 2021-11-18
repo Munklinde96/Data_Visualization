@@ -69,13 +69,7 @@ $('document').ready(function(){
             // }
         });        
         xAxis.tickSizeOuter(12);
-        // adjust size of tick font
-        // xAxis.tickSize(10);
-        // xAxis.tickPadding(10);
-        // xAxis.ticks(peptide_length);
-        // xAxis.tickSizeInner(0);
-        // make every 2nd tick invissible in xAxis
-    
+        
         // TODO: adjust when zooming
     svg.append("g")
         .attr("transform", "translate(" + 0 + ")")

@@ -63,6 +63,7 @@ def buildSampleModData(df, count):
 def homepage():
     # Get data and build dataframe
     path = r"UHT milk P036.csv"
+    #path = r"protein-peptides.csv"
     df = pd.read_csv(path)
     data.DataFrame = df
     #df1, df2, df3, df4 = split_data_in_samples(df)
