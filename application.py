@@ -73,7 +73,7 @@ def buildSegmentData(df, protein, _samples=[]):
     print(intSamples)
     # Create SegmentPlotData
     if protein == "":
-        peptide_patches, mod_patches, height, seqq, modification_color_map, min_peptide, max_peptide = create_data_for_segment_plot(df, selected_sample_indices=intSamples)
+        peptide_patches, mod_patches, height, seqq, modification_color_map, min_peptide, max_peptide = create_data_for_segment_plot(df, selected_samples_indices=intSamples)
         segmentObject = {
         'peptide_patches': peptide_patches,
         'mod_patches': mod_patches,
@@ -104,6 +104,7 @@ def buildSegmentData(df, protein, _samples=[]):
 @application.route("/",methods=["GET","POST"])
 def homepage():
     # Get data and build dataframe
+    # path = r"protein-peptides.csv"
     path = r"UHT milk P036.csv"
     #path = r"protein-peptides.csv"
     df = pd.read_csv(path)
