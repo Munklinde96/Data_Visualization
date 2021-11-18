@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.patches as patches
 from matplotlib import pyplot as plt
 from matplotlib import colors as cls
-from refactored_utils import get_position_of_mass_shift, get_color_palette_for_modifications, get_protein_sequence, get_color_legend_mods 
+from refactored_utils import get_position_of_mass_shift, get_color_palette_for_modifications, get_protein_sequence, get_color_legend_mods, get_selected_sample_columns
 from utils import colors_from_values
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from sklearn.preprocessing import normalize as norm
@@ -18,7 +18,7 @@ def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
         cmap(np.linspace(minval, maxval, n)))
     return new_cmap
 
-def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", sample_column_id = 'Area', selected_samples = [], start_end_indices =None):
+def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", sample_column_id = 'Area', selected_sample_indices = [], start_end_indices =None):
     df = df.copy()
     df = df[df["Protein Accession"] == _protein]
     if start_end_indices is not None:
@@ -27,20 +27,23 @@ def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", sample_colum
     df["Position of Mass Shift"] = df["Peptide"].apply(get_position_of_mass_shift)
     # get list of modification for each PTM
     df["Modification_types"] = df["PTM"].apply(lambda x: x if pd.isnull(x) else [s.strip() for s in x.split(";")])    
-    if len(selected_samples) == 0:
-        selected_samples = [col for col in df.columns if sample_column_id in col]
+    selected_sample_columns = [col for col in df.columns if sample_column_id in col]
+
+    if len(selected_sample_indices) > 0:
+        selected_sample_columns = get_selected_sample_columns(selected_sample_columns, selected_sample_indices)
+    
     ##SHOULD be deleted
-    selected_columns = ["Start", "End", "Protein Accession", 'Position of Mass Shift', 'Modification_types'] + selected_samples
+    selected_columns = ["Start", "End", "Protein Accession", 'Position of Mass Shift', 'Modification_types'] + selected_sample_columns
     df = df[selected_columns]
     
     unique_mod_types = get_unique_modification_types(df)
 
-    for col in selected_samples:  #make Area samples Nan values 0
+    for col in selected_sample_columns:  #make Area samples Nan values 0
         df[col] = df[col].fillna(0)
-    df = df[df[selected_samples].sum(axis=1) > 0]   # drop rows where all sample_columns are 0
+    df = df[df[selected_sample_columns].sum(axis=1) > 0]   # drop rows where all sample_columns are 0
 
     #Aggregate sample intensity, and normalize it
-    df["Agg Intensity"] = df[selected_samples].sum(axis=1)
+    df["Agg Intensity"] = df[selected_sample_columns].sum(axis=1)
     df['Agg Intensity'] = df['Agg Intensity'] / df['Agg Intensity'].sum()
 
     df["tuple"] = df[["Start", "End", 'Position of Mass Shift', 'Modification_types', 'Agg Intensity']].apply(tuple, axis=1)
@@ -303,15 +306,15 @@ def plot_peptide_segments(peptide_patches, mod_patches, height, modification_col
    Poetry. slam poetry. Slam Poetry is a collection of poems written by the poet, slam poet.
     The poems are collected in the slam poetry collection.
 """
-def create_and_plot_segment_plot(df, _protein="P02666", spacing=0.2, colors = True, color_scale='Blues', is_log_scaled = True, standard_height = 2, start_end_indices = None, is_stacked = True):
-    peptide_patches, mod_patches, height, seqq, modification_color_map, min_ind, max_ind = create_data_for_segment_plot(df, _protein, spacing=spacing, colors=colors, color_scale=color_scale, is_log_scaled=is_log_scaled, standard_height=standard_height, start_end_indices=start_end_indices, is_stacked=is_stacked)
+def create_and_plot_segment_plot(df, _protein="P02666", spacing=0.2, colors = True, color_scale='Blues', is_log_scaled = True, standard_height = 2, start_end_indices = None, is_stacked = True, sample_column_id = 'Area' , selected_sample_indices = []):
+    peptide_patches, mod_patches, height, seqq, modification_color_map, min_ind, max_ind = create_data_for_segment_plot(df, _protein, spacing=spacing, colors=colors, color_scale=color_scale, is_log_scaled=is_log_scaled, standard_height=standard_height, start_end_indices=start_end_indices, is_stacked=is_stacked, sample_column_id=sample_column_id, selected_sample_indices=selected_sample_indices)
     peptide_patches, mod_patches = get_patches_from_patch_attributes(peptide_patches, mod_patches)
     plot_peptide_segments(peptide_patches, mod_patches, height, modification_color_map, colors = colors, color_scale=color_scale, is_log_scaled=is_log_scaled, _protein = _protein)
 
 
-def create_data_for_segment_plot(df, _protein="P02666", spacing=0.2, colors = True, color_scale='Blues', is_log_scaled = True, standard_height = 2, start_end_indices = None, is_stacked = True, sample_column_id = 'Area' , selected_samples = []):
+def create_data_for_segment_plot(df, _protein="P02666", spacing=0.2, colors = True, color_scale='Blues', is_log_scaled = True, standard_height = 2, start_end_indices = None, is_stacked = True, sample_column_id = 'Area' , selected_sample_indices = []):
     # alterntive protein sequence P80457|XDH_BOVIN
-    data, unique_mod_types= preprocess_data_for_peptide_segment_plot(df, _protein, sample_column_id=sample_column_id, selected_samples=selected_samples, start_end_indices=start_end_indices)
+    data, unique_mod_types= preprocess_data_for_peptide_segment_plot(df, _protein, sample_column_id=sample_column_id, selected_sample_indices=selected_sample_indices, start_end_indices=start_end_indices)
     modtypes_color_map = get_color_palette_for_modifications(unique_mod_types)
     res_intensities, rectangles_and_mods = get_rectangles_for_peptides_and_mods(data, modtypes_color_map)
     

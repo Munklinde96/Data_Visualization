@@ -103,6 +103,7 @@ def buildSegmentData(df, protein, _samples=[]):
 @application.route("/",methods=["GET","POST"])
 def homepage():
     # Get data and build dataframe
+    # path = r"protein-peptides.csv"
     path = r"UHT milk P036.csv"
     #path = r"protein-peptides.csv"
     df = pd.read_csv(path)
