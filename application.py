@@ -49,7 +49,9 @@ def buildProteinModData(df, count, normalization):
     return modData.to_json()
 
 def buildSampleModData(df, protein):
-    data = get_sample_heatmap_data(df, _protein=protein)
+    df['#modifications'] = df['PTM'].apply(count_no_of_modifications)
+    df[df['#modifications'] > 0]
+    data = get_sample_heatmap_data(df, _prqotein=protein)
     return data.to_json()
 
 @application.route("/main",methods=["GET","POST"])

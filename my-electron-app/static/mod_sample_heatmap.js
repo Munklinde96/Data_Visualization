@@ -54,7 +54,7 @@ function renderSampleModPlot(){
         // Build color scale
         var myColor = d3.scaleSequential()
         .domain([minValue,maxValue])
-        .interpolator(d3.interpolateCool);
+        .interpolator(d3.interpolateBlues);
 
         // Labels of row and columns
         var myGroups = d3.map(modStructData, function(d){return d.sample;}).keys()
@@ -94,8 +94,8 @@ function renderSampleModPlot(){
         var mousemove = function(d) {
         tooltip
             .html("The exact value of<br>this cell is: " + d.value)
-            .style("left", (d3.mouse(this)[0]+1100) + "px")
-            .style("top", (d3.mouse(this)[1]+150) + "px")
+            .style("left", (d3.mouse(this)[0]) + "px")
+            .style("top", (d3.mouse(this)[1]) + "px")
         }
         var mouseleave = function(d) {
         tooltip.style("opacity", 0)

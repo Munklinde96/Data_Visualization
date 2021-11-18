@@ -95,8 +95,8 @@ function renderProteinModPlot(){
         var mousemove = function(d) {
         tooltip
             .html("The exact value of<br>this cell is: " + d.value)
-            .style("left", (d3.mouse(this)[0]+150) + "px")
-            .style("top", (d3.mouse(this)[1]+150) + "px")
+            .style("left", (d3.mouse(this)[0]) + "px")
+            .style("top", (d3.mouse(this)[1]) + "px")
         }
         var mouseleave = function(d) {
         tooltip.style("opacity", 0)
