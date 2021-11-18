@@ -148,3 +148,9 @@ def get_color_legend_mods(modification_types_to_color_map):
     for mod_type in modification_types_to_color_map:
         handles.append(patches.Patch(color=modification_types_to_color_map[mod_type], label=mod_type))
     return handles
+
+def get_selected_sample_columns(sample_columns, selected_sample_indices):
+    samples = []
+    for i in selected_sample_indices:
+        samples.append(sample_columns[i-1])
+    return samples
