@@ -67,7 +67,8 @@ def get_rectangles_for_peptides_and_mods(data, modtypes_color_map):
     for i in range (len(data)):
         modifications = []
         low, hi, mod_positions, mod_types, agg_intensity = data[i]
-        width = hi-low+1
+        low = low-1
+        width = hi-low
         rec = (low, width, agg_intensity)
         res_intensities.append(agg_intensity)
         if len(mod_positions) > 0:
@@ -311,6 +312,7 @@ def create_and_plot_segment_plot(df, _protein="P02666", spacing=0.2, colors = Tr
 
 
 def create_data_for_segment_plot(df, _protein="P02666", spacing=0.2, colors = True, color_scale='Blues', is_log_scaled = True, standard_height = 2, start_end_indices = None, is_stacked = True, sample_column_id = 'Area' , selected_samples = []):
+    # alterntive protein sequence P80457|XDH_BOVIN
     data, unique_mod_types= preprocess_data_for_peptide_segment_plot(df, _protein, sample_column_id=sample_column_id, selected_samples=selected_samples, start_end_indices=start_end_indices)
     modtypes_color_map = get_color_palette_for_modifications(unique_mod_types)
     res_intensities, rectangles_and_mods = get_rectangles_for_peptides_and_mods(data, modtypes_color_map)

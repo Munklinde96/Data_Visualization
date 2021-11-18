@@ -21,7 +21,6 @@ def count_no_of_modifications(ptm_str):
         return 0
     return 1 + ptm_str.count(';')
 
-
 #1. Declare application
 application= Flask(__name__)
 cors = CORS(application)
@@ -48,10 +47,14 @@ def buildProteinModData(df, count, normalization):
     # Convert to json
     return modData.to_json()
 
-def buildSampleModData(df, protein):
+# def buildSampleModData(df, protein):
+#     data = get_sample_heatmap_data(df, _protein=protein)
+#     return data.to_json()
+
+def buildSampleModData(df, count):
     df['#modifications'] = df['PTM'].apply(count_no_of_modifications)
-    df[df['#modifications'] > 0]
-    data = get_sample_heatmap_data(df, _prqotein=protein)
+    df[df['#modifications'] > count]
+    data = get_sample_heatmap_data(df)
     return data.to_json()
 
 @application.route("/main",methods=["GET","POST"])
@@ -60,6 +63,7 @@ def buildSampleModData(df, protein):
 def homepage():
     # Get data and build dataframe
     path = r"UHT milk P036.csv"
+    #path = r"protein-peptides.csv"
     df = pd.read_csv(path)
     data.DataFrame = df
     #df1, df2, df3, df4 = split_data_in_samples(df)

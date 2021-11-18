@@ -20,11 +20,18 @@ $('document').ready(function(){
         var max_color = max_peptide[1];
         var color = d3.scaleLinear().range([min_color, max_color]).domain([1, 2]);
         
+        modification_color_map_keys = Object.keys(modification_color_map);
+        modification_color_map_values = Object.values(modification_color_map);
+        // create map from values to keys
+        var colors_to_mod_map = new Map();
+        for (var i = 0; i < modification_color_map_keys.length; i++) {
+            colors_to_mod_map.set(modification_color_map_values[i], modification_color_map_keys[i]);
+        }
+
     // set the dimensions and margins of the graph
-    var margin = {top: 30, right: 130, bottom: 30, left: 130},
+    var margin = {top: 30, right: 30, bottom: 30, left: 30},
         width = screen.width - margin.left - margin.right,
         height = 700 - margin.top - margin.bottom;
-    
         
     // append the svg object to the body of the page
     var svg = d3.select("#graphDiv3")
@@ -41,34 +48,32 @@ $('document').ready(function(){
     var peptide_length = peptide_seq.length;
     var peptide_chars_with_numbers = peptide_chars.map(function(d,i){return d+i;});
     
-    
+
     var xScale = d3.scaleLinear()
         .domain([0, peptide_length])
         .range([0, width]);
     // based on width of window calculate tick_values_distance
     // var tick_values_distance = Math.floor(width/peptide_length);
-    var tick_values_distance = 2;
+    var tick_values_distance = 3;
     var xAxis = d3.axisTop(xScale)
         // .tickValues(d3.range(0, peptide_length, tick_values_distance))
         .tickValues(d3.range(0, peptide_length))
-        .tickFormat(function(d,i){
-            if (i%tick_values_distance == 0){
-                return peptide_chars[d];
-            }
-            else{
-                // set tick size
-                return "";
-            }
-        });        
-        // make every 2nd tick invissible in xAxis
     
-
-
+        .tickFormat(function(d,i){ return peptide_chars[d];
+            // if (i%tick_values_distance == 0){
+            //     return peptide_chars[d];
+            // }
+            // else{
+            //     // set tick size
+            //     return "";
+            // }
+        });        
+        xAxis.tickSizeOuter(12);
+        
         // TODO: adjust when zooming
     svg.append("g")
         .attr("transform", "translate(" + 0 + ")")
-        .call(xAxis);
-          
+        .call(xAxis);    
         
 
     // sample data for rectangles
@@ -103,12 +108,16 @@ $('document').ready(function(){
         tooltip.style("opacity", 1)
     }
     function mousemove_modification(d) {
-        tooltip.html("</p><p>Intensity: " + d[5] + "</p><p>Modtype: " + d[3] + "</p>")
+        // get modification type from colors_to_mod_map map
+        var mod_type = colors_to_mod_map.get(d[4]);
+        var mod_position = d[0];
+        var mod_char = peptide_chars[mod_position];
+        tooltip.html("<p>Intensity: " + expo(d[5], 3) + "</p><p>Modification Type: " + mod_type + "</p><p> Position: " + mod_position + "</p><p>Modification Character: " + mod_char + "</p>")
             .style("left", (d3.event.pageX + 10) + "px")
             .style("top", (d3.event.pageY - 10) + "px");
     }
     function mousemove_segments(d) {
-        tooltip.html("<p>Peptide: " + peptide_seq.substring(d[0]-1,  d[0] + d[2]-1) + "</p><p>Intensity: " + d[5] + "</p>")
+        tooltip.html("<p>Peptide: " + peptide_seq.substring(d[0],  d[0] + d[2]) + "</p><p>Intensity: " + expo(d[5], 3) + "</p>")
             .style("left", (d3.event.pageX + 10) + "px")
             .style("top", (d3.event.pageY - 10) + "px");
     }
@@ -116,6 +125,27 @@ $('document').ready(function(){
     function mouseleave(d) {
         tooltip.style("opacity", 0)
     }
+
+    // function onclick(d) {
+    //     // make tooltip that opens new html file
+    //     // make rectangle inside tooltip
+    //     tooltip.style("opacity", 1)
+    //         .style("background-color", "white")
+    //         .style("border", "solid")
+    //         .style("border-width", "2px")
+    //         .style("border-radius", "5px")
+    //         .style("padding", "5px")
+    //         // insert html code from document  /Users/sebastianloeschcke/Desktop/visualization_project/proj/Data_Visualization/my-electron-app/static/custom-tooltip.html
+    //         // html_doc = document.getElementById("html_doc");
+    //         // .html("<p>Peptide: " + peptide_seq.substring(d[0]-1,  d[0] + d[2]-1) + "</p><p>Intensity: " + expo(d[5], 3) + "</p>")
+               
+    //     // make smallview on to
+    // }
+
+    function expo(x, f) {
+        return Number.parseFloat(x).toExponential(f);
+      }
+
 
     var mod_rects = svg.selectAll("boo")
         .data(mod_patches)
@@ -133,10 +163,10 @@ $('document').ready(function(){
         .on("mouseout", mouseleave);
 
     // Inspired by: https://www.d3-graph-gallery.com/graph/custom_legend.html
-    keys = Object.keys(modification_color_map);
+   
     var size = 10
     var legend = svg.selectAll("legend")
-        .data(keys)
+        .data(modification_color_map_keys)
         .enter()
         .append("rect")
         .attr("x", 0)
@@ -147,7 +177,7 @@ $('document').ready(function(){
     
     // Add one dot in the legend for each name.
     legend_text = svg.selectAll("myLabels")
-        .data(keys)
+        .data(modification_color_map_keys)
         .enter()
         .append("text")
         .attr("x", 0 + size*1.2)
@@ -173,6 +203,7 @@ $('document').ready(function(){
         log_steps.push(Math.exp(Math.log(min_intensity) + i * step));
     }
     
+
     //floor log_steps to nearest power of 10
     var log_steps_floor = [];
     for (var i = 0; i < log_steps.length; i++) {
@@ -182,12 +213,18 @@ $('document').ready(function(){
     //parse log_steps to string
     var log_steps_string = [];
     for (var i = 0; i < log_steps.length; i++) {
-        log_steps_string.push(parseFloat(log_steps_floor[i]).toPrecision(1));
+        log_steps_string.push(expo(parseFloat(log_steps_floor[i]).toPrecision(1),1));
+    }
+
+        //parse log_steps to string
+    var log_steps_string = [];
+        for (var i = 0; i < log_steps.length; i++) {
+            log_steps_string.push(expo(parseFloat(log_steps_floor[i]).toPrecision(1),1));
     }
 
     //add max_intensity to log_steps_floor
-    log_steps_string.push(max_intensity);
-    log_steps_string.unshift(min_intensity);
+    log_steps_string.push(expo(max_intensity,3));
+    log_steps_string.unshift(expo(min_intensity,3));
     
 
 
