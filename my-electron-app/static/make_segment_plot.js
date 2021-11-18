@@ -210,30 +210,21 @@ $('document').ready(function(){
     }
     
 
-    //floor log_steps to nearest power of 10
-    var log_steps_floor = [];
-    for (var i = 0; i < log_steps.length; i++) {
-        log_steps_floor.push(Math.pow(10, Math.floor(Math.log(log_steps[i]) / Math.log(10))));
-    }
+    // //floor log_steps to nearest power of 10
+    // var log_steps_floor = [];
+    // for (var i = 0; i < log_steps.length; i++) {
+    //     log_steps_floor.push(Math.pow(10, Math.floor(Math.log(log_steps[i]) / Math.log(10))));
+    // }
 
     //parse log_steps to string
     var log_steps_string = [];
     for (var i = 0; i < log_steps.length; i++) {
-        log_steps_string.push(expo(parseFloat(log_steps_floor[i]).toPrecision(1),1));
-    }
-
-        //parse log_steps to string
-    var log_steps_string = [];
-        for (var i = 0; i < log_steps.length; i++) {
-            log_steps_string.push(expo(parseFloat(log_steps_floor[i]).toPrecision(1),1));
+        log_steps_string.push(expo(parseFloat(log_steps[i]).toPrecision(1), 1));
     }
 
     //add max_intensity to log_steps_floor
     log_steps_string.push(expo(max_intensity,3));
     log_steps_string.unshift(expo(min_intensity,3));
-    
-
-
     
     var defs = svg.append("defs");
     var linearGradient = defs.append("linearGradient")

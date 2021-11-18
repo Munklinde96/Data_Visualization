@@ -79,7 +79,6 @@ def get_and_prepare_data(data_path = 'UHT milk P036.csv', wanted_columns = ['Pro
     df = sanitize_data(df)
     return df
 
-
 ##############################################
 ############ USEFUL UTILS METHODS ############
 ##############################################

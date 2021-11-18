@@ -62,6 +62,7 @@ def buildSampleModData(df, count):
 @application.route("/",methods=["GET","POST"])
 def homepage():
     # Get data and build dataframe
+    # path = r"protein-peptides.csv"
     path = r"UHT milk P036.csv"
     df = pd.read_csv(path)
     data.DataFrame = df
