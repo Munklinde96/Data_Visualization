@@ -316,6 +316,7 @@ def create_data_for_segment_plot(df, _protein="P02666", spacing=0.2, colors = Tr
     data, unique_mod_types= preprocess_data_for_peptide_segment_plot(df, _protein, sample_column_id=sample_column_id, selected_samples=selected_samples, start_end_indices=start_end_indices)
     modtypes_color_map = get_color_palette_for_modifications(unique_mod_types)
     res_intensities, rectangles_and_mods = get_rectangles_for_peptides_and_mods(data, modtypes_color_map)
+    
     if(is_stacked):
         res_intensities, rectangles_and_mods = stack_recs(rectangles_and_mods)
     rects_and_attribute = map_to_attribute(colors, color_scale, is_log_scaled, res_intensities, rectangles_and_mods)
