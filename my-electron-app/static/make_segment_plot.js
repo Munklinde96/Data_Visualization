@@ -1,7 +1,17 @@
 
-$('document').ready(function(){
-    d3.json("http://127.0.0.1:5000/get-segment-data", function(error, data) {
+function renderSegmentPlot(){
+    if(selectedProtein === ""){
+        d3.select("#graphDiv3").select("svg").remove();
+        document.getElementById('no_protein_div_3').innerHTML = '<div style="width: 640px; height: 440px;"><h3>Select a protein to get started.</h3></div>';
+        return;
+    } else {
+        document.getElementById('no_protein_div_3').innerHTML = "<div></div>";
+    }
 
+    // remove old svg
+    d3.select("#graphDiv3").select("svg").remove();
+
+    d3.json("http://127.0.0.1:5000/get-segment-data?protein="+selectedProtein+"&samples="+selectedSample, function(error, data) {
         if (error) throw error;
         var rect_patches = data.peptide_patches;
         var mod_patches = data.mod_patches;
@@ -69,13 +79,7 @@ $('document').ready(function(){
             // }
         });        
         xAxis.tickSizeOuter(12);
-        // adjust size of tick font
-        // xAxis.tickSize(10);
-        // xAxis.tickPadding(10);
-        // xAxis.ticks(peptide_length);
-        // xAxis.tickSizeInner(0);
-        // make every 2nd tick invissible in xAxis
-    
+        
         // TODO: adjust when zooming
     svg.append("g")
         .attr("transform", "translate(" + 0 + ")")
@@ -263,4 +267,8 @@ $('document').ready(function(){
     color_legend_text.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top + 100) + ")");
     rect.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top + 100) + ")");
     });
+}
+
+$('document').ready(function(){
+    renderSegmentPlot();
 });

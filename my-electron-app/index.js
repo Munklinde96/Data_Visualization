@@ -21,8 +21,9 @@ const loadMainWindow = () => {
                     nodeIntegration: true
                 }
             });
+            mainWindow.maximize();
             mainWindow.loadFile(path.join(__dirname, "index.html")).then((_) => {
-                console.log("size is ready");
+                //console.log("site is ready");
             }).then((_) => {
                 
             });   
