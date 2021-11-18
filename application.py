@@ -36,8 +36,10 @@ class DataStore():
     DataFrame=None
 data=DataStore()
 
-def buildProteinModData(df, count, normalization):
+def buildProteinModData(df, count, normalization, _samples=[]):
     # Count modifications
+    #df1, df2, df3, df4 = split_data_in_samples(df)
+
     df['#modifications'] = df['PTM'].apply(count_no_of_modifications)
     df[df['#modifications'] > 0]
 
@@ -51,12 +53,51 @@ def buildProteinModData(df, count, normalization):
 #     data = get_sample_heatmap_data(df, _protein=protein)
 #     return data.to_json()
 
-def buildSampleModData(df, count):
-    df['#modifications'] = df['PTM'].apply(count_no_of_modifications)
-    df[df['#modifications'] > count]
-    data = get_sample_heatmap_data(df)
+def buildSampleModData(df, protein):
+    #df['#modifications'] = df['PTM'].apply(count_no_of_modifications)
+    #df[df['#modifications'] > count]
+    data = None
+    if protein == "":
+        data = get_sample_heatmap_data(df)
+    else:
+        data = get_sample_heatmap_data(df, _protein=protein)
     return data.to_json()
 
+def buildSegmentData(df, protein, _samples=[]):
+    if len(_samples) == 1:
+        if _samples[0] == '':
+            _samples = []
+    intSamples = []
+    for sample in _samples:
+        intSamples.append(int(sample))
+    # Create SegmentPlotData
+    if protein == "":
+        peptide_patches, mod_patches, height, seqq, modification_color_map, min_peptide, max_peptide = create_data_for_segment_plot(df, selected_samples=intSamples)
+        segmentObject = {
+        'peptide_patches': peptide_patches,
+        'mod_patches': mod_patches,
+        'height': height,
+        'seqq': seqq,
+        'modification_color_map': modification_color_map,
+        'min_peptide': min_peptide,
+        'max_peptide': max_peptide
+        }
+        segmentPlotJson = json.dumps(segmentObject)
+        return segmentPlotJson
+    else:
+        peptide_patches, mod_patches, height, seqq, modification_color_map, min_peptide, max_peptide = create_data_for_segment_plot(df, _protein=protein, selected_samples=intSamples)
+        segmentObject = {
+        'peptide_patches': peptide_patches,
+        'mod_patches': mod_patches,
+        'height': height,
+        'seqq': seqq,
+        'modification_color_map': modification_color_map,
+        'min_peptide': min_peptide,
+        'max_peptide': max_peptide
+        }
+        segmentPlotJson = json.dumps(segmentObject)
+        return segmentPlotJson
+    
 @application.route("/main",methods=["GET","POST"])
 #3. Define main code
 @application.route("/",methods=["GET","POST"])
@@ -66,7 +107,6 @@ def homepage():
     #path = r"protein-peptides.csv"
     df = pd.read_csv(path)
     data.DataFrame = df
-    #df1, df2, df3, df4 = split_data_in_samples(df)
     
     # Create initial configuration
     data.Normalization = "protein_intensity"
@@ -81,23 +121,12 @@ def homepage():
     data.ProteinModData = json.loads(proteinModJson)
 
     # Get JSON data for protein mod viz
-    sampleModJson = buildSampleModData(df, data.MinCount)
+    sampleModJson = buildSampleModData(df, "")
 
     # Save to datastore
     data.SampleModData = json.loads(sampleModJson)
 
-    # Create SegmentPlotData
-    peptide_patches, mod_patches, height, seqq, modification_color_map, min_peptide, max_peptide = create_data_for_segment_plot(df)
-    segmentObject = {
-        'peptide_patches': peptide_patches,
-        'mod_patches': mod_patches,
-        'height': height,
-        'seqq': seqq,
-        'modification_color_map': modification_color_map,
-        'min_peptide': min_peptide,
-        'max_peptide': max_peptide
-    }
-    segmentPlotJson = json.dumps(segmentObject)
+    segmentPlotJson = buildSegmentData(df, "")
     data.SegmentPlotData = segmentPlotJson
 
 
@@ -111,6 +140,8 @@ def returnProteinModData():
     print("received get-protein-mode-data request")
     minModCount = request.args.get('min_mod_count', default = 0, type = int)
     normalization = request.args.get('normalization_type', default = "", type = str)
+    samples = request.args.get('samples', default = "", type = str).split(",")
+    print(samples)
     proteinModJson = buildProteinModData(data.DataFrame, minModCount, normalization)
     data.ProteinModData = json.loads(proteinModJson)
     f=data.ProteinModData
@@ -132,6 +163,10 @@ def reutrnSampleModData():
 @cross_origin()
 def returnSegmentData():
     print("received get-segment-data request")
+    protein = request.args.get('protein', default = "", type = str)
+    samples = request.args.get('samples', default = "", type = str).split(",")
+    segmentPlotJson = buildSegmentData(data.DataFrame, protein, _samples=samples)
+    data.SegmentPlotData = segmentPlotJson
     f=data.SegmentPlotData
     return f
 

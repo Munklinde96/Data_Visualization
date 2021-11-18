@@ -1,13 +1,17 @@
 function renderSampleModPlot(){
     if(selectedProtein === ""){
+        d3.select("#graphDiv2").select("svg").remove();
+        document.getElementById('no_protein_div_2').innerHTML = '<div style="width: 640px; height: 440px;"><h3>Select a protein to get started.</h3></div>';
         return;
+    } else {
+        document.getElementById('no_protein_div_2').innerHTML = "<div></div>";
     }
     // set the dimensions and margins of the graph
     var margin = {top: 30, right: 130, bottom: 30, left: 130},
         width = 900 - margin.left - margin.right,
         height = 500 - margin.top - margin.bottom;
     
-        // remove old svg
+    // remove old svg
     d3.select("#graphDiv2").select("svg").remove();
     
     // append the svg object to the body of the page
@@ -54,7 +58,7 @@ function renderSampleModPlot(){
         // Build color scale
         var myColor = d3.scaleSequential()
         .domain([minValue,maxValue])
-        .interpolator(d3.interpolateCool);
+        .interpolator(d3.interpolateBlues);
 
         // Labels of row and columns
         var myGroups = d3.map(modStructData, function(d){return d.sample;}).keys()
@@ -94,8 +98,8 @@ function renderSampleModPlot(){
         var mousemove = function(d) {
         tooltip
             .html("The exact value of<br>this cell is: " + d.value)
-            .style("left", (d3.mouse(this)[0]+1100) + "px")
-            .style("top", (d3.mouse(this)[1]+150) + "px")
+            .style("left", (d3.mouse(this)[0]) + "px")
+            .style("top", (d3.mouse(this)[1]) + "px")
         }
         var mouseleave = function(d) {
         tooltip.style("opacity", 0)
@@ -120,6 +124,7 @@ function renderSampleModPlot(){
                     return val != d.sample;
                 });
             }
+            renderSegmentPlot();
         }
 
         svg.selectAll()
@@ -132,6 +137,18 @@ function renderSampleModPlot(){
             .attr("width", x.bandwidth() )
             .attr("height", y.bandwidth() )
             .style("fill", function(d) { return myColor(d.value)} )
+            .style("stroke", function(d){
+                if(selectedSample.contains()){
+                    return "red";
+                }
+                return "none";
+            })
+            .style("stroke-width", function(d){
+                if(d.sample === selectedSample){
+                    return 2;
+                }
+                return 0;
+            })
             .on("mouseover", mouseover)
             .on("mousemove", mousemove)
             .on("mouseleave", mouseleave)

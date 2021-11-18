@@ -16,7 +16,7 @@ function renderProteinModPlot(){
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     //Read the data
-    d3.json("http://127.0.0.1:5000/get-protein-mod-data?min_mod_count="+minModificationCount+"&normalization_type="+normalizationType, function(error, data) {
+    d3.json("http://127.0.0.1:5000/get-protein-mod-data?min_mod_count="+minModificationCount+"&normalization_type="+normalizationType+"&samples="+selectedSample, function(error, data) {
         // validate request
         if (error) throw error;
         // build modification and protein categories
@@ -95,8 +95,8 @@ function renderProteinModPlot(){
         var mousemove = function(d) {
         tooltip
             .html("The exact value of<br>this cell is: " + d.value)
-            .style("left", (d3.mouse(this)[0]+150) + "px")
-            .style("top", (d3.mouse(this)[1]+150) + "px")
+            .style("left", (d3.mouse(this)[0]) + "px")
+            .style("top", (d3.mouse(this)[1]) + "px")
         }
         var mouseleave = function(d) {
         tooltip.style("opacity", 0)
@@ -121,6 +121,7 @@ function renderProteinModPlot(){
                 selectedProtein = "";
             }
             renderSampleModPlot();
+            renderSegmentPlot();
         }
 
         svg.selectAll()
