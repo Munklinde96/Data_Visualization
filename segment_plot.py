@@ -22,9 +22,7 @@ def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", sample_colum
     df = df.copy()
     df = df[df["Protein Accession"] == _protein]
     if start_end_indices is not None:
-        df = df[df['Start'] == start_end_indices[0]]
-        df = df[df['End'] == start_end_indices[1]]
-
+        df = df[(df.Start == start_end_indices[0]) & (df.End == start_end_indices[1])]
 
     df["Position of Mass Shift"] = df["Peptide"].apply(get_position_of_mass_shift)
     # get list of modification for each PTM
