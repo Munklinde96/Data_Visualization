@@ -51,53 +51,77 @@ function renderSegmentPlot(){
     .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
     
-    var scale_factor = width/peptide_seq.length;
-    // var scale_factor = (width - margin.left - margin.right)/peptide_length;
+    var segment_height = 6;
+    var values_distance = 10;
 
     var peptide_chars = peptide_seq.split("");
     var peptide_length = peptide_seq.length;
-    var peptide_chars_with_numbers = peptide_chars.map(function(d,i){return d+i;});
-    
 
-    var xScale = d3.scaleLinear()
+    var isScrollDisplayed = values_distance * peptide_length > width;
+    console.log("isScrollDisplayed", isScrollDisplayed);
+
+    var xScale_ticks = d3.scaleLinear()
         .domain([0, peptide_length])
-        .range([0, width]);
-    // based on width of window calculate tick_values_distance
-    // var tick_values_distance = Math.floor(width/peptide_length);
-    var tick_values_distance = 3;
-    var xAxis = d3.axisTop(xScale)
-        // .tickValues(d3.range(0, peptide_length, tick_values_distance))
-        .tickValues(d3.range(0, peptide_length))
+        .range([0, peptide_length*values_distance]);
     
-        .tickFormat(function(d,i){ return peptide_chars[d];
-            // if (i%tick_values_distance == 0){
-            //     return peptide_chars[d];
-            // }
-            // else{
-            //     // set tick size
-            //     return "";
-            // }
+    var xScale_labels = d3.scaleLinear()
+        .domain([0, peptide_length])
+        .range([values_distance/2, peptide_length*values_distance + values_distance/2]);
+
+    var xAxis_ticks = d3.axisTop()
+        .scale(xScale_ticks).tickPadding(10)
+        .tickValues(d3.range(0, peptide_length))
+        // .tickFormat(function(d,i){ return peptide_chars[d];
+        .tickFormat(function(d,i){ return null
         });        
-        xAxis.tickSizeOuter(12);
+        xAxis_ticks.tickSizeOuter(12);
+    
+    var xAxis_labels = d3.axisTop()
+        .scale(xScale_labels).tickPadding(8)
+        .tickSize(0)
+        .tickValues(d3.range(0, peptide_length))
+        .tickFormat(function(d,i){ 
+            return peptide_chars[d];
+        });
         
-        // TODO: adjust when zooming
     svg.append("g")
-        .attr("transform", "translate(" + 0 + ")")
-        .call(xAxis);    
-        
+        .attr("class", "xAxis_ticks")
+        .attr("transform", "translate(0, -1)")
+        .call(xAxis_ticks);
+    
+    svg.append("g")
+        .attr("class", "xAxis_labels")
+        .attr("transform", "translate(0, -1)")
+        .call(xAxis_labels)
+        .selectAll("text")
+        .style("font-weight", function(d,i){
+            if(i%10 === 0){
+                return "bold";
+            } else {
+                return "normal";
+            }
+        })
+        .style("font-size", function(d,i){
+            if(i%10 === 0){
+                return "1.2em";
+            } else {
+                return "1em";
+            }
+        });
+
 
     // sample data for rectangles
     var rects = svg.selectAll("foo")
         .data(rect_patches)
         .enter()
         .append("rect")
-        .attr("x", d => d[0]*scale_factor)
-        .attr("y", d=> d[1]*scale_factor)
-        .attr("width", d=> d[2]*scale_factor)
-        .attr("height", d=> d[3]*scale_factor)
+        .attr("x", d => d[0]*values_distance)
+        .attr("y", d=> d[1]*segment_height)
+        .attr("width", d=> d[2]*values_distance)
+        .attr("height", d=> d[3]*segment_height)
         .attr("fill", d=> d[4])
         .attr("stroke", "black")
-        .attr("stroke-width", 0.2 *scale_factor)
+        .attr("stroke-width", 0.2)
         .on("mouseover",mouseover)
         .on("mousemove", mousemove_segments)
         .on("mouseout", mouseleave);
@@ -136,22 +160,6 @@ function renderSegmentPlot(){
         tooltip.style("opacity", 0)
     }
 
-    // function onclick(d) {
-    //     // make tooltip that opens new html file
-    //     // make rectangle inside tooltip
-    //     tooltip.style("opacity", 1)
-    //         .style("background-color", "white")
-    //         .style("border", "solid")
-    //         .style("border-width", "2px")
-    //         .style("border-radius", "5px")
-    //         .style("padding", "5px")
-    //         // insert html code from document  /Users/sebastianloeschcke/Desktop/visualization_project/proj/Data_Visualization/my-electron-app/static/custom-tooltip.html
-    //         // html_doc = document.getElementById("html_doc");
-    //         // .html("<p>Peptide: " + peptide_seq.substring(d[0]-1,  d[0] + d[2]-1) + "</p><p>Intensity: " + expo(d[5], 3) + "</p>")
-               
-    //     // make smallview on to
-    // }
-
     function expo(x, f) {
         return Number.parseFloat(x).toExponential(f);
       }
@@ -161,13 +169,13 @@ function renderSegmentPlot(){
         .data(mod_patches)
         .enter()
         .append("rect")
-        .attr("x", d => d[0]*scale_factor)
-        .attr("y", d=> (d[1])*scale_factor)
-        .attr("width", d=> d[2]*scale_factor)
-        .attr("height", d=> d[3]*scale_factor)
+        .attr("x", d => d[0]*values_distance)
+        .attr("y", d=> (d[1])*segment_height)
+        .attr("width", d=> d[2]*values_distance)
+        .attr("height", d=> d[3]*segment_height)
         .attr("fill", d=> d[4])
         .attr("stroke", "black")
-        .attr("stroke-width", 0.2 *scale_factor)
+        .attr("stroke-width", 0.2)
         .on("mouseover",mouseover)
         .on("mousemove", mousemove_modification)
         .on("mouseout", mouseleave);
@@ -223,7 +231,7 @@ function renderSegmentPlot(){
     //parse log_steps to string
     var log_steps_string = [];
     for (var i = 0; i < log_steps.length; i++) {
-        log_steps_string.push(expo(parseFloat(log_steps[i]).toPrecision(1), 1));
+        log_steps_string.push(expo(parseFloat(log_steps[i]).toPrecision(1), 3));
     }
 
     //add max_intensity to log_steps_floor
