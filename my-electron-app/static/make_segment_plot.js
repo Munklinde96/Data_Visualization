@@ -1,4 +1,3 @@
-
 function renderSegmentPlot(){
     if(selectedProtein === ""){
         d3.select("#graphDiv3").select("svg").remove();
@@ -49,14 +48,15 @@ function renderSegmentPlot(){
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
     .append("g")
+    // make scrolable svg
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
     
     var scale_factor = width/peptide_seq.length;
     // var scale_factor = (width - margin.left - margin.right)/peptide_length;
 
     var peptide_chars = peptide_seq.split("");
     var peptide_length = peptide_seq.length;
-    var peptide_chars_with_numbers = peptide_chars.map(function(d,i){return d+i;});
     
 
     var xScale = d3.scaleLinear()
@@ -85,6 +85,9 @@ function renderSegmentPlot(){
         .attr("transform", "translate(" + 0 + ")")
         .call(xAxis);    
         
+    var rx = 2
+    var ry = 2
+    var stroke_width = 0.2
 
     // sample data for rectangles
     var rects = svg.selectAll("foo")
@@ -96,8 +99,11 @@ function renderSegmentPlot(){
         .attr("width", d=> d[2]*scale_factor)
         .attr("height", d=> d[3]*scale_factor)
         .attr("fill", d=> d[4])
+        .attr("rx", rx)
+        .attr("ry", ry)
+        .attr("opacity", 0.8)
         .attr("stroke", "black")
-        .attr("stroke-width", 0.2 *scale_factor)
+        .attr("stroke-width", stroke_width)
         .on("mouseover",mouseover)
         .on("mousemove", mousemove_segments)
         .on("mouseout", mouseleave);
@@ -149,8 +155,10 @@ function renderSegmentPlot(){
         .attr("width", d=> d[2]*scale_factor)
         .attr("height", d=> d[3]*scale_factor)
         .attr("fill", d=> d[4])
+        .attr("rx", rx)
+        .attr("ry", ry)
         .attr("stroke", "black")
-        .attr("stroke-width", 0.2 *scale_factor)
+        .attr("stroke-width", stroke_width)
         .on("mouseover",mouseover)
         .on("mousemove", mousemove_modification)
         .on("mouseout", mouseleave);
@@ -206,27 +214,30 @@ function renderSegmentPlot(){
     color_bar_width = 20;
     color_bar_height = 180;
 
-    var steps = 5;
+    // find difrence in magnintude and use as steps
+    var max_exp = expo(max_intensity,1);
+    var min_exp = expo(min_intensity,1);
+    var max_exp_last_char = max_exp.substring(max_exp.length-1);
+    var min_exp_last_char = min_exp.substring(min_exp.length-1);
+    var steps = Math.abs(max_exp_last_char - min_exp_last_char)+1;
+
     var step = (Math.log(max_intensity) - Math.log(min_intensity)) / (steps - 1);
     log_steps = [];
     for (var i = 0; i < steps; i++) {
         log_steps.push(Math.exp(Math.log(min_intensity) + i * step));
     }
-    
-
-    // //floor log_steps to nearest power of 10
-    // var log_steps_floor = [];
-    // for (var i = 0; i < log_steps.length; i++) {
-    //     log_steps_floor.push(Math.pow(10, Math.floor(Math.log(log_steps[i]) / Math.log(10))));
-    // }
 
     //parse log_steps to string
     var log_steps_string = [];
     for (var i = 0; i < log_steps.length; i++) {
-        log_steps_string.push(expo(parseFloat(log_steps[i]).toPrecision(1), 1));
+        log_steps_string.push(expo(parseFloat(log_steps[i]).toPrecision(3), 3));
     }
 
     //add max_intensity to log_steps_floor
+    // make firsttt item equal expo(max_intensity,3)
+    // delete first and last item in log_steps_string
+    log_steps_string = log_steps_string.slice(1, log_steps_string.length - 1);
+    
     log_steps_string.push(expo(max_intensity,3));
     log_steps_string.unshift(expo(min_intensity,3));
     
@@ -258,7 +269,7 @@ function renderSegmentPlot(){
         .enter()
         .append("text")
         .attr("x", 220)
-        .attr("y", function(d,i){ return color_bar_height - i*(color_bar_height/6)})
+        .attr("y", function(d,i){ return color_bar_height - i*(color_bar_height/(steps-1))})
         .text(function(d){ return "-" +d})
         .attr("text-anchor", "right")
         .style("alignment-baseline", "middle")
