@@ -122,6 +122,7 @@ function renderProteinModPlot(){
             }
             renderSampleModPlot();
             renderSegmentPlot();
+            selectedSample = [];
         }
 
         svg.selectAll()

@@ -22,11 +22,7 @@ const loadMainWindow = () => {
                 }
             });
             mainWindow.maximize();
-            mainWindow.loadFile(path.join(__dirname, "index.html")).then((_) => {
-                //console.log("site is ready");
-            }).then((_) => {
-                
-            });   
+            mainWindow.loadFile(path.join(__dirname, "index.html"));
     }
 }
 

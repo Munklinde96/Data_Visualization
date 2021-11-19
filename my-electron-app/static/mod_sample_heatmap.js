@@ -30,6 +30,7 @@ function renderSampleModPlot(){
         var maxValue = null;
         var minValue = null;
         var modStructData = null;
+        var differentSamples = [];
         for (const [sample, mods] of Object.entries(data)) {
             for (const [mod, value] of Object.entries(mods)){
                 if(maxValue == null || value > maxValue){
@@ -37,6 +38,9 @@ function renderSampleModPlot(){
                 }
                 if(minValue == null || value < minValue) {
                     minValue =  value
+                }
+                if(differentSamples.includes(sample) == false){
+                    differentSamples.push(sample);
                 }
                 if(mod && sample && value){
                     if(modStructData == null){
@@ -108,7 +112,7 @@ function renderSampleModPlot(){
         var mouseclick = function(d, i){
             for(let n = 0; n < modStructData.length; n++){
                 // remove old if clicked on one it already contains
-                if(modStructData[n].sample === d.sample && selectedSample.includes(Number(d.sample))){
+                if(differentSamples.length === selectedSample.length || (modStructData[n].sample === d.sample && selectedSample.includes(Number(d.sample)))){
                     let target = d3.select("#sample_id_heatmap_"+n);
                     target.style('stroke', 'none');
                 } else if(Number(d.sample) === Number(modStructData[n].sample)){
@@ -137,18 +141,6 @@ function renderSampleModPlot(){
             .attr("width", x.bandwidth() )
             .attr("height", y.bandwidth() )
             .style("fill", function(d) { return myColor(d.value)} )
-            .style("stroke", function(d){
-                if(selectedSample.contains()){
-                    return "red";
-                }
-                return "none";
-            })
-            .style("stroke-width", function(d){
-                if(d.sample === selectedSample){
-                    return 2;
-                }
-                return 0;
-            })
             .on("mouseover", mouseover)
             .on("mousemove", mousemove)
             .on("mouseleave", mouseleave)

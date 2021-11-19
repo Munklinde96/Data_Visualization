@@ -70,9 +70,10 @@ def buildSegmentData(df, protein, _samples=[]):
     intSamples = []
     for sample in _samples:
         intSamples.append(int(sample))
+    print(intSamples)
     # Create SegmentPlotData
     if protein == "":
-        peptide_patches, mod_patches, height, seqq, modification_color_map, min_peptide, max_peptide = create_data_for_segment_plot(df, selected_samples=intSamples)
+        peptide_patches, mod_patches, height, seqq, modification_color_map, min_peptide, max_peptide = create_data_for_segment_plot(df, selected_samples_indices=intSamples)
         segmentObject = {
         'peptide_patches': peptide_patches,
         'mod_patches': mod_patches,
@@ -85,7 +86,7 @@ def buildSegmentData(df, protein, _samples=[]):
         segmentPlotJson = json.dumps(segmentObject)
         return segmentPlotJson
     else:
-        peptide_patches, mod_patches, height, seqq, modification_color_map, min_peptide, max_peptide = create_data_for_segment_plot(df, _protein=protein, selected_samples=intSamples)
+        peptide_patches, mod_patches, height, seqq, modification_color_map, min_peptide, max_peptide = create_data_for_segment_plot(df, _protein=protein, selected_sample_indices=intSamples)
         segmentObject = {
         'peptide_patches': peptide_patches,
         'mod_patches': mod_patches,
