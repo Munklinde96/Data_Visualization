@@ -1,3 +1,5 @@
+const { zoom } = require("d3-zoom");
+
 function renderSegmentPlot(){
     if(selectedProtein === ""){
         d3.select("#graphDiv3").select("svg").remove();
@@ -110,10 +112,11 @@ function renderSegmentPlot(){
             }
         });
 
-
     var rx = 3
     var ry = 3
     var stroke_width = 0.1
+    var opacity = 0.7
+    var opacity_mod = 0.8
     // sample data for rectangles
     var rects = svg.selectAll("foo")
         .data(rect_patches)
@@ -126,7 +129,7 @@ function renderSegmentPlot(){
         .attr("fill", d=> d[4])
         .attr("rx", rx)
         .attr("ry", ry)
-        .attr("opacity", 0.8)
+        .attr("opacity", opacity)
         .attr("stroke", "black")
         .attr("stroke-width", stroke_width)
         .on("mouseover",mouseover)
@@ -158,7 +161,21 @@ function renderSegmentPlot(){
             .style("top", (d3.event.pageY - 10) + "px");
     }
     function mousemove_segments(d) {
-        tooltip.html("<p>Peptide: " + peptide_seq.substring(d[0],  d[0] + d[2]) + "</p><p>Intensity: " + expo(d[5], 3) + "</p>")
+        if (d[0]-3  >= 0) {
+            var three_chars_before = peptide_chars.slice(d[0]-3, d[0]); 
+        } else {
+            var three_chars_before = peptide_chars.slice(0, d[0]);
+        }
+        if (d[0]+ d[2]+3 <= peptide_length) {
+            var three_chars_after = peptide_chars.slice(d[0] + d[2], d[0] + d[2]+3);
+        } else {
+            var three_chars_after = peptide_chars.slice(d[0] + d[2], peptide_length);
+        }
+        // make text smaller in html
+        three_chars_before_italic = '<i>' +three_chars_before.join("")+'</i>';
+        three_chars_after_italic = '<i>' +three_chars_after.join("") +'</i>';
+
+        tooltip.html("<p>Peptide: " + three_chars_before_italic+ '.' + peptide_seq.substring(d[0],  d[0] + d[2])+ '.' + three_chars_after_italic + "</p><p>Intensity: " + expo(d[5], 3) + "</p>")
             .style("left", (d3.event.pageX + 10) + "px")
             .style("top", (d3.event.pageY - 10) + "px");
     }
@@ -182,11 +199,12 @@ function renderSegmentPlot(){
         .attr("fill", d=> d[4])
         .attr("rx", rx)
         .attr("ry", ry)
+        .attr("opacity", opacity_mod)
         .attr("stroke", "black")
         .attr("stroke-width", stroke_width)
         .on("mouseover",mouseover)
         .on("mousemove", mousemove_modification)
-        .on("mouseout", mouseleave);
+        .on("mouseout", mouseleave);    
 
     // Inspired by: https://www.d3-graph-gallery.com/graph/custom_legend.html
     //   modification labels
