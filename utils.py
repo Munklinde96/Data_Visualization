@@ -306,7 +306,10 @@ def get_modification_count_per_protein(df, countFilter, normalize):
             proteinIntensity =  get_protein_total_intensity(df, "P02666")
             updateMods = {}
             for mod, count in mods.items():
-                updateMods[mod] = count / proteinIntensity
+                if proteinIntensity == 0:
+                    updateMods[mod] = 0
+                else:
+                    updateMods[mod] = count / proteinIntensity
             modificationCountByProteinFiltered[protein] = updateMods
     else:
         print("norm is: no normalization")

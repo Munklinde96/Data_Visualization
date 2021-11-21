@@ -62,7 +62,7 @@ function renderSampleModPlot(){
         // Build color scale
         var myColor = d3.scaleSequential()
         .domain([minValue,maxValue])
-        .interpolator(d3.interpolateBlues);
+        .interpolator(d3.interpolateOranges);
 
         // Labels of row and columns
         var myGroups = d3.map(modStructData, function(d){return d.sample;}).keys()
@@ -137,6 +137,8 @@ function renderSampleModPlot(){
             .append("rect")
             .attr("x", function(d) {return x(d.sample) })
             .attr("y", function(d) { return y(d.mod) })
+            .attr("rx",3)
+            .attr("ry",3)
             .attr("id", function(d, i){return "sample_id_heatmap_"+i })
             .attr("width", x.bandwidth() )
             .attr("height", y.bandwidth() )
@@ -145,6 +147,58 @@ function renderSampleModPlot(){
             .on("mousemove", mousemove)
             .on("mouseleave", mouseleave)
             .on("click", mouseclick)
+
+        // COLORBAR LEGEND
+        color_bar_width = 30;
+        color_bar_height = height;
+    
+        var defs = svg.append("defs");
+        var linearGradient = defs.append("linearGradient")
+        .attr("id", "linear-gradient_sample_mod_heat")
+        .attr("x1", "0%")
+        .attr("y1", "100%")
+        .attr("x2", "0%")
+        .attr("y2", "0%")
+        .attr("spreadMethod", "pad");
+
+
+        // get 100 points from my color and add to linearGradient
+        gradinet_steps = 100;
+        for(let i = 0; i < gradinet_steps ; i++){
+            value = minValue + (maxValue - minValue) * i / gradinet_steps ;
+            color = myColor(value);
+            offset = (i / gradinet_steps) * 100 + "%";
+            linearGradient.append("stop")
+            .attr("offset", offset)
+            .attr("stop-color", color)
+        }
+
+        var rect = svg.append("rect")
+        .attr("x", width +5)
+        .attr("y", 0)
+        .attr("width", color_bar_width)
+        .attr("height", color_bar_height)
+        .style("fill", "url(#linear-gradient_sample_mod_heat)");
+
+        // legend axis and scale
+        // create a scale and axis for the legend
+        var legendScale = d3.scaleLinear()
+        .domain([maxValue, minValue])
+        .range([0,color_bar_height]);
+        
+        var legendAxis = d3.axisRight(legendScale)
+        .ticks(5)
+        .tickSize(5)
+        .tickFormat(d3.format(".2f"));
+        // set tick for last value also
+        legendAxis.tickValues(legendAxis.scale().ticks(5).concat(legendAxis.scale().domain()));
+
+        // add the legend axis to the svg
+        svg.append("g")
+        .attr("transform", "translate(" + (width + color_bar_width + 5) + ",0)")
+        .call(legendAxis);
+ 
+        
     });
 }
 
