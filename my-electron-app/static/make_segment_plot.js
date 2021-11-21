@@ -185,11 +185,7 @@ function renderSegmentPlot(){
         three_chars_after_italic = '<i>' +three_chars_after.join("") +'</i>';
         
         // get all modification on this segments
-        var mod_positions = [];
-        var mod_types = [];
         mod_types_and_positions = [];
-        // find modification where x in mod_patches is between d[0] and d[0] + d[2] of this segment
-        //  and y is like d[1]
         for (var i = 0; i < mod_patches.length; i++) {
             if (mod_patches[i][0] >= d[0] && mod_patches[i][0] <= d[0] + d[2] && mod_patches[i][1] == d[1]) {
                 pos = mod_patches[i][0];
