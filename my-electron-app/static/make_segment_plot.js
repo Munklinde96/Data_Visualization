@@ -186,9 +186,11 @@ function renderSegmentPlot(){
         
         // get all modification on this segments
         mod_types_and_positions = [];
+        mod_positions = [];
         for (var i = 0; i < mod_patches.length; i++) {
             if (mod_patches[i][0] >= d[0] && mod_patches[i][0] <= d[0] + d[2] && mod_patches[i][1] == d[1]) {
                 pos = mod_patches[i][0];
+                mod_positions.push(pos);
                 _type =colors_to_mod_map.get(mod_patches[i][4]);
                 mod_types_and_positions.push(_type + "(" + pos+")");
             }
@@ -205,10 +207,50 @@ function renderSegmentPlot(){
             .style("top", (d3.event.pageY - 10) + "px");
         }
 
+        // highlight the peptide sequence in the x-axis 
+        var x_axis_highlight = svg.selectAll(".xAxis_labels")
+            .selectAll("text")
+            .style("fill", function(dd,i){
+                if(i >= d[0] && i < d[0] + d[2]){
+                    // check if modification at position i
+                    if (mod_positions.includes(i)) {
+                        return "red";
+                    } else {
+                        return d[4];
+                    }
+                } else {
+                    return "black";
+                }
+            })
+            // increase size of the text
+            .style("font-size", function(dd,i){
+                if(i >= d[0] && i < d[0] + d[2]){
+                    return "1.5em";
+                } else {
+                    return "1em";
+                }
+            })
+            // make bold
+            .style("font-weight", function(dd,i){
+                if(i >= d[0] && i < d[0] + d[2]){
+                    return "bold";
+                } else {
+                    return "normal";
+                }
+            });
+
     }
     
     function mouseleave(d) {
         tooltip.style("opacity", 0)
+        var x_axis_highlight = svg.selectAll(".xAxis_labels")
+        .selectAll("text")
+        .style("fill", 'black');
+        // TODO: make it back to normal
+        // ##########
+        // ##########
+        // ##########
+        // ##########
     }
     function expo(x, f) {
         return Number.parseFloat(x).toExponential(f);
@@ -245,6 +287,19 @@ function renderSegmentPlot(){
         .attr("width", size)
         .attr("height", size)
         .style("fill", function(d, i){ return modification_color_map[d]})
+        .on("mouseover", function(d,i){
+            d3.select(this)
+            .style("cursor", "pointer")
+            .style("stroke", "black")
+            .style("stroke-width", "2px");
+        })
+        .on("mouseout", function(d,i){
+            d3.select(this)
+            .style("cursor", "none")
+            .style("stroke", "none");
+        })
+        // implement ONCLICK
+        // .on("click", function(d,i){
     
     // Add one dot in the legend for each name.
     legend_text = svg.selectAll("myLabels")
@@ -258,10 +313,10 @@ function renderSegmentPlot(){
         .style("fill", "black")
         .style("alignment-baseline", "middle")
         .on("mouseover", function(d,i){
-            d3.select(this).style("font-weight", "bold");
+            d3.select(this).style("font-weight", "bold").style("cursor", "pointer");
         })
         .on("mouseout", function(d,i){
-            d3.select(this).style("font-weight", "normal");
+            d3.select(this).style("font-weight", "normal").style("cursor", "none");
         })
         .on("click", function(d,i){
             // switch between color in color map and standard color 

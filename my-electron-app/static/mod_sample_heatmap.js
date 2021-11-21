@@ -62,7 +62,7 @@ function renderSampleModPlot(){
         // Build color scale
         var myColor = d3.scaleSequential()
         .domain([minValue,maxValue])
-        .interpolator(d3.interpolateBlues);
+        .interpolator(d3.interpolateOranges);
 
         // Labels of row and columns
         var myGroups = d3.map(modStructData, function(d){return d.sample;}).keys()
@@ -161,13 +161,17 @@ function renderSampleModPlot(){
         .attr("y2", "0%")
         .attr("spreadMethod", "pad");
 
-        linearGradient.append("stop")
-        .attr("offset", "0%")
-        .attr("stop-color", myColor(minValue))
 
-        linearGradient.append("stop")
-        .attr("offset", "100%")
-        .attr("stop-color", myColor(maxValue))
+        // get 100 points from my color and add to linearGradient
+        gradinet_steps = 100;
+        for(let i = 0; i < gradinet_steps ; i++){
+            value = minValue + (maxValue - minValue) * i / gradinet_steps ;
+            color = myColor(value);
+            offset = (i / gradinet_steps) * 100 + "%";
+            linearGradient.append("stop")
+            .attr("offset", offset)
+            .attr("stop-color", color)
+        }
 
         var rect = svg.append("rect")
         .attr("x", width +5)
