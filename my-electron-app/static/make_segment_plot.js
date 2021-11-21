@@ -9,9 +9,18 @@ function renderSegmentPlot(){
         document.getElementById('no_protein_div_3').innerHTML = "<div></div>";
     }
 
+    
     // remove old svg
     d3.select("#graphDiv3").select("svg").remove();
+    
+    // get <p> paragraph field inside the graphDiv3 div to change Peptide Segments Plot text
+    var p = document.getElementById("graphDiv3").getElementsByTagName("p")[0];
+    p.innerHTML = "Peptide Segments Plot - Protein: " + selectedProtein;
+    p.style.fontWeight = "bold";
+    p.style.fontStyle = "italic";
 
+    
+    
     d3.json("http://127.0.0.1:5000/get-segment-data?protein="+selectedProtein+"&samples="+selectedSample, function(error, data) {
         if (error) throw error;
         var rect_patches = data.peptide_patches;
@@ -276,9 +285,6 @@ function renderSegmentPlot(){
         log_steps_string.push(expo(parseFloat(log_steps[i]).toPrecision(3), 3));
     }
 
-    //add max_intensity to log_steps_floor
-    // make firsttt item equal expo(max_intensity,3)
-    // delete first and last item in log_steps_string
     log_steps_string = log_steps_string.slice(1, log_steps_string.length - 1);
     
     log_steps_string.push(expo(max_intensity,3));
@@ -307,18 +313,33 @@ function renderSegmentPlot(){
         .attr("height", color_bar_height)
         .style("fill", "url(#linear-gradient)");
 
+
+    var color_legend_x = 220;
     color_legend_text = svg.selectAll("colorLabels")
         .data(log_steps_string)
         .enter()
         .append("text")
-        .attr("x", 220)
+        .attr("x", color_legend_x)
         .attr("y", function(d,i){ return color_bar_height - i*(color_bar_height/(steps-1))})
         .text(function(d){ return "-" +d})
         .attr("text-anchor", "right")
         .style("alignment-baseline", "middle")
 
-        //move color_legend_text next to rect
+    // add right line to next to color_legend_text
+    var legendLine = svg.append("line")
+    .attr("x1", color_legend_x)
+    .attr("y1", 0)
+    .attr("x2", color_legend_x)
+    .attr("y2", color_bar_height)
+    .attr("stroke", "black")
+    .attr("stroke-width", 1);
+    
+    //move color_legend_text next to rect
     color_legend_text.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top + 100) + ")");
+    // move legendLine next to color_legend_text
+    legendLine.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top + 100) + ")");
+
+    
     rect.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top + 100) + ")");
     });
 }
