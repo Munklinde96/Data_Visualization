@@ -70,7 +70,6 @@ function renderSegmentPlot(){
     var peptide_length = peptide_seq.length;
 
     var isScrollDisplayed = values_distance * peptide_length > width;
-    console.log("isScrollDisplayed", isScrollDisplayed);
 
     var xScale_ticks = d3.scaleLinear()
         .domain([0, peptide_length])
@@ -288,7 +287,8 @@ function renderSegmentPlot(){
         .attr("y", function(d,i){ return 100 + i*(size+5)}) // 100 is where the first dot appears. 25 is the distance between dots
         .attr("width", size)
         .attr("height", size)
-        .style("fill", function(d, i){ return modification_color_map[d]})
+        // .style("fill", function(d, i){ return modification_color_map[d]})
+        .style("fill",'grey')
         .on("mouseover", function(d,i){
             d3.select(this)
             .style("cursor", "pointer")
@@ -309,14 +309,13 @@ function renderSegmentPlot(){
                 if (color_val == dd[4]) {
                     // check color
                     col = d3.select(this).style("fill");
-                    console.log(col);
-                    if (col == "rgb(128, 128, 128)") {// if grey
-                        console.log("color is grey");
+                    if (col == "rgb(128, 128, 128)" || col == 'grey') {// if grey
+                        // console.log("color is grey");
                         d3.select(this).style("fill", color_val);
                         d3.select(this).attr("opacity", opacity_mod);
                     } else {
                         d3.select(this).style("fill", "grey");
-                        d3.select(this).attr("opacity", opacity_mod_grey);
+                        d3.select(this).attr("opacity", opacity_mod);
                     }
                     // opacity_ = d3.select(this).attr("opacity");
                     // // change opacity
@@ -327,6 +326,14 @@ function renderSegmentPlot(){
                     // }
                 }
             })
+            // fill box with color of text next to it (if it is grey)
+            box_fill = d3.select(this).style("fill");
+            if (box_fill == "rgb(128, 128, 128)" || box_fill == "grey") {
+                d3.select(this).style("fill", modification_color_map[d]);
+            } else {
+                d3.select(this).style("fill", "grey");
+            }
+            
         });
     
     // Add one dot in the legend for each name.
@@ -347,17 +354,12 @@ function renderSegmentPlot(){
             d3.select(this).style("font-weight", "normal").style("cursor", "none");
         })
         .on("click", function(d,i){
-            // switch between color in color map and standard color 
-            var current_color = d3.select(this).style("fill");  
-            if (current_color == "black"){ 
-                d3.select(this).style("fill", modification_color_map[d]);
-                d3.select(this).style("font-weight", "bold");
-            }
-            else{
-                d3.select(this).style("fill", "black");
-                d3.select(this).style("font-weight", "normal");
-            }
+            legend.filter(function(dd, ii){// call legend.click on i'th element
+                if (ii == i) {
+                    d3.select(this).dispatch("click");
+                }
             })
+        })
 
 
     // move legend and legend_text  to Center LEFT 
