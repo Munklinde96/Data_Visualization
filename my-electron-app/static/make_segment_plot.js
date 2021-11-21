@@ -12,46 +12,52 @@ function renderSegmentPlot(){
     d3.select("#graphDiv3").select("svg").remove();
 
     d3.json("http://127.0.0.1:5000/get-segment-data?protein="+selectedProtein+"&samples="+selectedSample, function(error, data) {
-        if (error) throw error;
-        var rect_patches = data.peptide_patches;
-        var mod_patches = data.mod_patches;
-        var plot_height = data.height;
-        var peptide_seq = data.seqq;
-        var modification_color_map = data.modification_color_map;
-        var min_peptide = data.min_peptide;
-        var max_peptide = data.max_peptide;
-        var min_intensity = min_peptide[0];
-        var max_intensity = max_peptide[0];
-        //round min_intensity and max_intensity to 10 decimals
-        min_intensity = Math.round(min_intensity * 100000000) / 100000000;
-        max_intensity = Math.round(max_intensity * 100000000) / 100000000;
+    if (error) throw error;
+    console.log(data)
+    var rect_patches = data.peptide_patches;
+    var mod_patches = data.mod_patches;
+    var plot_height = data.height;
+    var peptide_seq = data.seqq;
+    var modification_color_map = data.modification_color_map;
+    var min_peptide = data.min_peptide;
+    var max_peptide = data.max_peptide;
+    var min_intensity = min_peptide[0];
+    var max_intensity = max_peptide[0];
+    //round min_intensity and max_intensity to 10 decimals
+    min_intensity = Math.round(min_intensity * 100000000) / 100000000;
+    max_intensity = Math.round(max_intensity * 100000000) / 100000000;
 
-        var min_color = min_peptide[1];
-        var max_color = max_peptide[1];
-        var color = d3.scaleLinear().range([min_color, max_color]).domain([1, 2]);
-        
-        modification_color_map_keys = Object.keys(modification_color_map);
-        modification_color_map_values = Object.values(modification_color_map);
-        // create map from values to keys
-        var colors_to_mod_map = new Map();
-        for (var i = 0; i < modification_color_map_keys.length; i++) {
-            colors_to_mod_map.set(modification_color_map_values[i], modification_color_map_keys[i]);
-        }
+    var min_color = min_peptide[1];
+    var max_color = max_peptide[1];
+    var color = d3.scaleLinear().range([min_color, max_color]).domain([1, 2]);
+    
+    modification_color_map_keys = Object.keys(modification_color_map);
+    modification_color_map_values = Object.values(modification_color_map);
+    // create map from values to keys
+    var colors_to_mod_map = new Map();
+    for (var i = 0; i < modification_color_map_keys.length; i++) {
+        colors_to_mod_map.set(modification_color_map_values[i], modification_color_map_keys[i]);
+    }
+
+    var selector_height = 100
 
     // set the dimensions and margins of the graph
-    var margin = {top: 30, right: 30, bottom: 30, left: 30},
-        width = screen.width - margin.left - margin.right,
-        height = 700 - margin.top - margin.bottom;
+    var margin = {top: 30, right: 15, bottom: 30, left: 15};
+    var width = screen.width - margin.left - margin.right;
+    var height = plot_height*5;
+
+    var margin_overview = {top: 30, right: 15, bottom: 10, left: 15};
+        
         
     // append the svg object to the body of the page
     var svg = d3.select("#graphDiv3")
     .append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
+    .attr("width", width)
+    .attr("height", height + margin.top + margin.bottom + selector_height)
     .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
     
-    var segment_height = 6;
+    var segment_height = 5;
     var values_distance = 10;
 
     var peptide_chars = peptide_seq.split("");
@@ -71,7 +77,6 @@ function renderSegmentPlot(){
     var xAxis_ticks = d3.axisTop()
         .scale(xScale_ticks).tickPadding(10)
         .tickValues(d3.range(0, peptide_length))
-        // .tickFormat(function(d,i){ return peptide_chars[d];
         .tickFormat(function(d,i){ return null
         });        
         xAxis_ticks.tickSizeOuter(12);
@@ -84,14 +89,14 @@ function renderSegmentPlot(){
             return peptide_chars[d];
         });
         
-    svg.append("g")
+    var x_ticks = svg.append("g")
         .attr("class", "xAxis_ticks")
-        .attr("transform", "translate(0, -1)")
+        .attr("transform", "translate(" + 0 + "," + (selector_height + margin_overview.bottom - 1+12) + ")")
         .call(xAxis_ticks);
     
-    svg.append("g")
+    var x_labels = svg.append("g")
         .attr("class", "xAxis_labels")
-        .attr("transform", "translate(0, -1)")
+        .attr("transform", "translate(" + 0 + "," + (selector_height + margin_overview.bottom - 1+12) + ")")
         .call(xAxis_labels)
         .selectAll("text")
         .style("font-weight", function(d,i){
@@ -116,7 +121,7 @@ function renderSegmentPlot(){
         .enter()
         .append("rect")
         .attr("x", d => d[0]*values_distance)
-        .attr("y", d=> d[1]*segment_height)
+        .attr("y", d => (selector_height + margin_overview.bottom +12) + d[1]*segment_height)
         .attr("width", d=> d[2]*values_distance)
         .attr("height", d=> d[3]*segment_height)
         .attr("fill", d=> d[4])
@@ -162,15 +167,14 @@ function renderSegmentPlot(){
 
     function expo(x, f) {
         return Number.parseFloat(x).toExponential(f);
-      }
-
+    }
 
     var mod_rects = svg.selectAll("boo")
         .data(mod_patches)
         .enter()
         .append("rect")
         .attr("x", d => d[0]*values_distance)
-        .attr("y", d=> (d[1])*segment_height)
+        .attr("y", d=> (selector_height + margin_overview.bottom+12) + d[1]*segment_height)
         .attr("width", d=> d[2]*values_distance)
         .attr("height", d=> d[3]*segment_height)
         .attr("fill", d=> d[4])
@@ -203,9 +207,6 @@ function renderSegmentPlot(){
         .text(function(d){ return d})
         .attr("text-anchor", "left")
         .style("alignment-baseline", "middle")
-        
-       
-
 
     // move legend and legend_text  to Center LEFT 
     legend.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top) + ")");
@@ -220,13 +221,6 @@ function renderSegmentPlot(){
     for (var i = 0; i < steps; i++) {
         log_steps.push(Math.exp(Math.log(min_intensity) + i * step));
     }
-    
-
-    // //floor log_steps to nearest power of 10
-    // var log_steps_floor = [];
-    // for (var i = 0; i < log_steps.length; i++) {
-    //     log_steps_floor.push(Math.pow(10, Math.floor(Math.log(log_steps[i]) / Math.log(10))));
-    // }
 
     //parse log_steps to string
     var log_steps_string = [];
@@ -274,7 +268,68 @@ function renderSegmentPlot(){
         //move color_legend_text next to rect
     color_legend_text.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top + 100) + ")");
     rect.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top + 100) + ")");
-    });
+
+    if (isScrollDisplayed){
+        var x_overview = d3.scaleLinear()
+            .domain([0, peptide_length])
+            .range([0, width]);
+
+        var sub_segment_height = selector_height/height * segment_height;
+        var sub_values_distance = width/peptide_length;
+        var selector_width = Math.round(parseFloat((width/values_distance*width)/peptide_length));
+
+        var sub_segments = svg.selectAll("sub_foo")
+            .data(rect_patches)
+            .enter()
+            .append("rect")
+            .attr("x", d => d[0]*sub_values_distance)
+            .attr("y", d=>  d[1]*sub_segment_height)
+            .attr("width", d=> d[2]*sub_values_distance)
+            .attr("height", d=> d[3]*sub_segment_height)
+            .attr("fill", d=> d[4])
+            .attr("opacity", 0.5);
+
+        var displayed = d3.scaleQuantize()
+            .domain([0, width])
+            .range(d3.range(peptide_length));
+
+        var selector = svg.append("rect")
+            .attr("transform", "translate(0, 0)")
+            .attr("class", "mover")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("height", selector_height)
+            .attr("width", selector_width)
+            .attr("fill", "gray")
+            .attr("opacity", 0.5)
+            .attr("stroke", "red")
+            .attr("stroke-width", 0.2)
+            .attr("pointer-events", "all")
+            .attr("cursor", "ew-resize")
+            .call(d3.drag().on("drag", display));
+
+
+        function display() {
+            var x = parseInt(d3.select(this).attr("x")),
+                nx = x + d3.event.dx,
+                w = parseInt(d3.select(this).attr("width")),
+                f, nf;
+
+            if(nx < 0 || nx + w > width) return;
+
+            d3.select(this).attr("x", nx);
+
+            f = displayed(x);
+            nf = displayed(nx);
+
+            if(f == nf) return;
+
+            rects.attr("transform", "translate(" + -width/selector_width * nx + "," + 0 + ")");
+            mod_rects.attr("transform", "translate(" + -width/selector_width * nx + "," + 0 + ")");
+            x_ticks.attr("transform", "translate(" + -width/selector_width * nx + "," + (selector_height + margin_overview.bottom - 1+12) + ")");
+            x_labels.attr("transform", "translate(" + -width/selector_width * nx + "," + 0 + ")");
+        }
+    }});
 }
 
 $('document').ready(function(){
