@@ -126,6 +126,7 @@ function renderSegmentPlot(){
     var stroke_width = 0.1
     var opacity = 0.7
     var opacity_mod = 0.8
+    opacity_mod_grey = 0.5
     // sample data for rectangles
     var rects = svg.selectAll("foo")
         .data(rect_patches)
@@ -265,7 +266,8 @@ function renderSegmentPlot(){
         .attr("y", d=> (d[1])*segment_height)
         .attr("width", d=> d[2]*values_distance)
         .attr("height", d=> d[3]*segment_height)
-        .attr("fill", d=> d[4])
+        // .attr("fill", d=> d[4])
+        .attr("fill", 'grey')
         .attr("rx", rx)
         .attr("ry", ry)
         .attr("opacity", opacity_mod)
@@ -299,7 +301,33 @@ function renderSegmentPlot(){
             .style("stroke", "none");
         })
         // implement ONCLICK
-        // .on("click", function(d,i){
+        .on("click", function(d,i){
+            // iterate over all modifications where the color is the same as the one clicked
+            // and change the opacity to 0
+            mod_rects.filter(function(dd){
+                color_val = modification_color_map[d];
+                if (color_val == dd[4]) {
+                    // check color
+                    col = d3.select(this).style("fill");
+                    console.log(col);
+                    if (col == "rgb(128, 128, 128)") {// if grey
+                        console.log("color is grey");
+                        d3.select(this).style("fill", color_val);
+                        d3.select(this).attr("opacity", opacity_mod);
+                    } else {
+                        d3.select(this).style("fill", "grey");
+                        d3.select(this).attr("opacity", opacity_mod_grey);
+                    }
+                    // opacity_ = d3.select(this).attr("opacity");
+                    // // change opacity
+                    // if (opacity_ == 0) {
+                    //     d3.select(this).attr("opacity", opacity_mod);
+                    // } else {
+                    //     d3.select(this).attr("opacity", 0);
+                    // }
+                }
+            })
+        });
     
     // Add one dot in the legend for each name.
     legend_text = svg.selectAll("myLabels")
@@ -355,13 +383,13 @@ function renderSegmentPlot(){
     //parse log_steps to string
     var log_steps_string = [];
     for (var i = 0; i < log_steps.length; i++) {
-        log_steps_string.push(expo(parseFloat(log_steps[i]).toPrecision(3), 3));
+        log_steps_string.push(expo(parseFloat(log_steps[i]).toPrecision(2), 2));
     }
 
     log_steps_string = log_steps_string.slice(1, log_steps_string.length - 1);
     
-    log_steps_string.push(expo(max_intensity,3));
-    log_steps_string.unshift(expo(min_intensity,3));
+    log_steps_string.push(expo(max_intensity,2));
+    log_steps_string.unshift(expo(min_intensity,2));
     
     var defs = svg.append("defs");
     var linearGradient = defs.append("linearGradient")
