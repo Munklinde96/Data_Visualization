@@ -183,10 +183,32 @@ function renderSegmentPlot(){
         // make text smaller in html
         three_chars_before_italic = '<i>' +three_chars_before.join("")+'</i>';
         three_chars_after_italic = '<i>' +three_chars_after.join("") +'</i>';
-
-        tooltip.html("<p>Peptide: " + three_chars_before_italic+ '.' + peptide_seq.substring(d[0],  d[0] + d[2])+ '.' + three_chars_after_italic + "</p><p>Intensity: " + expo(d[5], 3) + "</p>")
+        
+        // get all modification on this segments
+        var mod_positions = [];
+        var mod_types = [];
+        mod_types_and_positions = [];
+        // find modification where x in mod_patches is between d[0] and d[0] + d[2] of this segment
+        //  and y is like d[1]
+        for (var i = 0; i < mod_patches.length; i++) {
+            if (mod_patches[i][0] >= d[0] && mod_patches[i][0] <= d[0] + d[2] && mod_patches[i][1] == d[1]) {
+                pos = mod_patches[i][0];
+                _type =colors_to_mod_map.get(mod_patches[i][4]);
+                mod_types_and_positions.push(_type + "(" + pos+")");
+            }
+        }
+        
+        mod_types_and_positions_str = mod_types_and_positions.join(", "); 
+        if (mod_types_and_positions_str.length > 0) {
+        tooltip.html("<p>Peptide: " + three_chars_before_italic+ '.' + peptide_seq.substring(d[0],  d[0] + d[2])+ '.' + three_chars_after_italic + "</p><p>Intensity: " + expo(d[5], 3) + "</p><p>Modifications: " + mod_types_and_positions_str + "</p>")
             .style("left", (d3.event.pageX + 10) + "px")
             .style("top", (d3.event.pageY - 10) + "px");
+        } else {
+            tooltip.html("<p>Peptide: " + three_chars_before_italic+ '.' + peptide_seq.substring(d[0],  d[0] + d[2])+ '.' + three_chars_after_italic + "</p><p>Intensity: " + expo(d[5], 3) + "</p>")
+            .style("left", (d3.event.pageX + 10) + "px")
+            .style("top", (d3.event.pageY - 10) + "px");
+        }
+
     }
     
     function mouseleave(d) {
