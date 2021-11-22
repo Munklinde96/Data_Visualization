@@ -110,23 +110,9 @@ function renderSegmentPlot(){
         .attr("transform", "translate(" + 0 + "," + (selector_height + margin_overview.bottom - 1+12) + ")")
         .call(xAxis_labels)
         .selectAll("text")
-        .style("font-weight", function(d,i){
-            if(i%10 === 0){
-                return "bold";
-            } else {
-                return "normal";
-            }
-        })
-        .style("font-size", function(d,i){
-            if(i%10 === 0){
-                return "1.2em";
-            } else {
-                return "1em";
-            }
-        });
 
-    var rx = 3
-    var ry = 3
+    var rx = 2
+    var ry = 2
     var stroke_width = 0.1
     var opacity = 0.7
     var opacity_mod = 0.8
