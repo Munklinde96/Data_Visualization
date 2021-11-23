@@ -22,9 +22,15 @@ def combine_and_aggregate_intensity(dataframes: list, sample_column_id='Area'):
     df_collection = []
     for i in range(len(dataframes)):
         df = dataframes[i]
-        df = df[df["PTM"].notnull()]
+        df["PTM"] = df["PTM"].fillna("Unmodified")
         df = df.copy()
+        print("first")
+        print(df[[sample_columns[i], 'PTM', '#modifications']].head())
+        df['#modifications'] = df['#modifications'].fillna(0)
+        df['#modifications'] = df['#modifications'].replace(0,1)
         df['Intensity'] = df[sample_columns[i]].divide(df['#modifications'])
+        print("second")
+        print(df[['Intensity', 'PTM', '#modifications']].head())
         df['PTM'] = df['PTM'].str.split(';').str[0]
         df_new = df[['PTM', 'Intensity']]
         df_new = df_new.groupby(['PTM']).sum()
@@ -40,7 +46,11 @@ def create_and_plot_sample_heatmap(df, _protein='P02666'):
     data = get_sample_heatmap_data(df, _protein)
     sns.heatmap(data, cmap='viridis')
 
-def get_sample_heatmap_data(df, _protein='P02666'):
+def get_sample_heatmap_data(df, _protein='P02666', sample_column_id='Area'):
+    sample_columns = [col for col in df.columns if sample_column_id in col]
+    for col in sample_columns:  #make Area samples Nan values 0
+        df[col] = df[col].fillna(0)
+
     df = normalize_intensities_by_protein_intensity(df)
     df = df[df['Protein Accession'] == _protein]
     df_list = split_data_in_samples(df)

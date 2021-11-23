@@ -1,5 +1,3 @@
-const { zoom } = require("d3-zoom");
-
 function renderSegmentPlot(){
     if(selectedProtein === ""){
         d3.select("#graphDiv3").select("svg").remove();
@@ -54,7 +52,12 @@ function renderSegmentPlot(){
     // set the dimensions and margins of the graph
     var margin = {top: 30, right: 20, bottom: 30, left: 20};
     var width = screen.width *0.7;
-    var height = plot_height*5;
+    var mod_label_size = 10
+    var height = plot_height*5 + selector_height;
+    // if(plot_height*5 < 200 + colors_to_mod_map.length*(mod_label_size+5)){
+    //     height = 200 + colors_to_mod_map.length*(mod_label_size+5);
+    // }
+    // var height = Math.max([plot_height*5, 200 + colors_to_mod_map.length*(mod_label_size+5)]);
 
     var margin_overview = {top: 30, right: 15, bottom: 10, left: 15};
         
@@ -63,11 +66,8 @@ function renderSegmentPlot(){
     var svg = d3.select("#graphDiv3")
     .append("svg")
     .attr("width", width)
-    .attr("height", height + margin.top + margin.bottom + selector_height)
+    .attr("height", height + selector_height)
     .append("g")
-    // make scrolable svg
-    .attr("transform", "translate(" + 0 + "," + margin.top + ")");
-
     
     var segment_height = 5;
     var values_distance = 10;
@@ -268,15 +268,15 @@ function renderSegmentPlot(){
 
     // Inspired by: https://www.d3-graph-gallery.com/graph/custom_legend.html
     //   modification labels
-    var size = 10
+    var mod_label_size = 10
     var legend = svg.selectAll("legend")
         .data(modification_color_map_keys)
         .enter()
         .append("rect")
         .attr("x", 0)
-        .attr("y", function(d,i){ return 100 + i*(size+5)}) // 100 is where the first dot appears. 25 is the distance between dots
-        .attr("width", size)
-        .attr("height", size)
+        .attr("y", function(d,i){ return 100 + i*(mod_label_size+5)}) // 100 is where the first dot appears. 25 is the distance between dots
+        .attr("width", mod_label_size)
+        .attr("height", mod_label_size)
         // .style("fill", function(d, i){ return modification_color_map[d]})
         .style("fill",'grey')
         .on("mouseover", function(d,i){
@@ -331,8 +331,8 @@ function renderSegmentPlot(){
         .data(modification_color_map_keys)
         .enter()
         .append("text")
-        .attr("x", 0 + size*1.2)
-        .attr("y", function(d,i){ return 100 + i*(size+5) + (size/2)}) // 100 is where the first dot appears. 25 is the distance between dots
+        .attr("x", 0 + mod_label_size*1.2)
+        .attr("y", function(d,i){ return 100 + i*(mod_label_size+5) + (mod_label_size/2)}) // 100 is where the first dot appears. 25 is the distance between dots
         .text(function(d){ return d})
         .attr("text-anchor", "left")
         .style("fill", "black")
