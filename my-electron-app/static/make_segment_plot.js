@@ -53,7 +53,7 @@ function renderSegmentPlot(){
 
     // set the dimensions and margins of the graph
     var margin = {top: 30, right: 20, bottom: 30, left: 20};
-    var width = screen.width - 100;
+    var width = screen.width *0.7;
     var height = plot_height*5;
 
     var margin_overview = {top: 30, right: 15, bottom: 10, left: 15};
