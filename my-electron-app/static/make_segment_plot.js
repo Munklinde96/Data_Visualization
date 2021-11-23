@@ -52,8 +52,8 @@ function renderSegmentPlot(){
     var selector_height = 100
 
     // set the dimensions and margins of the graph
-    var margin = {top: 30, right: 15, bottom: 30, left: 15};
-    var width = screen.width - margin.left - margin.right;
+    var margin = {top: 30, right: 20, bottom: 30, left: 20};
+    var width = screen.width - 100;
     var height = plot_height*5;
 
     var margin_overview = {top: 30, right: 15, bottom: 10, left: 15};
@@ -66,7 +66,7 @@ function renderSegmentPlot(){
     .attr("height", height + margin.top + margin.bottom + selector_height)
     .append("g")
     // make scrolable svg
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    .attr("transform", "translate(" + 0 + "," + margin.top + ")");
 
     
     var segment_height = 5;
@@ -436,10 +436,6 @@ function renderSegmentPlot(){
     rect.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top + 100) + ")");
 
     if (isScrollDisplayed){
-        var x_overview = d3.scaleLinear()
-            .domain([0, peptide_length])
-            .range([0, width]);
-
         var sub_segment_height = selector_height/height * segment_height;
         var sub_values_distance = width/peptide_length;
         var selector_width = Math.round(parseFloat((width/values_distance*width)/peptide_length));
