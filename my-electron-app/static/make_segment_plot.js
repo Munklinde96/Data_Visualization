@@ -18,7 +18,6 @@ function renderSegmentPlot(){
     p.innerHTML = "Peptide Segments Plot - Protein: " + selectedProtein;
     p.style.fontWeight = "bold";
     p.style.fontStyle = "italic";
-
     
     
     d3.json("http://127.0.0.1:5000/get-segment-data?protein="+selectedProtein+"&samples="+selectedSample, function(error, data) {
@@ -164,8 +163,8 @@ function renderSegmentPlot(){
         });
 
         // get all modification on this segments - retuns [mod_types_and_positions, mod_positions]
-        modPositionsAndTypes = getModificationPositions(mod_patches, d, colors_to_mod_map);
-        mod_positions = modPositionsAndTypes[1];
+        var modPositionsAndTypes = getModificationPositions(mod_patches, d, colors_to_mod_map);
+        var mod_positions = modPositionsAndTypes[1];
         var x_axis_highlight = highlightSeqInXAxis(svg, segment[0], mod_positions);
 
         
@@ -176,12 +175,12 @@ function renderSegmentPlot(){
     }
     function mousemove_segments(d) {
         // get all modification on this segments - retuns [mod_types_and_positions, mod_positions]
-        modPositionsAndTypes = getModificationPositions(mod_patches, d, colors_to_mod_map);
-        mod_types_and_positions = modPositionsAndTypes[0];
-        mod_positions = modPositionsAndTypes[1];
+        var modPositionsAndTypes = getModificationPositions(mod_patches, d, colors_to_mod_map);
+        var mod_types_and_positions = modPositionsAndTypes[0];
+        var mod_positions = modPositionsAndTypes[1];
 
 
-        mod_types_and_positions_str = mod_types_and_positions.join(", "); 
+        var mod_types_and_positions_str = mod_types_and_positions.join(", "); 
         if (mod_types_and_positions_str.length > 0) {
         tooltip.html("<p>Intensity: " + expo(d[5], 3) + "</p><p>Modifications: " + mod_types_and_positions_str + "</p>")
             .style("left", (d3.event.pageX + 10) + "px")
@@ -278,7 +277,7 @@ function renderSegmentPlot(){
                 }
             })
             // fill box with color of text next to it (if it is grey)
-            box_fill = d3.select(this).style("fill");
+            var box_fill = d3.select(this).style("fill");
             if (box_fill == "rgb(128, 128, 128)" || box_fill == "grey") {
                 d3.select(this).style("fill", modification_color_map[d]);
             } else {
@@ -288,7 +287,7 @@ function renderSegmentPlot(){
         });
     
     // Add one dot in the legend for each name.
-    legend_text = svg.selectAll("myLabels")
+    var legend_text = svg.selectAll("myLabels")
         .data(modification_color_map_keys)
         .enter()
         .append("text")
@@ -317,8 +316,8 @@ function renderSegmentPlot(){
     legend.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top) + ")");
     legend_text.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top) + ")");
 
-    color_bar_width = 20;
-    color_bar_height = 180;
+    var color_bar_width = 20;
+    var color_bar_height = 180;
 
     // find difrence in magnintude and use as steps
     var max_exp = expo(max_intensity,1);
@@ -328,7 +327,7 @@ function renderSegmentPlot(){
     var steps = Math.abs(max_exp_last_char - min_exp_last_char)+1;
 
     var step = (Math.log(max_intensity) - Math.log(min_intensity)) / (steps - 1);
-    log_steps = [];
+    var log_steps = [];
     for (var i = 0; i < steps; i++) {
         log_steps.push(Math.exp(Math.log(min_intensity) + i * step));
     }
@@ -339,7 +338,7 @@ function renderSegmentPlot(){
         log_steps_string.push(expo(parseFloat(log_steps[i]).toPrecision(2), 2));
     }
 
-    log_steps_string = log_steps_string.slice(1, log_steps_string.length - 1);
+    var log_steps_string = log_steps_string.slice(1, log_steps_string.length - 1);
     
     log_steps_string.push(expo(max_intensity,2));
     log_steps_string.unshift(expo(min_intensity,2));
@@ -369,7 +368,7 @@ function renderSegmentPlot(){
 
 
     var color_legend_x = 220;
-    color_legend_text = svg.selectAll("colorLabels")
+    var color_legend_text = svg.selectAll("colorLabels")
         .data(log_steps_string)
         .enter()
         .append("text")
@@ -463,13 +462,13 @@ $('document').ready(function(){
     renderSegmentPlot();
 });
 function getModificationPositions(mod_patches, d, colors_to_mod_map) {
-    mod_types_and_positions = [];
-    mod_positions = [];
+    var mod_types_and_positions = [];
+    var mod_positions = [];
     for (var i = 0; i < mod_patches.length; i++) {
         if (mod_patches[i][0] >= d[0] && mod_patches[i][0] <= d[0] + d[2] && mod_patches[i][1] == d[1]) {
-            pos = mod_patches[i][0];
+            var pos = mod_patches[i][0];
             mod_positions.push(pos);
-            _type = colors_to_mod_map.get(mod_patches[i][4]);
+            var _type = colors_to_mod_map.get(mod_patches[i][4]);
             mod_types_and_positions.push(_type + "(" + pos + ")");
         }
     }
