@@ -112,8 +112,12 @@ function renderProteinModPlot(){
                 }
                 if(d.protein === proteinStructData[n].protein && d.protein !== selectedProtein){
                     let target = d3.select("#mod_prot_id_heatmap_"+n);
+                    // cupid red
+                    // target.style('stroke', '#F7B4BB');
                     target.style('stroke', 'red');
-                    target.style('stroke-width', 2);
+                    target.attr('rx', 2)
+                    target.attr('ry', 2)
+                    target.style('stroke-width', 1);
                 }
             }
             if(selectedProtein !== d.protein){
@@ -140,10 +144,18 @@ function renderProteinModPlot(){
             .style("fill", function(d) {return myColor(d.value)})
             .style("stroke", function(d){
                 if(d.protein === selectedProtein){
-                    return "red";
+                    // egg white
+                    return 'red';
                 }
                 return "none";
             })
+            // .style('opacity', function(d){
+            //     if(d.protein !== selectedProtein){
+            //         return 0.5;
+            //     } else {
+            //         return 1;
+            //     }
+            // })
             .style("stroke-width", function(d){
                 if(d.protein === selectedProtein){
                     return 2;
