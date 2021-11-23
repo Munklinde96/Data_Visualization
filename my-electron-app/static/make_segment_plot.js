@@ -22,7 +22,6 @@ function renderSegmentPlot(){
     
     d3.json("http://127.0.0.1:5000/get-segment-data?protein="+selectedProtein+"&samples="+selectedSample, function(error, data) {
     if (error) throw error;
-    console.log(data)
     var rect_patches = data.peptide_patches;
     var mod_patches = data.mod_patches;
     var plot_height = data.height;
@@ -163,19 +162,14 @@ function renderSegmentPlot(){
         });
 
         // get all modification on this segments - retuns [mod_types_and_positions, mod_positions]
-        var modPositionsAndTypes = getModificationPositions(mod_patches, d, colors_to_mod_map);
+        var modPositionsAndTypes = getModificationPositions(mod_patches, segment[0], colors_to_mod_map, peptide_seq);
         var mod_positions = modPositionsAndTypes[1];
-        var x_axis_highlight = highlightSeqInXAxis(svg, segment[0], mod_positions);
-
-        
-        // call highlightSeqInXAxis on segment behind the modification
-        
-       
-
+        var specific_mod_pos = d[0];
+        var x_axis_highlight = highlightSeqInXAxis(svg, segment[0], mod_positions, specific_mod_pos, true);
     }
     function mousemove_segments(d) {
         // get all modification on this segments - retuns [mod_types_and_positions, mod_positions]
-        var modPositionsAndTypes = getModificationPositions(mod_patches, d, colors_to_mod_map);
+        var modPositionsAndTypes = getModificationPositions(mod_patches, d, colors_to_mod_map, peptide_seq);
         var mod_types_and_positions = modPositionsAndTypes[0];
         var mod_positions = modPositionsAndTypes[1];
 
@@ -191,7 +185,7 @@ function renderSegmentPlot(){
             .style("top", (d3.event.pageY - 10) + "px");
         }
         // highlight the peptide sequence in the x-axis 
-        var x_axis_highlight = highlightSeqInXAxis(svg, d, mod_positions);
+        var x_axis_highlight = highlightSeqInXAxis(svg, d, mod_positions, 0, false);
 
     }
     
@@ -260,7 +254,6 @@ function renderSegmentPlot(){
                     // check color
                     col = d3.select(this).style("fill");
                     if (col == "rgb(128, 128, 128)" || col == 'grey') {// if grey
-                        // console.log("color is grey");
                         d3.select(this).style("fill", color_val);
                         d3.select(this).attr("opacity", opacity_mod);
                     } else {
@@ -461,22 +454,23 @@ function renderSegmentPlot(){
 $('document').ready(function(){
     renderSegmentPlot();
 });
-function getModificationPositions(mod_patches, d, colors_to_mod_map) {
+function getModificationPositions(mod_patches, d, colors_to_mod_map, peptide_sequence) {
     var mod_types_and_positions = [];
     var mod_positions = [];
     for (var i = 0; i < mod_patches.length; i++) {
         if (mod_patches[i][0] >= d[0] && mod_patches[i][0] <= d[0] + d[2] && mod_patches[i][1] == d[1]) {
             var pos = mod_patches[i][0];
+            var letter = peptide_sequence[pos]; //letter at position
             mod_positions.push(pos);
             var _type = colors_to_mod_map.get(mod_patches[i][4]);
-            mod_types_and_positions.push(_type + "(" + pos + ")");
+            mod_types_and_positions.push(_type + "(" + letter + ")");
         }
     }
     // make array of arrays mod_types_and_positions and mod_positions
     return [mod_types_and_positions, mod_positions];
 }
 
-function highlightSeqInXAxis(svg, d, mod_positions) {
+function highlightSeqInXAxis(svg, d, mod_positions, specific_mod_pos, has_specific) {
     return svg.selectAll(".xAxis_labels")
         .selectAll("text")
         // make bold
@@ -489,7 +483,7 @@ function highlightSeqInXAxis(svg, d, mod_positions) {
         })
         .style("fill", function (dd, i) {
             if (i >= d[0] && i < d[0] + d[2] && mod_positions.includes(i)) {
-                return 'red';
+                return '#ff0033';   // hibiscus red
             } else {
                 return "black";
             }
@@ -509,6 +503,19 @@ function highlightSeqInXAxis(svg, d, mod_positions) {
             } else {
                 return "normal";
             }
+        })
+        // opacity
+        .style("opacity", function (dd, i) {
+            if (has_specific){
+                // make opscity smaller for all other than specific_mod_pos
+                if (i != specific_mod_pos) {
+                    if (i >= d[0] && i < d[0] + d[2]) { // and within the range
+                        return 0.3;
+                    }
+                }
+            }
+            return 1;
         });
+
 }
 
