@@ -1,8 +1,8 @@
 const { zoom } = require("d3-zoom");
 
-function renderSegmentPlot(){
+function renderProteinSelectionPlot(){
     if(selectedProtein === ""){
-        d3.select("#graphDiv3").select("svg").remove();
+        d3.select("#proteinSelectionView").select("svg").remove();
         document.getElementById('no_protein_div_3').innerHTML = '<div style="width: 640px; height: 440px;"><h3>Select a protein to get started.</h3></div>';
         return;
     } else {
@@ -11,10 +11,9 @@ function renderSegmentPlot(){
 
     
     // remove old svg
-    d3.select("#graphDiv3").select("svg").remove();
+    d3.select("#proteinSelectionView").select("svg").remove();
     
-    // get <p> paragraph field inside the graphDiv3 div to change Peptide Segments Plot text
-    var p = document.getElementById("graphDiv3").getElementsByTagName("p")[0];
+    var p = document.getElementById("proteinSelectionView").getElementsByTagName("p")[0];
     p.innerHTML = "Peptide Segments Plot - Protein: " + selectedProtein;
     p.style.fontWeight = "bold";
     p.style.fontStyle = "italic";
@@ -54,7 +53,7 @@ function renderSegmentPlot(){
         height = 700 - margin.top - margin.bottom;
         
     // append the svg object to the body of the page
-    var svg = d3.select("#graphDiv3")
+    var svg = d3.select("#proteinSelectionView")
     .append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
@@ -146,7 +145,7 @@ function renderSegmentPlot(){
         .on("mouseout", mouseleave);
         
 
-    var tooltip = d3.select("#graphDiv3")
+    var tooltip = d3.select("#proteinSelectionView")
         .append("div")
         .style("opacity", 0)
         .attr("class", "tooltip")
@@ -446,7 +445,3 @@ function renderSegmentPlot(){
     rect.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top + 100) + ")");
     });
 }
-
-$('document').ready(function(){
-    renderSegmentPlot();
-});
