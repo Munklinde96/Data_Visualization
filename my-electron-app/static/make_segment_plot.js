@@ -197,7 +197,9 @@ function renderSegmentPlot(){
         .style("font-weight", "normal");
 
         // revert the highlighting of the peptide sequence in the x-axis
-        var x_axis_highlight = highlightSeqInXAxis(svg, d, mod_positions, 0, false);
+        svg.selectAll(".xAxis_labels")
+        .selectAll("text")
+        .style("opacity", 1);   
 
         
     }
