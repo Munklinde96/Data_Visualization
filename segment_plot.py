@@ -40,7 +40,7 @@ def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", sample_colum
 
     for col in selected_sample_columns:  #make Area samples Nan values 0
         df[col] = df[col].fillna(0)
-    df = df[df[selected_sample_columns].sum(axis=1) > 0]   # drop rows where all sample_columns are 0
+    df = df[df[selected_sample_columns].sum(axis=1) > 0]  # drop rows where all sample_columns are 0
 
     #Aggregate sample intensity, and normalize it
     df["Agg Intensity"] = df[selected_sample_columns].sum(axis=1)
@@ -103,7 +103,9 @@ def normalize(res_intensities, is_log_scaled = False,  min_val=0):
     return normalized
 
 def colors_(values: list , color_scale = 'Greys', is_log_scaled = True, is_normalized = True):
-    if is_normalized:
+    if len(values) == 1:
+        normalized = [1]
+    elif is_normalized:
         normalized = normalize(values, is_log_scaled,  min_val=0.2)
     cmap = plt.cm.get_cmap(color_scale)
     color_list = [cls.rgb2hex(cmap(i)) for i in normalized]
