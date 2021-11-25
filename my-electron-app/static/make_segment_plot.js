@@ -356,6 +356,8 @@ function renderSegmentPlot(){
     legend.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top) + ")");
     legend_text.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top) + ")");
 
+    if(rect_patches.length > 1) {
+
     color_bar_width = 20;
     color_bar_height = 180;
 
@@ -434,6 +436,8 @@ function renderSegmentPlot(){
 
     
     rect.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top + 100) + ")");
+
+    }
 
     if (isScrollDisplayed){
         var sub_segment_height = selector_height/height * segment_height;

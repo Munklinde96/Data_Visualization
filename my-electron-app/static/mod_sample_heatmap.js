@@ -31,11 +31,9 @@ function renderSampleModPlot(){
         var minValue = 0;
         var modStructData = null;
         var differentSamples = [];
-        console.log(data)
     
         for (const [sample, mods] of Object.entries(data)) {
             for (const [mod, value] of Object.entries(mods)){
-                console.log(value);
                 if(maxValue == null || value > maxValue){
                     maxValue = value;
                 }
