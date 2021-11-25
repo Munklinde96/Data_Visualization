@@ -319,8 +319,10 @@ function renderSegmentPlot(){
     legend.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top) + ")");
     legend_text.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top) + ")");
 
-    var color_bar_width = 20;
-    var color_bar_height = 180;
+    if(rect_patches.length > 1) {
+
+    color_bar_width = 20;
+    color_bar_height = 180;
 
     // find difrence in magnintude and use as steps
     var max_exp = expo(max_intensity,1);
@@ -397,6 +399,8 @@ function renderSegmentPlot(){
 
     
     rect.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top + 100) + ")");
+
+    }
 
     if (isScrollDisplayed){
         var sub_segment_height = selector_height/height * segment_height;

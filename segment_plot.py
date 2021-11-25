@@ -102,17 +102,19 @@ def normalize(res_intensities, is_log_scaled = False,  min_val=0):
     normalized = values * (1 - min_val) + min_val
     return normalized
 
-def colors_(values: list , color_scale = 'Greys', is_log_scaled = True, is_normalized = True):
+def colors_(values: list , color_scale = 'Blues', is_log_scaled = True, is_normalized = True):
+    cmap = plt.cm.get_cmap(color_scale)
     if len(values) == 1:
         normalized = [1]
+        return [cls.rgb2hex(cmap(1.0))]
     elif is_normalized:
         normalized = normalize(values, is_log_scaled,  min_val=0.2)
-    cmap = plt.cm.get_cmap(color_scale)
+    #get max value from cmap
     color_list = [cls.rgb2hex(cmap(i)) for i in normalized]
     return color_list
 
 
-def map_to_colors(res_intensities, res_rectangles_and_mods, color_scale = 'Greys', is_log_scaled = True):
+def map_to_colors(res_intensities, res_rectangles_and_mods, color_scale = 'Blues', is_log_scaled = True):
     rects = [r[0] for r in res_rectangles_and_mods]
     color_values = colors_(res_intensities, color_scale=color_scale, is_log_scaled=is_log_scaled)
     rects_and_colors = list(zip(rects, color_values))
@@ -140,7 +142,7 @@ def map_to_attribute(colors, color_scale, is_log_scaled, res_intensities, rectan
         rects_and_attribute = map_to_norm_intensities(res_intensities, rectangles_and_mods)
     return rects_and_attribute
 
-def stack_recs(rectangles_and_mods: list, colors = True, color_scale = 'Greys', is_log_scaled = True):
+def stack_recs(rectangles_and_mods: list, colors = True, color_scale = 'Blues', is_log_scaled = True):
     """
     rectangles_and_mods is a tuple list of (rectangle, modifications)
     a rectangle is tuples on the form (low, width, agg_intensity)
@@ -261,7 +263,7 @@ def get_patches_from_patch_attributes(peptide_patches, mod_patches):
         mod_patches_list.append(patch)
     return peptide_patches_list, mod_patches_list
 
-def plot_peptide_segments(peptide_patches, mod_patches, height, modification_color_map, _protein="P02666", colors = True, color_scale = 'Greys', is_log_scaled = True):
+def plot_peptide_segments(peptide_patches, mod_patches, height, modification_color_map, _protein="P02666", colors = True, color_scale = 'Blues', is_log_scaled = True):
     fig = plt.figure(figsize=(30,25))
     ax = fig.add_subplot(111)
     ax.set_ylim((0,height))
