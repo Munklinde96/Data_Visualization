@@ -132,7 +132,7 @@ function renderSegmentPlot(){
         .attr("stroke-width", stroke_width)
         .on("mouseover",mouseover)
         .on("mousemove", mousemove_segments)
-        .on("mouseout", mouseleave);
+        .on("mouseout", mouseleave_mods);
         
 
     var tooltip = d3.select("#graphDiv3")
@@ -158,7 +158,7 @@ function renderSegmentPlot(){
         
         // get segment in rect_patches where d[0] and d[1] are located and call highlightSeqInXAxis
         var segment = rect_patches.filter(function(rect) {
-            return (rect[0] <= d[0] && d[0] <= rect[0] + rect[2] && rect[1] <= d[1] && d[1] <= rect[1] + rect[3]);
+            return (rect[0] <= d[0] && d[0] <= rect[0] + rect[2] && rect[1] <= d[1] && d[1] < rect[1] + rect[3]);
         });
 
         // get all modification on this segments - retuns [mod_types_and_positions, mod_positions]
@@ -188,21 +188,25 @@ function renderSegmentPlot(){
         var x_axis_highlight = highlightSeqInXAxis(svg, d, mod_positions, 0, false);
     }
     
-    function mouseleave(d) {
+    function mouseleave_segments(d) {
         tooltip.style("opacity", 0)
         var x_axis_highlight = svg.selectAll(".xAxis_labels")
         .selectAll("text")
         .style("fill", 'black')
         .style("font-size", "1em")
-        .style("font-weight", "normal");
-
-        // revert the highlighting of the peptide sequence in the x-axis
-        svg.selectAll(".xAxis_labels")
-        .selectAll("text")
-        .style("opacity", 1);   
-
-        
+        .style("font-weight", "normal")
+        .style("opacity", 1);
     }
+    function mouseleave_mods(d) {
+        tooltip.style("opacity", 0)
+        var x_axis_highlight = svg.selectAll(".xAxis_labels")
+        .selectAll("text")
+        .style("fill", 'black')
+        .style("font-size", "1em")
+        .style("font-weight", "normal")
+        .style("opacity", 1);
+    }
+
     function expo(x, f) {
         return Number.parseFloat(x).toExponential(f);
     }
@@ -224,7 +228,7 @@ function renderSegmentPlot(){
         .attr("stroke-width", stroke_width)
         .on("mouseover",mouseover)
         .on("mousemove", mousemove_modification)
-        .on("mouseout", mouseleave);    
+        .on("mouseout", mouseleave_segments);    
 
     // Inspired by: https://www.d3-graph-gallery.com/graph/custom_legend.html
     //   modification labels
