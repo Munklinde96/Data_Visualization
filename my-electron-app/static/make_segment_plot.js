@@ -186,7 +186,6 @@ function renderSegmentPlot(){
         }
         // highlight the peptide sequence in the x-axis 
         var x_axis_highlight = highlightSeqInXAxis(svg, d, mod_positions, 0, false);
-
     }
     
     function mouseleave(d) {
@@ -196,6 +195,11 @@ function renderSegmentPlot(){
         .style("fill", 'black')
         .style("font-size", "1em")
         .style("font-weight", "normal");
+
+        // revert the highlighting of the peptide sequence in the x-axis
+        var x_axis_highlight = highlightSeqInXAxis(svg, d, mod_positions, 0, false);
+
+        
     }
     function expo(x, f) {
         return Number.parseFloat(x).toExponential(f);
@@ -471,46 +475,34 @@ function highlightSeqInXAxis(svg, d, mod_positions, specific_mod_pos, has_specif
         .selectAll("text")
         // make bold
         .style('font-weight', function (dd, i) {
-            if (i >= d[0] && i < d[0] + d[2]) {
+            if (i >= d[0] && i < d[0] + d[2] && mod_positions.includes(i)) {
                 return 'bold';
             } else {
                 return 'normal';
             }
         })
-        .style("fill", function (dd, i) {
-            if (i >= d[0] && i < d[0] + d[2] && mod_positions.includes(i)) {
-                return '#ff0033';   // hibiscus red
-            } else {
-                return "black";
-            }
-        })
         // increase size of the text
         .style("font-size", function (dd, i) {
-            if (i >= d[0] && i < d[0] + d[2]) {
+            if (has_specific && i == specific_mod_pos) {
                 return "1.5em";
+            // }else if 
+            } else if (i >= d[0] && i < d[0] + d[2] && mod_positions.includes(i)) {
+                return "1.2em";
+            
+            } else if (i >= d[0] && i < d[0] + d[2]) {
+                return "1.1em";    
             } else {
                 return "1em";
             }
         })
-        // make bold
-        .style("font-weight", function (dd, i) {
-            if (i >= d[0] && i < d[0] + d[2]) {
-                return "bold";
-            } else {
-                return "normal";
-            }
-        })
         // opacity
-        .style("opacity", function (dd, i) {
-            if (has_specific){
-                // make opscity smaller for all other than specific_mod_pos
-                if (i != specific_mod_pos) {
-                    if (i >= d[0] && i < d[0] + d[2]) { // and within the range
-                        return 0.3;
-                    }
-                }
+        .style("opacity", function (dd, i) {   
+            if (i >= d[0] && i < d[0] + d[2]) { // and within the range
+                return 1;
             }
-            return 1;
+            else {
+                return 0.4;
+            }
         });
 
 }
