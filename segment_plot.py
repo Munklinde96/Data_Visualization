@@ -40,7 +40,7 @@ def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", sample_colum
 
     for col in selected_sample_columns:  #make Area samples Nan values 0
         df[col] = df[col].fillna(0)
-    df = df[df[selected_sample_columns].sum(axis=1) > 0]   # drop rows where all sample_columns are 0
+    df = df[df[selected_sample_columns].sum(axis=1) > 0]  # drop rows where all sample_columns are 0
 
     #Aggregate sample intensity, and normalize it
     df["Agg Intensity"] = df[selected_sample_columns].sum(axis=1)

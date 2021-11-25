@@ -27,12 +27,15 @@ function renderSampleModPlot(){
         // validate request
         if (error) throw error;
         // build modification and sample categories
-        var maxValue = null;
-        var minValue = null;
+        var maxValue = 0;
+        var minValue = 0;
         var modStructData = null;
         var differentSamples = [];
+        console.log(data)
+    
         for (const [sample, mods] of Object.entries(data)) {
             for (const [mod, value] of Object.entries(mods)){
+                console.log(value);
                 if(maxValue == null || value > maxValue){
                     maxValue = value;
                 }
@@ -163,7 +166,7 @@ function renderSampleModPlot(){
 
 
         // get 100 points from my color and add to linearGradient
-        gradinet_steps = 100;
+        var gradinet_steps = 100;
         for(let i = 0; i < gradinet_steps ; i++){
             value = minValue + (maxValue - minValue) * i / gradinet_steps ;
             color = myColor(value);

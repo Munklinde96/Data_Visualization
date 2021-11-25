@@ -24,13 +24,11 @@ def combine_and_aggregate_intensity(dataframes: list, sample_column_id='Area'):
         df = dataframes[i]
         df["PTM"] = df["PTM"].fillna("Unmodified")
         df = df.copy()
-        print("first")
-        print(df[[sample_columns[i], 'PTM', '#modifications']].head())
+        # print(df[[sample_columns[i], 'PTM', '#modifications']].head())
         df['#modifications'] = df['#modifications'].fillna(0)
         df['#modifications'] = df['#modifications'].replace(0,1)
         df['Intensity'] = df[sample_columns[i]].divide(df['#modifications'])
-        print("second")
-        print(df[['Intensity', 'PTM', '#modifications']].head())
+        # print(df[['Intensity', 'PTM', '#modifications']].head())
         df['PTM'] = df['PTM'].str.split(';').str[0]
         df_new = df[['PTM', 'Intensity']]
         df_new = df_new.groupby(['PTM']).sum()
