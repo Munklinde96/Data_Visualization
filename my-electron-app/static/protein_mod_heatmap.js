@@ -261,7 +261,6 @@ function renderProteinModPlot(){
             // else return "Modification Count";
             return "Modification Count";
         });
-
     });
 }
 
