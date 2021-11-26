@@ -270,6 +270,8 @@ def get_modification_count_per_protein(df, countFilter, normalize):
             mod = mod.strip()
             if mod not in modificationCountByProtein[proteinName]:
                 modificationCountByProtein[proteinName][mod] = 1
+                if mod is not "Unmodified":
+                    totalProteinModCount[proteinName] += 1
             else:
                 modificationCountByProtein[proteinName][mod] += 1
                 if mod is not "Unmodified":
