@@ -288,6 +288,7 @@ function renderSegmentPlot(){
             }
             
         });
+
     
     // Add one dot in the legend for each name.
     var legend_text = svg.selectAll("myLabels")
@@ -314,10 +315,10 @@ function renderSegmentPlot(){
             })
         })
 
-
     // move legend and legend_text  to Center LEFT 
     legend.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top) + ")");
     legend_text.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top) + ")");
+
 
     if(rect_patches.length > 1) {
 
@@ -396,11 +397,28 @@ function renderSegmentPlot(){
     color_legend_text.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top + 100) + ")");
     // move legendLine next to color_legend_text
     legendLine.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top + 100) + ")");
-
     
     rect.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top + 100) + ")");
 
+    // make color_legend text label on top of color bar
+    var color_legend_text_label = svg.append("text")
+        .attr("x", color_legend_x - color_bar_width)
+        .attr("y", -20)
+        .text("Intensity")
+        .attr("text-anchor", "right")
+        .style("alignment-baseline", "middle")
+        // .style("font-size", "12px")
+        .attr("transform", "translate(" + 0 + "," + (height/2 - margin.top + 100) + ")");      
     }
+
+     // add title to legend and legend_text
+    var legend_title = svg.append("text")
+    .attr("x", 0)
+    // same y as color_legend_text_label
+    .attr("y", (height/2 - margin.top + 100) - 15)
+    .text("Modification Types")
+    .attr("text-anchor", "left")
+    .style("text-anchor", "left");
 
     if (isScrollDisplayed){
         var sub_segment_height = selector_height/height * segment_height;
