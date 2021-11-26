@@ -234,14 +234,17 @@ function renderProteinModPlot(){
         .attr("transform", "translate(" + (width + color_bar_width + 5) + ",0)")
         .call(legendAxis);
 
+        // svg.append("text")
+        // .attr("x", width - 30 )
+        // .attr("y", -10)
+        // .style("text-anchor", "start")
+        // .text("Modification Count");
+        
         // add text label on top of colorbar
-
         svg.append("text")
-        .attr("x", width - 30 )
-        .attr("y", -10)
-        .style("text-anchor", "start")
+        .attr("transform", "translate("+ (width + color_bar_width + 35 + color_bar_width) +","+(color_bar_height/2)+")rotate(-90)")
+        .style("text-anchor", "middle")
         .text("Modification Count");
-
 
 
         

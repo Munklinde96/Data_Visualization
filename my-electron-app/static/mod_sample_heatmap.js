@@ -83,8 +83,6 @@ function renderSampleModPlot(){
         .attr("text-anchor", "middle")
         .attr("transform", "translate("+ (width/2) +","+(height+margin.top+20)+")")
         .text("Sample");
-        
-        
 
         // Build Y scales and axis:
         var y = d3.scaleBand()
@@ -217,6 +215,11 @@ function renderSampleModPlot(){
         .attr("transform", "translate(" + (width + color_bar_width + 5) + ",0)")
         .call(legendAxis);
  
+        // add text label on top of colorbar
+        svg.append("text")
+        .attr("text-anchor", "middle")
+        .attr("transform", "translate("+ (width + color_bar_width + 35 + color_bar_width/2) +","+(color_bar_height/2)+")rotate(-90)")
+        .text("Modification Frequency");
 
         
     });
