@@ -10,8 +10,8 @@ function renderProteinModPlot(){
     // append the svg object to the body of the page
     var svg = d3.select("#mod_heatmap")
         .append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
+        .attr("width", width + margin.left + 2*margin.right)
+        .attr("height", height + margin.top + 2*margin.bottom)
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -69,7 +69,16 @@ function renderProteinModPlot(){
         .style("text-anchor", "end")
         .attr("dx", "-.8em")
         .attr("dy", ".15em")
-        .attr("transform", "rotate(-45)");    
+        .attr("transform", "rotate(-45)");  
+        
+        // add label to xaxis
+        svg.append("text")
+        .attr("transform",
+            "translate(" + (width/2) + " ," +
+                            (height + margin.top + 30) + ")")
+        .style("text-anchor", "middle")
+        .text("Protein");
+
 
         // Build Y scales and axis:
         var y = d3.scaleBand()
@@ -88,6 +97,15 @@ function renderProteinModPlot(){
         .style("border-width", "2px")
         .style("border-radius", "5px")
         .style("padding", "5px")
+
+        // add label to y axis
+        svg.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 0 - margin.left)
+        .attr("x",0 - (height / 2))
+        .attr("dy", "1em")
+        .style("text-anchor", "middle")
+        .text("Modification Type");
 
         // Three function that change the tooltip when user hover / move / leave a cell
         var mouseover = function(d) {
@@ -215,6 +233,17 @@ function renderProteinModPlot(){
         svg.append("g")
         .attr("transform", "translate(" + (width + color_bar_width + 5) + ",0)")
         .call(legendAxis);
+
+        // add text label on top of colorbar
+
+        svg.append("text")
+        .attr("x", width - 30 )
+        .attr("y", -10)
+        .style("text-anchor", "start")
+        .text("Modification Count");
+
+
+
         
     });
 }

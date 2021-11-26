@@ -17,8 +17,8 @@ function renderSampleModPlot(){
     // append the svg object to the body of the page
     var svg = d3.select("#graphDiv2")
         .append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
+        .attr("width", width + margin.left + 2*margin.right)
+        .attr("height", height + margin.top + 2* margin.bottom)
         .append("g")
         .attr("transform",
             "translate(" + margin.left + "," + margin.top + ")");
@@ -76,7 +76,15 @@ function renderSampleModPlot(){
         .padding(0.01);
         svg.append("g")
         .attr("transform", "translate(0," + height + ")")
-        .call(d3.axisBottom(x))
+        .call(d3.axisBottom(x));
+
+        // x-axis label in middle of x-axis
+        svg.append("text")
+        .attr("text-anchor", "middle")
+        .attr("transform", "translate("+ (width/2) +","+(height+margin.top+20)+")")
+        .text("Sample");
+        
+        
 
         // Build Y scales and axis:
         var y = d3.scaleBand()
@@ -84,6 +92,16 @@ function renderSampleModPlot(){
         .domain(myVars)
         .padding(0.01);
         svg.append("g").call(d3.axisLeft(y));
+
+        // add label to y axis
+        svg.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 0 - margin.left)
+        .attr("x",0 - (height / 2))
+        .attr("dy", "1em")
+        .style("text-anchor", "middle")
+        .text("Modification Type");
+
 
         // create a tooltip
         var tooltip = d3.select("#graphDiv2")
@@ -199,6 +217,7 @@ function renderSampleModPlot(){
         .attr("transform", "translate(" + (width + color_bar_width + 5) + ",0)")
         .call(legendAxis);
  
+
         
     });
 }
