@@ -225,7 +225,13 @@ function renderProteinModPlot(){
         var legendAxis = d3.axisRight(legendScale)
         .ticks(5)
         .tickSize(5)
-        .tickFormat(d3.format(".2f"));
+        .tickFormat( function(d){
+            // if normalization is protein_intensity, use scientific notation
+            if(normalizationType === "protein_intensity"){
+                return d3.format(".2e")(d);
+            }
+            else return d.toFixed(2);
+            })
         // set tick for last value also
         legendAxis.tickValues(legendAxis.scale().ticks(5).concat(legendAxis.scale().domain()));
 
@@ -244,10 +250,18 @@ function renderProteinModPlot(){
         svg.append("text")
         .attr("transform", "translate("+ (width + color_bar_width + 35 + color_bar_width) +","+(color_bar_height/2)+")rotate(-90)")
         .style("text-anchor", "middle")
-        .text("Modification Count");
+        .text(function(){
+            // if(normalizationType === "protein_intensity"){
+            //     return "Modification Count - normalized by protein intensity";
+            // }
+            
+            // else if (normalizationType === "protein_total_mod_count"){
+            //     return "Modification Count - normalized by total modification count in protein";
+            // }
+            // else return "Modification Count";
+            return "Modification Count";
+        });
 
-
-        
     });
 }
 
