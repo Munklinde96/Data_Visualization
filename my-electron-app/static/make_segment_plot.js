@@ -54,7 +54,7 @@ function renderSegmentPlot(){
     // set the dimensions and margins of the graph
     var margin = {top: 30, right: 20, bottom: 30, left: 20};
     var margin_overview = {top: 30, right: 15, bottom: 10, left: 15};
-    var width = screen.width *0.7;
+    var width = screen.width *0.9;
     var mod_label_size = 10
     var color_bar_width = 20;
     var color_bar_height = 180;
@@ -421,10 +421,6 @@ function renderSegmentPlot(){
         .attr("fill", d=> d[4])
         .attr("opacity", 0.5);
 
-    var displayed = d3.scaleQuantize()
-        .domain([0, width])
-        .range(d3.range(peptide_length));
-
     var selector = svg.append("rect")
         .attr("class", "mover")
         .attr("x", 0)
@@ -446,9 +442,10 @@ function renderSegmentPlot(){
         .attr("opacity", 0.5)
         .attr("pointer-events", "all")
         .attr("cursor", "ew-resize")
-        .call(d3.drag().on("drag", zoom_plt));
+        .call(d3.drag().on("drag", zoom_plt_left));
     
     var right_selector_border = svg.append("rect")
+        .attr("class", "right_selector_border")
         .attr("x", selector_width)
         .attr("y", 0)
         .attr("height", selector_height)
@@ -457,11 +454,13 @@ function renderSegmentPlot(){
         .attr("opacity", 0.5)
         .attr("pointer-events", "all")
         .attr("cursor", "ew-resize")
-        .call(d3.drag().on("drag", zoom_plt));
+        .call(d3.drag().on("drag", zoom_plt_right));
 
     function drag_plt() {
-        var x = parseInt(d3.select(this).attr("x")),
-            nx = x + d3.event.dx,
+        var selector_width = parseInt(d3.select('.mover').attr('width'));
+
+        var x = parseInt(d3.select(this).attr("x"));
+        var nx = x + d3.event.dx,
             w = parseInt(d3.select(this).attr("width"));
 
         if(nx < 0 || nx + w > selector_range) return;
@@ -477,14 +476,79 @@ function renderSegmentPlot(){
 
     }
 
-    function zoom_plt() {
-        var x = parseInt(d3.select(this).attr("x")),
-            nx = x + d3.event.dx,
-            w = parseInt(d3.select(this).attr("width"));
+    function zoom_plt_right() {
+        var selector_x = parseInt(d3.select('.mover').attr('x')),
+            selector_width = parseInt(d3.select('.mover').attr('width'));
 
-        if(nx < 0 || nx + w > selector_range) return;
+        var x = parseInt(d3.select(this).attr("x"));
+        var nx = d3.event.x,
+            ndx = x + d3.event.dx;
 
-        selector.attr("transform", "scale(" + x/(nx + w) + "," + 1 + ")");
+        var scaleFactor = selector_width/(nx-selector_x);
+        var scale = width / selector_width;
+
+        if(nx < selector_x + 40 || nx > selector_range) return;
+
+        right_selector_border.attr("x", nx - selector_x);
+        selector.attr("width", nx - selector_x);
+        rects.attr("width", function() {
+            return this.getAttribute('width') * scaleFactor;
+            });
+        rects.attr("x", function() {
+            return this.getAttribute('x') * scaleFactor;
+            });
+           
+        mod_rects.attr("width", function() {
+            return this.getAttribute('width') * scaleFactor;
+        });
+        mod_rects.attr("x", function() {
+            return this.getAttribute('x') * scaleFactor;
+        });
+        mod_rects.attr("transform", "translate(" +  (scaleFactor * (width/ndx) - selector_x *scale)  + "," + 0 + ")");
+        rects.attr("transform", "translate(" + (scaleFactor * (width/ndx) - selector_x * scale)  + "," + 0 + ")");
+
+
+        
+
+    }
+
+    function zoom_plt_left() {
+        var selector_x = parseInt(d3.select('.mover').attr('x'));
+        var selector_width = parseInt(d3.select('.mover').attr('width'));
+
+        var right_selector_border_x = parseInt(d3.select('.right_selector_border').attr('x'));
+
+        var x = parseInt(d3.select(this).attr("x"));
+        var nx = d3.event.x;
+        // var ndx = x + d3.event.dx;
+
+        var scaleFactor = selector_width/(nx-selector_x);
+        var scale = width / selector_width;
+
+        console.log(nx)
+        // console.log(selector_x)
+        // console.log(selector_width)
+        if(nx < 0 || nx > right_selector_border_x - 40) return;
+
+        selector.attr("width", right_selector_border_x - nx);
+        selector.attr("x", right_selector_border_x - selector_width);
+        left_selector_border.attr("x", right_selector_border_x - selector_width);
+
+        // selector.attr("width", selector_width - );
+        // selector.attr('width', selector_width - (nx - selector_x));
+        // rects.attr("width", function() {
+        //     return this.getAttribute('width') * scaleFactor;
+        //     });
+        // rects.attr("x", function() {
+        //     return this.getAttribute('x') * scaleFactor;
+        //     });
+           
+        // mod_rects.attr("width", function() {
+        //     return this.getAttribute('width') * scaleFactor;
+        // });
+        // mod_rects.attr("x", function() {
+        //     return this.getAttribute('x') * scaleFactor;
+        // });
     }
 });
 }
