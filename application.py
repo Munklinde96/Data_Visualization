@@ -78,7 +78,8 @@ def buildSegmentData(df, protein, _samples=[], start_pos=0, end_pos=0, _stacked=
         print("check this out", start_end_indicies)
     # Create SegmentPlotData
     if protein == "":
-        peptide_patches, mod_patches, height, seqq, modification_color_map, min_peptide, max_peptide = create_data_for_segment_plot(df, selected_samples_indices=intSamples, spacing=0.0, start_end_indices=start_end_indicies, is_stacked=_stacked)
+        # set this back selected_samples_indices=intSamples
+        peptide_patches, mod_patches, height, seqq, modification_color_map, min_peptide, max_peptide = create_data_for_segment_plot(df, spacing=0.0, start_end_indices=start_end_indicies, is_stacked=_stacked)
         segmentObject = {
         'peptide_patches': peptide_patches,
         'mod_patches': mod_patches,
