@@ -262,6 +262,14 @@ function renderProteinModPlot(){
             return "Modification Count";
         });
 
+        if (normalizationType === "protein_intensity"){
+            //  select id= 'mod_heatmap_title' and change text
+            d3.select('#mod_heatmap_title').text("Modification count per protein - normalized by protein intensity");
+        } else if (normalizationType === "protein_total_mod_count"){
+            d3.select('#mod_heatmap_title').text("Modification count per protein - normalized by total modification count in protein");
+        }
+        else d3.select('#mod_heatmap_title').text("Modification count per protein");
+
     });
 }
 
