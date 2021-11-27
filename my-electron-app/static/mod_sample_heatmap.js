@@ -8,7 +8,7 @@ function renderSampleModPlot(){
     }
     // set the dimensions and margins of the graph
     var margin = {top: 30, right: 130, bottom: 30, left: 130},
-        width = screen.width*0.3,
+        width = screen.width*0.35,
         height = 500 - margin.top - margin.bottom;
     
     // remove old svg

@@ -1,6 +1,7 @@
 from flask import Flask, flash, redirect, render_template, request, session, abort,send_from_directory,send_file,jsonify
 import pandas as pd
 import sys
+from refactored_utils import get_and_prepare_data
 sys.path.append("./..")
 from utils import get_modification_count_per_protein
 from sample_heatmap import get_sample_heatmap_data
@@ -37,11 +38,6 @@ class DataStore():
 data=DataStore()
 
 def buildProteinModData(df, count, normalization, _samples=[]):
-    # Count modifications
-    #df1, df2, df3, df4 = split_data_in_samples(df)
-
-    df['#modifications'] = df['PTM'].apply(count_no_of_modifications)
-    df[df['#modifications'] > 0]
 
     # Get data for first viz
     modData = pd.DataFrame(get_modification_count_per_protein(df, count,  normalization))
@@ -54,8 +50,6 @@ def buildProteinModData(df, count, normalization, _samples=[]):
 #     return data.to_json()
 
 def buildSampleModData(df, protein):
-    #df['#modifications'] = df['PTM'].apply(count_no_of_modifications)
-    #df[df['#modifications'] > count]
     data = None
     if protein == "":
         data = get_sample_heatmap_data(df)
@@ -113,7 +107,7 @@ def homepage():
     # path = r"protein-peptides.csv"
     path = r"UHT milk P036.csv"
     #path = r"protein-peptides.csv"
-    df = pd.read_csv(path)
+    df = get_and_prepare_data(path)
     data.DataFrame = df
     
     # Create initial configuration
@@ -129,13 +123,13 @@ def homepage():
     data.ProteinModData = json.loads(proteinModJson)
 
     # Get JSON data for protein mod viz
-    sampleModJson = buildSampleModData(df, "")
+    # sampleModJson = buildSampleModData(df, "")
 
     # Save to datastore
-    data.SampleModData = json.loads(sampleModJson)
+    # data.SampleModData = json.loads(sampleModJson)
 
-    segmentPlotJson = buildSegmentData(df, "")
-    data.SegmentPlotData = segmentPlotJson
+    # segmentPlotJson = buildSegmentData(df, "")
+    # data.SegmentPlotData = segmentPlotJson
 
 
     # Return data to frontend
