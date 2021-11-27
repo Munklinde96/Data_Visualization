@@ -106,6 +106,24 @@ function renderSegmentPlot(){
         .call(xAxis_labels)
         .selectAll("text")
 
+    // make every other label smaller
+    var adjust_xaxis = function (scale) {
+        // make every second label have font size by scale smaller
+        x_labels.attr("font-size", function(d,i){
+            if (i % 2 == 0) {
+                return scale * mod_label_size;
+            } else {
+                return mod_label_size;
+            }
+        });
+    }
+
+    //make zoom fuctionality for x axis
+    
+    // TODO
+    // adjust_xaxis(2);
+    
+    
     var rx = 2
     var ry = 2
     var stroke_width = 0.1
@@ -485,7 +503,31 @@ function renderSegmentPlot(){
 
         selector.attr("transform", "scale(" + x/(nx + w) + "," + 1 + ")");
     }
-});
+
+    // make histogram with number of modifications per x value in data
+
+    // make array with number and type of modifications per position in mod_patches
+    // GET MODS PER POSITION FROM PYTHON INSTEAD
+    // var mod_counts = [];
+    // for(var i = 0; i < peptide_length; i++) {
+    //     mod_counts.push([[] , []]);
+    // }
+    // for(var i = 0; i < mod_patches.length; i++) {
+    //     // add 1 to mod_counts[mod_patches[i][0]][0]
+    //     mod_counts[mod_patches[i][0]][0] += 1;
+    //     // get type from color
+    //     var color_ = mod_patches[i][4];
+    //     // convert color to type using colors_to_mod_map
+    //     var type_ = colors_to_mod_map[color_];
+    //     // add type to mod_counts[mod_patches[i][0]][1]
+    //     mod_counts[mod_patches[i][0]][1].push(type_);
+    // }
+    
+    
+    
+    
+
+    });
 }
 
 $('document').ready(function(){
