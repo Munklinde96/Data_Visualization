@@ -270,6 +270,8 @@ def get_modification_count_per_protein(df, countFilter, normalize):
             mod = mod.strip()
             if mod not in modificationCountByProtein[proteinName]:
                 modificationCountByProtein[proteinName][mod] = 1
+                if mod is not "Unmodified":
+                    totalProteinModCount[proteinName] += 1
             else:
                 modificationCountByProtein[proteinName][mod] += 1
                 if mod is not "Unmodified":
@@ -285,22 +287,6 @@ def get_modification_count_per_protein(df, countFilter, normalize):
             updateMods = {}
             for mod, count in mods.items():
                 updateMods[mod] = count / totalProteinModCount[protein]
-            modificationCountByProteinFiltered[protein] = updateMods
-    elif "protein_length" in '{0}'.format(normalize):
-        print("norm is: protein_length")
-        for protein, mods in modificationCountByProteinFiltered.items():
-            proteinLength = get_protein_length_from_uniprot(protein)
-            updateMods = {}
-            for mod, count in mods.items():
-                updateMods[mod] = count / proteinLength
-            modificationCountByProteinFiltered[protein] = updateMods
-    elif "protein_mass" in '{0}'.format(normalize):
-        print("norm is: protein_mass")
-        for protein, mods in modificationCountByProteinFiltered.items():
-            proteinMass = get_protein_mass_from_uniprot(protein)
-            updateMods = {}
-            for mod, count in mods.items():
-                updateMods[mod] = count / proteinMass
             modificationCountByProteinFiltered[protein] = updateMods
     elif "protein_intensity" in '{0}'.format(normalize):
         print("norm is: protein_intensity")

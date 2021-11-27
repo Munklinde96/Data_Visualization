@@ -59,12 +59,6 @@ function renderSegmentPlot(){
     var color_bar_width = 20;
     var color_bar_height = 180;
     var height = plot_height*5 + margin_overview.bottom + 12 + color_bar_height;
-    // if(plot_height*5 < 200 + colors_to_mod_map.length*(mod_label_size+5)){
-    //     height = 200 + colors_to_mod_map.length*(mod_label_size+5);
-    // }
-    // var height = Math.max([plot_height*5, 200 + colors_to_mod_map.length*(mod_label_size+5)]);
-
-        
         
     // append the svg object to the body of the page
     var svg = d3.select("#graphDiv3")
@@ -477,7 +471,6 @@ function renderSegmentPlot(){
         .range(d3.range(peptide_length));
 
     var selector = svg.append("rect")
-        .attr("transform", "translate(0, 0)")
         .attr("class", "mover")
         .attr("x", 0)
         .attr("y", 0)
@@ -485,34 +478,60 @@ function renderSegmentPlot(){
         .attr("width", selector_width)
         .attr("fill", "gray")
         .attr("opacity", 0.5)
-        .attr("stroke", "red")
-        .attr("stroke-width", 0.2)
         .attr("pointer-events", "all")
         .attr("cursor", "ew-resize")
-        .call(d3.drag().on("drag", display));
+        .call(d3.drag().on("drag", drag_plt));
 
+    var left_selector_border = svg.append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("height", selector_height)
+        .attr("width", 1)
+        .attr("fill", "red")
+        .attr("opacity", 0.5)
+        .attr("pointer-events", "all")
+        .attr("cursor", "ew-resize")
+        .call(d3.drag().on("drag", zoom_plt));
+    
+    var right_selector_border = svg.append("rect")
+        .attr("x", selector_width)
+        .attr("y", 0)
+        .attr("height", selector_height)
+        .attr("width", 1)
+        .attr("fill", "red")
+        .attr("opacity", 0.5)
+        .attr("pointer-events", "all")
+        .attr("cursor", "ew-resize")
+        .call(d3.drag().on("drag", zoom_plt));
 
-    function display() {
+    function drag_plt() {
         var x = parseInt(d3.select(this).attr("x")),
             nx = x + d3.event.dx,
-            w = parseInt(d3.select(this).attr("width")),
-            f, nf;
+            w = parseInt(d3.select(this).attr("width"));
 
         if(nx < 0 || nx + w > selector_range) return;
 
         d3.select(this).attr("x", nx);
 
-        f = displayed(x);
-        nf = displayed(nx);
-
-        // if(f == nf) return;
-
         rects.attr("transform", "translate(" + -width/selector_width * nx + "," + 0 + ")");
         mod_rects.attr("transform", "translate(" + -width/selector_width * nx + "," + 0 + ")");
         x_ticks.attr("transform", "translate(" + -width/selector_width * nx + "," + (selector_height + margin_overview.bottom - 1+12) + ")");
         x_labels.attr("transform", "translate(" + -width/selector_width * nx + "," + 0 + ")");
+        left_selector_border.attr("transform", "translate(" + nx + "," + 0 + ")");
+        right_selector_border.attr("transform", "translate(" + nx + "," + 0 + ")");
+
     }
-    });
+
+    function zoom_plt() {
+        var x = parseInt(d3.select(this).attr("x")),
+            nx = x + d3.event.dx,
+            w = parseInt(d3.select(this).attr("width"));
+
+        if(nx < 0 || nx + w > selector_range) return;
+
+        selector.attr("transform", "scale(" + x/(nx + w) + "," + 1 + ")");
+    }
+});
 }
 
 $('document').ready(function(){
