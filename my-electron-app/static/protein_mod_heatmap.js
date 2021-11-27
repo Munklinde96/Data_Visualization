@@ -2,7 +2,7 @@ function renderProteinModPlot(){
     console.log("drawing mod heatap")
     // set the dimensions and margins of the graph
     var margin = {top: 30, right: 130, bottom: 30, left: 130},
-        width = 900 - margin.left - margin.right,
+        width = 900 - margin.left ,
         height = 500 - margin.top - margin.bottom;
     // remove old svg
     d3.select("#mod_heatmap").select("svg").remove();
@@ -10,8 +10,8 @@ function renderProteinModPlot(){
     // append the svg object to the body of the page
     var svg = d3.select("#mod_heatmap")
         .append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
+        .attr("width", width + margin.left + 2*margin.right)
+        .attr("height", height + margin.top + 2*margin.bottom)
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -69,7 +69,16 @@ function renderProteinModPlot(){
         .style("text-anchor", "end")
         .attr("dx", "-.8em")
         .attr("dy", ".15em")
-        .attr("transform", "rotate(-45)");    
+        .attr("transform", "rotate(-45)");  
+        
+        // add label to xaxis
+        svg.append("text")
+        .attr("transform",
+            "translate(" + (width/2) + " ," +
+                            (height + margin.top + 30) + ")")
+        .style("text-anchor", "middle")
+        .text("Protein");
+
 
         // Build Y scales and axis:
         var y = d3.scaleBand()
@@ -88,6 +97,15 @@ function renderProteinModPlot(){
         .style("border-width", "2px")
         .style("border-radius", "5px")
         .style("padding", "5px")
+
+        // add label to y axis
+        svg.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 0 - margin.left)
+        .attr("x",0 - (height / 2))
+        .attr("dy", "1em")
+        .style("text-anchor", "middle")
+        .text("Modification Type");
 
         // Three function that change the tooltip when user hover / move / leave a cell
         var mouseover = function(d) {
@@ -112,8 +130,12 @@ function renderProteinModPlot(){
                 }
                 if(d.protein === proteinStructData[n].protein && d.protein !== selectedProtein){
                     let target = d3.select("#mod_prot_id_heatmap_"+n);
+                    // cupid red
+                    // target.style('stroke', '#F7B4BB');
                     target.style('stroke', 'red');
-                    target.style('stroke-width', 2);
+                    target.attr('rx', 2)
+                    target.attr('ry', 2)
+                    target.style('stroke-width', 1);
                 }
             }
             if(selectedProtein !== d.protein){
@@ -140,10 +162,18 @@ function renderProteinModPlot(){
             .style("fill", function(d) {return myColor(d.value)})
             .style("stroke", function(d){
                 if(d.protein === selectedProtein){
-                    return "red";
+                    // egg white
+                    return 'red';
                 }
                 return "none";
             })
+            // .style('opacity', function(d){
+            //     if(d.protein !== selectedProtein){
+            //         return 0.5;
+            //     } else {
+            //         return 1;
+            //     }
+            // })
             .style("stroke-width", function(d){
                 if(d.protein === selectedProtein){
                     return 2;
@@ -195,7 +225,13 @@ function renderProteinModPlot(){
         var legendAxis = d3.axisRight(legendScale)
         .ticks(5)
         .tickSize(5)
-        .tickFormat(d3.format(".2f"));
+        .tickFormat( function(d){
+            // if normalization is protein_intensity, use scientific notation
+            if(normalizationType === "protein_intensity"){
+                return d3.format(".2e")(d);
+            }
+            else return d.toFixed(2);
+            })
         // set tick for last value also
         legendAxis.tickValues(legendAxis.scale().ticks(5).concat(legendAxis.scale().domain()));
 
@@ -203,7 +239,29 @@ function renderProteinModPlot(){
         svg.append("g")
         .attr("transform", "translate(" + (width + color_bar_width + 5) + ",0)")
         .call(legendAxis);
+
+        // svg.append("text")
+        // .attr("x", width - 30 )
+        // .attr("y", -10)
+        // .style("text-anchor", "start")
+        // .text("Modification Count");
         
+        // add text label on top of colorbar
+        svg.append("text")
+        .attr("transform", "translate("+ (width + color_bar_width + 35 + color_bar_width) +","+(color_bar_height/2)+")rotate(-90)")
+        .style("text-anchor", "middle")
+        .text(function(){
+            // if(normalizationType === "protein_intensity"){
+            //     return "Modification Count - normalized by protein intensity";
+            // }
+            
+            // else if (normalizationType === "protein_total_mod_count"){
+            //     return "Modification Count - normalized by total modification count in protein";
+            // }
+            // else return "Modification Count";
+            return "Modification Count";
+        });
+
     });
 }
 

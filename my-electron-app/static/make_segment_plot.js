@@ -37,6 +37,8 @@ function renderSegmentPlot(){
     var min_color = min_peptide[1];
     var max_color = max_peptide[1];
     var color = d3.scaleLinear().range([min_color, max_color]).domain([1, 2]);
+
+    
     
     var modification_color_map_keys = Object.keys(modification_color_map);
     var modification_color_map_values = Object.values(modification_color_map);
@@ -54,25 +56,24 @@ function renderSegmentPlot(){
     var height = plot_height*5;
 
     var margin_overview = {top: 30, right: 15, bottom: 10, left: 15};
-        
+    var width = screen.width *0.7;
+    var mod_label_size = 10
+    var color_bar_width = 20;
+    var color_bar_height = 180;
+    var height = plot_height*5 + margin_overview.bottom + 12 + color_bar_height;
         
     // append the svg object to the body of the page
     var svg = d3.select("#graphDiv3")
     .append("svg")
     .attr("width", width)
-    .attr("height", height + margin.top + margin.bottom + selector_height)
+    .attr("height", height + selector_height)
     .append("g")
-    // make scrolable svg
-    .attr("transform", "translate(" + 0 + "," + margin.top + ")");
-
     
     var segment_height = 5;
     var values_distance = 10;
 
     var peptide_chars = peptide_seq.split("");
     var peptide_length = peptide_seq.length;
-
-    var isScrollDisplayed = values_distance * peptide_length > width;
 
     var xScale_ticks = d3.scaleLinear()
         .domain([0, peptide_length])
@@ -158,94 +159,49 @@ function renderSegmentPlot(){
     function mousemove_modification(d) {
         // get modification type from colors_to_mod_map map
         var mod_type = colors_to_mod_map.get(d[4]);
-        var mod_position = d[0];
-        var mod_char = peptide_chars[mod_position];
-        tooltip.html("<p>Intensity: " + expo(d[5], 3) + "</p><p>Modification Type: " + mod_type + "</p><p> Position: " + mod_position + "</p><p>Modification Character: " + mod_char + "</p>")
+        tooltip.html("<p>Intensity: " + expo(d[5], 3) + "</p><p>Modification Type: " + mod_type + "</p>")
             .style("left", (d3.event.pageX + 10) + "px")
             .style("top", (d3.event.pageY - 10) + "px");
+
+        // get segment in rect_patches where d[0] and d[1] are located and call highlightSeqInXAxis
+        var segment = rect_patches.filter(function(rect) {
+            return (rect[0] <= d[0] && d[0] <= rect[0] + rect[2] && rect[1] <= d[1] && d[1] < rect[1] + rect[3]);
+        });
+
+        // get all modification on this segments - retuns [mod_types_and_positions, mod_positions]
+        var modPositionsAndTypes = getModificationPositions(mod_patches, segment[0], colors_to_mod_map, peptide_seq);
+        var mod_positions = modPositionsAndTypes[1];
+        var specific_mod_pos = d[0];
+        var x_axis_highlight = highlightSeqInXAxis(svg, segment[0], mod_positions, specific_mod_pos, true);
     }
     function mousemove_segments(d) {
-        if (d[0]-3  >= 0) {
-            var three_chars_before = peptide_chars.slice(d[0]-3, d[0]); 
-        } else {
-            var three_chars_before = peptide_chars.slice(0, d[0]);
-        }
-        if (d[0]+ d[2]+3 <= peptide_length) {
-            var three_chars_after = peptide_chars.slice(d[0] + d[2], d[0] + d[2]+3);
-        } else {
-            var three_chars_after = peptide_chars.slice(d[0] + d[2], peptide_length);
-        }
-        // make text smaller in html
-        three_chars_before_italic = '<i>' +three_chars_before.join("")+'</i>';
-        three_chars_after_italic = '<i>' +three_chars_after.join("") +'</i>';
-        
-        // get all modification on this segments
-        mod_types_and_positions = [];
-        mod_positions = [];
-        for (var i = 0; i < mod_patches.length; i++) {
-            if (mod_patches[i][0] >= d[0] && mod_patches[i][0] <= d[0] + d[2] && mod_patches[i][1] == d[1]) {
-                pos = mod_patches[i][0];
-                mod_positions.push(pos);
-                _type =colors_to_mod_map.get(mod_patches[i][4]);
-                mod_types_and_positions.push(_type + "(" + pos+")");
-            }
-        }
-        
-        mod_types_and_positions_str = mod_types_and_positions.join(", "); 
+        // get all modification on this segments - retuns [mod_types_and_positions, mod_positions]
+        var modPositionsAndTypes = getModificationPositions(mod_patches, d, colors_to_mod_map, peptide_seq);
+        var mod_types_and_positions = modPositionsAndTypes[0];
+        var mod_positions = modPositionsAndTypes[1];
+
+        var mod_types_and_positions_str = mod_types_and_positions.join(", "); 
         if (mod_types_and_positions_str.length > 0) {
-        tooltip.html("<p>Peptide: " + three_chars_before_italic+ '.' + peptide_seq.substring(d[0],  d[0] + d[2])+ '.' + three_chars_after_italic + "</p><p>Intensity: " + expo(d[5], 3) + "</p><p>Modifications: " + mod_types_and_positions_str + "</p>")
+        tooltip.html("<p>Intensity: " + expo(d[5], 3) + "</p><p>Modifications: " + mod_types_and_positions_str + "</p>")
             .style("left", (d3.event.pageX + 10) + "px")
             .style("top", (d3.event.pageY - 10) + "px");
         } else {
-            tooltip.html("<p>Peptide: " + three_chars_before_italic+ '.' + peptide_seq.substring(d[0],  d[0] + d[2])+ '.' + three_chars_after_italic + "</p><p>Intensity: " + expo(d[5], 3) + "</p>")
+            tooltip.html("<p>Intensity: " + expo(d[5], 3) + "</p>")
             .style("left", (d3.event.pageX + 10) + "px")
             .style("top", (d3.event.pageY - 10) + "px");
         }
-
         // highlight the peptide sequence in the x-axis 
-        var x_axis_highlight = svg.selectAll(".xAxis_labels")
-            .selectAll("text")
-            .style("fill", function(dd,i){
-                if(i >= d[0] && i < d[0] + d[2]){
-                    // check if modification at position i
-                    if (mod_positions.includes(i)) {
-                        return "red";
-                    } else {
-                        return d[4];
-                    }
-                } else {
-                    return "black";
-                }
-            })
-            // increase size of the text
-            .style("font-size", function(dd,i){
-                if(i >= d[0] && i < d[0] + d[2]){
-                    return "1.5em";
-                } else {
-                    return "1em";
-                }
-            })
-            // make bold
-            .style("font-weight", function(dd,i){
-                if(i >= d[0] && i < d[0] + d[2]){
-                    return "bold";
-                } else {
-                    return "normal";
-                }
-            });
-
+        var x_axis_highlight = highlightSeqInXAxis(svg, d, mod_positions, 0, false);
     }
     
     function mouseleave(d) {
         tooltip.style("opacity", 0)
         var x_axis_highlight = svg.selectAll(".xAxis_labels")
         .selectAll("text")
-        .style("fill", 'black');
-        // TODO: make it back to normal
-        // ##########
-        // ##########
-        // ##########
-        // ##########
+        .style("fill", 'black')
+        .style("font-size", "1em")
+        .style("font-weight", "normal")
+        .style("opacity", 1);
     }
 
     function expo(x, f) {
@@ -273,15 +229,15 @@ function renderSegmentPlot(){
 
     // Inspired by: https://www.d3-graph-gallery.com/graph/custom_legend.html
     //   modification labels
-    var size = 10
+    var mod_label_size = 10
     var legend = svg.selectAll("legend")
         .data(modification_color_map_keys)
         .enter()
         .append("rect")
         .attr("x", 0)
-        .attr("y", function(d,i){ return 100 + i*(size+5)}) // 100 is where the first dot appears. 25 is the distance between dots
-        .attr("width", size)
-        .attr("height", size)
+        .attr("y", function(d,i){ return 100 + i*(mod_label_size+5)}) // 100 is where the first dot appears. 25 is the distance between dots
+        .attr("width", mod_label_size)
+        .attr("height", mod_label_size)
         // .style("fill", function(d, i){ return modification_color_map[d]})
         .style("fill",'grey')
         .on("mouseover", function(d,i){
@@ -322,7 +278,7 @@ function renderSegmentPlot(){
                 }
             })
             // fill box with color of text next to it (if it is grey)
-            box_fill = d3.select(this).style("fill");
+            var box_fill = d3.select(this).style("fill");
             if (box_fill == "rgb(128, 128, 128)" || box_fill == "grey") {
                 d3.select(this).style("fill", modification_color_map[d]);
             } else {
@@ -330,14 +286,15 @@ function renderSegmentPlot(){
             }
             
         });
+
     
     // Add one dot in the legend for each name.
-    legend_text = svg.selectAll("myLabels")
+    var legend_text = svg.selectAll("myLabels")
         .data(modification_color_map_keys)
         .enter()
         .append("text")
-        .attr("x", 0 + size*1.2)
-        .attr("y", function(d,i){ return 100 + i*(size+5) + (size/2)}) // 100 is where the first dot appears. 25 is the distance between dots
+        .attr("x", 0 + mod_label_size*1.2)
+        .attr("y", function(d,i){ return 100 + i*(mod_label_size+5) + (mod_label_size/2)}) // 100 is where the first dot appears. 25 is the distance between dots
         .text(function(d){ return d})
         .attr("text-anchor", "left")
         .style("fill", "black")
@@ -356,13 +313,17 @@ function renderSegmentPlot(){
             })
         })
 
-
     // move legend and legend_text  to Center LEFT 
     legend.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top) + ")");
     legend_text.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top) + ")");
 
+<<<<<<< HEAD
     var color_bar_width = 20;
     var color_bar_height = 180;
+=======
+
+    if(rect_patches.length > 1) {
+>>>>>>> b72e2f6d7757d772a9ca6e665279bdd7dc488428
 
     // find difrence in magnintude and use as steps
     var max_exp = expo(max_intensity,1);
@@ -372,7 +333,7 @@ function renderSegmentPlot(){
     var steps = Math.abs(max_exp_last_char - min_exp_last_char)+1;
 
     var step = (Math.log(max_intensity) - Math.log(min_intensity)) / (steps - 1);
-    log_steps = [];
+    var log_steps = [];
     for (var i = 0; i < steps; i++) {
         log_steps.push(Math.exp(Math.log(min_intensity) + i * step));
     }
@@ -413,7 +374,7 @@ function renderSegmentPlot(){
 
 
     var color_legend_x = 220;
-    color_legend_text = svg.selectAll("colorLabels")
+    var color_legend_text = svg.selectAll("colorLabels")
         .data(log_steps_string)
         .enter()
         .append("text")
@@ -425,21 +386,21 @@ function renderSegmentPlot(){
 
     // add right line to next to color_legend_text
     var legendLine = svg.append("line")
-    .attr("x1", color_legend_x)
-    .attr("y1", 0)
-    .attr("x2", color_legend_x)
-    .attr("y2", color_bar_height)
-    .attr("stroke", "black")
-    .attr("stroke-width", 1);
+        .attr("x1", color_legend_x)
+        .attr("y1", 0)
+        .attr("x2", color_legend_x)
+        .attr("y2", color_bar_height)
+        .attr("stroke", "black")
+        .attr("stroke-width", 1);
     
     //move color_legend_text next to rect
     color_legend_text.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top + 100) + ")");
     // move legendLine next to color_legend_text
     legendLine.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top + 100) + ")");
-
     
     rect.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top + 100) + ")");
 
+<<<<<<< HEAD
     if (isScrollDisplayed){
         var sub_segment_height = selector_height/height * segment_height;
         var sub_values_distance = width/peptide_length;
@@ -497,8 +458,163 @@ function renderSegmentPlot(){
             x_labels.attr("transform", "translate(" + -width/selector_width * nx + "," + 0 + ")");
         }
     }});
+=======
+    // make color_legend text label on top of color bar
+    var color_legend_text_label = svg.append("text")
+        .attr("x", color_legend_x - color_bar_width)
+        .attr("y", -20)
+        .text("Intensity")
+        .attr("text-anchor", "right")
+        .style("alignment-baseline", "middle")
+        // .style("font-size", "12px")
+        .attr("transform", "translate(" + 0 + "," + (height/2 - margin.top + 100) + ")");      
+    }
+
+    var legend_title = svg.append("text")
+    .attr("x", 0)
+    // same y as color_legend_text_label
+    .attr("y", (height/2 - margin.top + 100) - 15)
+    .text("Modification Types")
+    .attr("text-anchor", "left")
+    .style("text-anchor", "left");
+
+    var sub_segment_height = selector_height/height * segment_height;
+    var sub_values_distance = Math.min(values_distance, width/peptide_length);
+    var selector_width = Math.min(values_distance*peptide_length, Math.round(parseFloat((width/values_distance*width)/peptide_length)));
+    var selector_range = Math.min(width, values_distance*peptide_length);
+     // add title to legend and legend_text
+
+    var sub_segments = svg.selectAll("sub_foo")
+        .data(rect_patches)
+        .enter()
+        .append("rect")
+        .attr("x", d => d[0]*sub_values_distance)
+        .attr("y", d=>  d[1]*sub_segment_height)
+        .attr("width", d=> d[2]*sub_values_distance)
+        .attr("height", d=> d[3]*sub_segment_height)
+        .attr("fill", d=> d[4])
+        .attr("opacity", 0.5);
+
+    var displayed = d3.scaleQuantize()
+        .domain([0, width])
+        .range(d3.range(peptide_length));
+
+    var selector = svg.append("rect")
+        .attr("class", "mover")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("height", selector_height)
+        .attr("width", selector_width)
+        .attr("fill", "gray")
+        .attr("opacity", 0.5)
+        .attr("pointer-events", "all")
+        .attr("cursor", "ew-resize")
+        .call(d3.drag().on("drag", drag_plt));
+
+    var left_selector_border = svg.append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("height", selector_height)
+        .attr("width", 1)
+        .attr("fill", "red")
+        .attr("opacity", 0.5)
+        .attr("pointer-events", "all")
+        .attr("cursor", "ew-resize")
+        .call(d3.drag().on("drag", zoom_plt));
+    
+    var right_selector_border = svg.append("rect")
+        .attr("x", selector_width)
+        .attr("y", 0)
+        .attr("height", selector_height)
+        .attr("width", 1)
+        .attr("fill", "red")
+        .attr("opacity", 0.5)
+        .attr("pointer-events", "all")
+        .attr("cursor", "ew-resize")
+        .call(d3.drag().on("drag", zoom_plt));
+
+    function drag_plt() {
+        var x = parseInt(d3.select(this).attr("x")),
+            nx = x + d3.event.dx,
+            w = parseInt(d3.select(this).attr("width"));
+
+        if(nx < 0 || nx + w > selector_range) return;
+
+        d3.select(this).attr("x", nx);
+
+        rects.attr("transform", "translate(" + -width/selector_width * nx + "," + 0 + ")");
+        mod_rects.attr("transform", "translate(" + -width/selector_width * nx + "," + 0 + ")");
+        x_ticks.attr("transform", "translate(" + -width/selector_width * nx + "," + (selector_height + margin_overview.bottom - 1+12) + ")");
+        x_labels.attr("transform", "translate(" + -width/selector_width * nx + "," + 0 + ")");
+        left_selector_border.attr("transform", "translate(" + nx + "," + 0 + ")");
+        right_selector_border.attr("transform", "translate(" + nx + "," + 0 + ")");
+
+    }
+
+    function zoom_plt() {
+        var x = parseInt(d3.select(this).attr("x")),
+            nx = x + d3.event.dx,
+            w = parseInt(d3.select(this).attr("width"));
+
+        if(nx < 0 || nx + w > selector_range) return;
+
+        selector.attr("transform", "scale(" + x/(nx + w) + "," + 1 + ")");
+    }
+});
+>>>>>>> b72e2f6d7757d772a9ca6e665279bdd7dc488428
 }
 
 $('document').ready(function(){
     renderSegmentPlot();
 });
+
+function getModificationPositions(mod_patches, d, colors_to_mod_map, peptide_sequence) {
+    var mod_types_and_positions = [];
+    var mod_positions = [];
+    for (var i = 0; i < mod_patches.length; i++) {
+        if (mod_patches[i][0] >= d[0] && mod_patches[i][0] <= d[0] + d[2] && mod_patches[i][1] == d[1]) {
+            var pos = mod_patches[i][0];
+            var letter = peptide_sequence[pos]; //letter at position
+            mod_positions.push(pos);
+            var _type = colors_to_mod_map.get(mod_patches[i][4]);
+            mod_types_and_positions.push(_type + "(" + letter + ")");
+        }
+    }
+    // make array of arrays mod_types_and_positions and mod_positions
+    return [mod_types_and_positions, mod_positions];
+}
+
+function highlightSeqInXAxis(svg, d, mod_positions, specific_mod_pos, has_specific) {
+    return svg.selectAll(".xAxis_labels")
+        .selectAll("text")
+        // make bold
+        .style('font-weight', function (dd, i) {
+            if (i >= d[0] && i < d[0] + d[2] && mod_positions.includes(i)) {
+                return 'bold';
+            } else {
+                return 'normal';
+            }
+        })
+        // increase size of the text
+        .style("font-size", function (dd, i) {
+            if (has_specific && i == specific_mod_pos) {
+                return "1.5em";
+            // }else if 
+            } else if (i >= d[0] && i < d[0] + d[2] && mod_positions.includes(i)) {
+                return "1.2em";
+
+            } else if (i >= d[0] && i < d[0] + d[2]) {
+                return "1.1em";    
+            } else {
+                return "1em";
+            }
+        })
+        // opacity
+        .style("opacity", function (dd, i) {   
+            if (i >= d[0] && i < d[0] + d[2]) { // and within the range
+                return 1;
+            }
+            else {
+                return 0.4;
+            }
+        })};
