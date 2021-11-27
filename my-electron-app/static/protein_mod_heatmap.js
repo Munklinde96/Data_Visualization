@@ -1,3 +1,4 @@
+
 function renderProteinModPlot(){
     console.log("drawing mod heatap")
     // set the dimensions and margins of the graph
@@ -49,23 +50,39 @@ function renderProteinModPlot(){
             }
         }
        
-        // Build color scale
-        var myColor = d3.scaleSequential()
-        .domain([minValue,maxValue])
-        .interpolator(d3.interpolateViridis);
+        // Build color scale 
+        // var myColor = d3.scaleSequential()
+        // .domain([minValue,maxValue])
+        // .interpolator(d3.interpolatePurples);´
+        var myColor = d3.scaleSequential(function(t) {
+            // return d3.interpolatePurples(t/1.15+0.23)
+            return d3.interpolatePurples(t/1.15+0.23)
+        })
+        .domain([minValue,maxValue]);
 
-        // Labels of row and columns
+
+
+
+        // Protein categories
         var proteins = d3.map(proteinStructData, function(d){return d.protein;}).keys()
-
+        var initial_proteins = proteins;
         if ( Object.keys(sortingOrderProteins).length === 0) {
             sortProteinsBySumOfAllModifications(proteins, proteinStructData);
             sortingOrderProteins = proteins;
         } else {
             proteins = sortingOrderProteins
+            for (var i = 0; i < proteins.length; i++) { // remove proteins that are not in initial_proteins 
+                if (initial_proteins.indexOf(proteins[i]) == -1) {
+                    proteins.splice(i, 1);
+                    i--;
+                }
+            }
         }
+        // Modification categories
         var modifications = d3.map(proteinStructData, function(d){return d.mod;}).keys();
         sortModificationsAndMoveUnmofifiedToTop(modifications);
 
+        
         // Build X scales and axis:
         var x = d3.scaleBand()
         .range([ 0, width ])
@@ -234,7 +251,7 @@ function renderProteinModPlot(){
         .style("fill", "url(#linear-gradient_mod_heat)");
 
         // legend axis and scale
-         // create a scale and axis for the legend
+        // create a scale and axis for the legend
         var legendScale = d3.scaleLinear()
         .domain([maxValue, minValue])
         .range([0,color_bar_height]);

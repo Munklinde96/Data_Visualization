@@ -61,9 +61,14 @@ function renderSampleModPlot(){
             }
         }
         // Build color scale
-        var myColor = d3.scaleSequential()
-        .domain([minValue,maxValue])
-        .interpolator(d3.interpolateOranges);
+        // var myColor = d3.scaleSequential()
+        // .domain([minValue,maxValue])
+        // .interpolator(d3.interpolateOranges);
+        var myColor = d3.scaleSequential(function(t) {
+            return d3.interpolateOranges(t/1.15+0.23)
+
+        })
+        .domain([minValue,maxValue]);
 
         // Labels of row and columns
         var samples = d3.map(modStructData, function(d){return d.sample;}).keys()

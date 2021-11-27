@@ -16,6 +16,7 @@
     "d3": "6.7.0",
     "d3-fetch": "2.0.0",
     "d3-node": "^2.2.3",
+    "d3-scale-chromatic": "^3.0.0",
     "jsdom": "^18.0.1",
     "node-fetch": "^3.1.0",
     "node-fetch-polyfill": "^2.0.6",
