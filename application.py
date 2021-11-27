@@ -34,6 +34,8 @@ class DataStore():
     SampleModData=None
     SegmentPlotData=None
     DataFrame=None
+    HeatMapSortingMods=None
+    HeatMapSortingProteins=None
 data=DataStore()
 
 def buildProteinModData(df, count, normalization, _samples=[]):
@@ -45,7 +47,7 @@ def buildProteinModData(df, count, normalization, _samples=[]):
 
     # Get data for first viz
     modData = pd.DataFrame(get_modification_count_per_protein(df, count,  normalization))
-    
+    # data.HeatMapSortingMods = 
     # Convert to json
     return modData.to_json()
 

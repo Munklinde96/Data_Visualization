@@ -50,12 +50,12 @@
     <table cellspacing="0" cellpadding="0" class="m-2">
       <tr>
         <td style="padding: 30px;" id="mod_heatmap">
-          <p><b><i> Distribution of modifications for each protein.</b><br></i>
+          <p><b><i id = "mod_protein_title"> Modification count per protein </b><br></i>
           </p>
         </td>
         <td id="graphDiv2">
         <div id="no_protein_div_2"></div>
-        <p><b><i> Distribution of modifications for each sample.</b></br>
+        <p><b><i id = "mod_sample_title"> Modification frequency per sample </b></br>
             </i> </p>
           </br>
         </td>
@@ -78,6 +78,7 @@
       normalizationType = "";
       selectedProtein = "";
       selectedSample = [];
+      sortingOrderProteins = {};
       document.getElementById('min_mod_count_input').value = minModificationCount;
       document.getElementById('normalization_select').value = normalizationType;
     </script>

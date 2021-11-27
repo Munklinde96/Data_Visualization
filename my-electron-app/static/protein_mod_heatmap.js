@@ -55,13 +55,21 @@ function renderProteinModPlot(){
         .interpolator(d3.interpolateViridis);
 
         // Labels of row and columns
-        var myGroups = d3.map(proteinStructData, function(d){return d.protein;}).keys()
-        var myVars = d3.map(proteinStructData, function(d){return d.mod;}).keys();
-                
+        var proteins = d3.map(proteinStructData, function(d){return d.protein;}).keys()
+
+        if ( Object.keys(sortingOrderProteins).length === 0) {
+            sortProteinsBySumOfAllModifications(proteins, proteinStructData);
+            sortingOrderProteins = proteins;
+        } else {
+            proteins = sortingOrderProteins
+        }
+        var modifications = d3.map(proteinStructData, function(d){return d.mod;}).keys();
+        sortModificationsAndMoveUnmofifiedToTop(modifications);
+
         // Build X scales and axis:
         var x = d3.scaleBand()
         .range([ 0, width ])
-        .domain(myGroups)
+        .domain(proteins)
         svg.append("g")
         .attr("transform", "translate(0," + height + ")")
         .call(d3.axisBottom(x))
@@ -70,7 +78,7 @@ function renderProteinModPlot(){
         .attr("dx", "-.8em")
         .attr("dy", ".15em")
         .attr("transform", "rotate(-45)");  
-        
+
         // add label to xaxis
         svg.append("text")
         .attr("transform",
@@ -83,7 +91,7 @@ function renderProteinModPlot(){
         // Build Y scales and axis:
         var y = d3.scaleBand()
         .range([ height, 0 ])
-        .domain(myVars)
+        .domain(modifications)
         .padding(0.01);
         svg.append("g").call(d3.axisLeft(y));
 
@@ -130,8 +138,6 @@ function renderProteinModPlot(){
                 }
                 if(d.protein === proteinStructData[n].protein && d.protein !== selectedProtein){
                     let target = d3.select("#mod_prot_id_heatmap_"+n);
-                    // cupid red
-                    // target.style('stroke', '#F7B4BB');
                     target.style('stroke', 'red');
                     target.attr('rx', 2)
                     target.attr('ry', 2)
@@ -185,8 +191,19 @@ function renderProteinModPlot(){
             .on("mouseleave", mouseleave)
             .on("click", mouseclick)
 
-        // COLORBAR LEGEND
+        // make Black line and small spacing above row for 'Unmodified'
+        svg.append("line")
+        .attr("x1", 0)
+        .attr("y1", y("Unmodified"))
+        .attr("x2", width)
+        .attr("y2", y("Unmodified"))
+        .style("stroke", "black")
+        .style("stroke-width", 4);
 
+        // make 'Unmodifed' tick label in y axis italic
+        makeUnmodifiedLabelItalic(svg);
+
+        // COLORBAR LEGEND
         // make sequential gradient 
         color_bar_width = 30;
         color_bar_height = height;
@@ -246,7 +263,7 @@ function renderProteinModPlot(){
         // .style("text-anchor", "start")
         // .text("Modification Count");
         
-        // add text label on top of colorbar
+        // add text label on to colorbar
         svg.append("text")
         .attr("transform", "translate("+ (width + color_bar_width + 35 + color_bar_width) +","+(color_bar_height/2)+")rotate(-90)")
         .style("text-anchor", "middle")
@@ -261,10 +278,68 @@ function renderProteinModPlot(){
             // else return "Modification Count";
             return "Modification Count";
         });
-
+        
+        // change title of heatmap
+        changeTitleAccordingToNormalization(normalizationType);
+        
     });
 }
 
 $('document').ready(function(){
     renderProteinModPlot();
 });
+function changeTitleAccordingToNormalization(normalizationType) {
+    if (normalizationType === "protein_intensity") {
+        d3.select("#mod_protein_title").text("Modification count per protein - normalized by protein intensity");
+    } else if (normalizationType === "protein_total_mod_count") {
+        d3.select("#mod_protein_title").text("Modification count per protein - normalized by total modification count in protein");
+    } else {
+        d3.select("#mod_protein_title").text("Modification count per protein");
+    }
+}
+
+function makeUnmodifiedLabelItalic(svg) {
+    svg.selectAll(".tick text")
+        .filter(function (d, i) {
+            return d === "Unmodified";
+        })
+        .style("font-style", "italic");
+}
+
+function sortModificationsAndMoveUnmofifiedToTop(modifications) {
+    modifications.sort(); // sort modifications alphabetically
+    var unmodifiedIndex = modifications.indexOf('Unmodified'); // move 'Unmodified' to the top
+    if (unmodifiedIndex != -1) {
+        modifications.splice(unmodifiedIndex, 1);
+        modifications.unshift('Unmodified');
+    }
+}
+
+function sortProteinsBySpecificOrder(proteinStructData, order) {
+    var sortedProteinStructData = [];
+    for (var i = 0; i < order.length; i++) {
+        for (var j = 0; j < proteinStructData.length; j++) {
+            if (order[i] === proteinStructData[j].protein) {
+                sortedProteinStructData.push(proteinStructData[j]);
+            }
+        }
+    }
+    return sortedProteinStructData;
+}
+
+function sortProteinsBySumOfAllModifications(proteins, proteinStructData) {
+    proteins.sort(function (a, b) {
+        var aSum = 0;
+        var bSum = 0;
+        for (var i = 0; i < proteinStructData.length; i++) {
+            if (proteinStructData[i].protein == a) {
+                aSum += proteinStructData[i].value;
+            }
+            if (proteinStructData[i].protein == b) {
+                bSum += proteinStructData[i].value;
+            }
+        }
+        return bSum - aSum;
+    });
+}
+
