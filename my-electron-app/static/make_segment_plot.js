@@ -1,5 +1,3 @@
-const { zoom } = require("d3-zoom");
-
 function renderSegmentPlot(){
     if(selectedProtein === ""){
         d3.select("#graphDiv3").select("svg").remove();
@@ -23,7 +21,6 @@ function renderSegmentPlot(){
     
     d3.json("http://127.0.0.1:5000/get-segment-data?protein="+selectedProtein+"&samples="+selectedSample, function(error, data) {
     if (error) throw error;
-    console.log(data)
     var rect_patches = data.peptide_patches;
     var mod_patches = data.mod_patches;
     var plot_height = data.height;
@@ -34,15 +31,15 @@ function renderSegmentPlot(){
     var min_intensity = min_peptide[0];
     var max_intensity = max_peptide[0];
     //round min_intensity and max_intensity to 10 decimals
-    min_intensity = Math.round(min_intensity * 100000000) / 100000000;
-    max_intensity = Math.round(max_intensity * 100000000) / 100000000;
+    var min_intensity = Math.round(min_intensity * 100000000) / 100000000;
+    var max_intensity = Math.round(max_intensity * 100000000) / 100000000;
 
     var min_color = min_peptide[1];
     var max_color = max_peptide[1];
     var color = d3.scaleLinear().range([min_color, max_color]).domain([1, 2]);
     
-    modification_color_map_keys = Object.keys(modification_color_map);
-    modification_color_map_values = Object.values(modification_color_map);
+    var modification_color_map_keys = Object.keys(modification_color_map);
+    var modification_color_map_values = Object.values(modification_color_map);
     // create map from values to keys
     var colors_to_mod_map = new Map();
     for (var i = 0; i < modification_color_map_keys.length; i++) {
@@ -53,7 +50,7 @@ function renderSegmentPlot(){
 
     // set the dimensions and margins of the graph
     var margin = {top: 30, right: 20, bottom: 30, left: 20};
-    var width = screen.width *0.7;
+    var width = screen.width *0.65;
     var height = plot_height*5;
 
     var margin_overview = {top: 30, right: 15, bottom: 10, left: 15};
@@ -118,6 +115,12 @@ function renderSegmentPlot(){
     var opacity_mod = 0.8
     opacity_mod_grey = 0.5
     // sample data for rectangles
+    var mouseclick = function(d, i){
+        proteinStartPos = d[0];
+        proteinEndPos = d[0]+d[2];
+        selectedSequence=data.seqq.substring(proteinStartPos-1, proteinEndPos-1);
+        renderProteinSelectionPlot();
+    }
     var rects = svg.selectAll("foo")
         .data(rect_patches)
         .enter()
@@ -134,6 +137,7 @@ function renderSegmentPlot(){
         .attr("stroke-width", stroke_width)
         .on("mouseover",mouseover)
         .on("mousemove", mousemove_segments)
+        .on("click", mouseclick)
         .on("mouseout", mouseleave);
         
 
@@ -243,6 +247,7 @@ function renderSegmentPlot(){
         // ##########
         // ##########
     }
+
     function expo(x, f) {
         return Number.parseFloat(x).toExponential(f);
     }
@@ -356,8 +361,8 @@ function renderSegmentPlot(){
     legend.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top) + ")");
     legend_text.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top) + ")");
 
-    color_bar_width = 20;
-    color_bar_height = 180;
+    var color_bar_width = 20;
+    var color_bar_height = 180;
 
     // find difrence in magnintude and use as steps
     var max_exp = expo(max_intensity,1);
@@ -378,7 +383,7 @@ function renderSegmentPlot(){
         log_steps_string.push(expo(parseFloat(log_steps[i]).toPrecision(2), 2));
     }
 
-    log_steps_string = log_steps_string.slice(1, log_steps_string.length - 1);
+    var log_steps_string = log_steps_string.slice(1, log_steps_string.length - 1);
     
     log_steps_string.push(expo(max_intensity,2));
     log_steps_string.unshift(expo(min_intensity,2));
@@ -481,8 +486,8 @@ function renderSegmentPlot(){
 
             d3.select(this).attr("x", nx);
 
-            f = displayed(x);
-            nf = displayed(nx);
+            var f = displayed(x);
+            var nf = displayed(nx);
 
             // if(f == nf) return;
 

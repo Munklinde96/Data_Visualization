@@ -135,6 +135,7 @@ def map_to_attribute(colors, color_scale, is_log_scaled, res_intensities, rectan
     if colors:
         rects_and_attribute = map_to_colors(res_intensities, rectangles_and_mods, color_scale = color_scale, is_log_scaled=is_log_scaled)
     else:
+        print("res intensities: ", res_intensities)
         rects_and_attribute = map_to_norm_intensities(res_intensities, rectangles_and_mods)
     return rects_and_attribute
 

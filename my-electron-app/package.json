@@ -4,6 +4,7 @@
   "description": "Viz App For AU Food Science",
   "main": "index.js",
   "scripts": {
+    "electron": "ELECTRON_DISABLE_SECURITY_WARNINGS=true electron .",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "electron ."
   },
@@ -16,6 +17,7 @@
     "d3": "6.7.0",
     "d3-fetch": "2.0.0",
     "d3-node": "^2.2.3",
+    "electron-tabs": "^0.15.0",
     "jsdom": "^18.0.1",
     "node-fetch": "^3.1.0",
     "node-fetch-polyfill": "^2.0.6",

@@ -63,7 +63,7 @@ def buildSampleModData(df, protein):
         data = get_sample_heatmap_data(df, _protein=protein)
     return data.to_json()
 
-def buildSegmentData(df, protein, _samples=[]):
+def buildSegmentData(df, protein, _samples=[], start_pos=0, end_pos=0, _stacked=True):
     if len(_samples) == 1:
         if _samples[0] == '':
             _samples = []
@@ -71,9 +71,14 @@ def buildSegmentData(df, protein, _samples=[]):
     for sample in _samples:
         intSamples.append(int(sample))
     print(intSamples)
+    # Create start and end indicies
+    start_end_indicies = None
+    if start_pos != 0 and end_pos != 0:
+        start_end_indicies = (start_pos, end_pos)
+        print("check this out", start_end_indicies)
     # Create SegmentPlotData
     if protein == "":
-        peptide_patches, mod_patches, height, seqq, modification_color_map, min_peptide, max_peptide = create_data_for_segment_plot(df, selected_samples_indices=intSamples, spacing=0.0)
+        peptide_patches, mod_patches, height, seqq, modification_color_map, min_peptide, max_peptide = create_data_for_segment_plot(df, selected_samples_indices=intSamples, spacing=0.0, start_end_indices=start_end_indicies, is_stacked=_stacked)
         segmentObject = {
         'peptide_patches': peptide_patches,
         'mod_patches': mod_patches,
@@ -86,7 +91,7 @@ def buildSegmentData(df, protein, _samples=[]):
         segmentPlotJson = json.dumps(segmentObject)
         return segmentPlotJson
     else:
-        peptide_patches, mod_patches, height, seqq, modification_color_map, min_peptide, max_peptide = create_data_for_segment_plot(df, _protein=protein, selected_sample_indices=intSamples, spacing = 0.0)
+        peptide_patches, mod_patches, height, seqq, modification_color_map, min_peptide, max_peptide = create_data_for_segment_plot(df, _protein=protein, selected_sample_indices=intSamples, spacing = 0.0, start_end_indices=start_end_indicies, is_stacked=_stacked)
         segmentObject = {
         'peptide_patches': peptide_patches,
         'mod_patches': mod_patches,
@@ -168,6 +173,19 @@ def returnSegmentData():
     protein = request.args.get('protein', default = "", type = str)
     samples = request.args.get('samples', default = "", type = str).split(",")
     segmentPlotJson = buildSegmentData(data.DataFrame, protein, _samples=samples)
+    data.SegmentPlotData = segmentPlotJson
+    f=data.SegmentPlotData
+    return f
+
+@application.route("/get-segment-protein-data",methods=["GET","POST"])
+@cross_origin()
+def returnSegmentProteinData():
+    print("received get-segment-protein-data request")
+    startPos = request.args.get('start_pos', default = 0, type = int)
+    endPos = request.args.get('end_pos', default = 0, type = int)
+    protein = request.args.get('protein', default = "", type = str)
+    samples = request.args.get('samples', default = "", type = str).split(",")
+    segmentPlotJson = buildSegmentData(data.DataFrame, protein, _samples=samples, start_pos=startPos, end_pos=endPos, _stacked=False)
     data.SegmentPlotData = segmentPlotJson
     f=data.SegmentPlotData
     return f
