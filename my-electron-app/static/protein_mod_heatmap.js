@@ -1,8 +1,9 @@
 function renderProteinModPlot(){
-    console.log("drawing mod heatap")
+    console.log("drawing mod heatap");
+    console.log("with values: (minModCount: "+minModificationCount+", norm:"+normalizationType+")");
     // set the dimensions and margins of the graph
     var margin = {top: 30, right: 130, bottom: 30, left: 130},
-        width = 900 - margin.left ,
+        width = screen.width*0.3,
         height = 500 - margin.top - margin.bottom;
     // remove old svg
     d3.select("#mod_heatmap").select("svg").remove();
@@ -69,7 +70,7 @@ function renderProteinModPlot(){
         .style("text-anchor", "end")
         .attr("dx", "-.8em")
         .attr("dy", ".15em")
-        .attr("transform", "rotate(-45)");  
+        .attr("transform", "rotate(-90)");  
         
         // add label to xaxis
         svg.append("text")
@@ -128,7 +129,7 @@ function renderProteinModPlot(){
                     let target = d3.select("#mod_prot_id_heatmap_"+n);
                     target.style('stroke', 'none');
                 }
-                if(d.protein === proteinStructData[n].protein && d.protein !== selectedProtein){
+                if(d.protein === proteinStructData[n].protein){
                     let target = d3.select("#mod_prot_id_heatmap_"+n);
                     // cupid red
                     // target.style('stroke', '#F7B4BB');
@@ -138,13 +139,9 @@ function renderProteinModPlot(){
                     target.style('stroke-width', 1);
                 }
             }
-            if(selectedProtein !== d.protein){
-                selectedProtein = d.protein;
-            } else {
-                selectedProtein = "";
-            }
+            selectedProtein = d.protein;            
+            document.getElementById("state_selected_protein").textContent = selectedProtein;
             renderSampleModPlot();
-            renderSegmentPlot();
             selectedSample = [];
         }
 
@@ -265,6 +262,6 @@ function renderProteinModPlot(){
     });
 }
 
-$('document').ready(function(){
+(function() {
     renderProteinModPlot();
-});
+ })();
