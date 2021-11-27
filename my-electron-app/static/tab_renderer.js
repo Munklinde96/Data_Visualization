@@ -21,7 +21,7 @@ let tabGroup = new TabGroup({
 
 // 3. Add a tab from a website
 let tab1 = tabGroup.addTab({
-    title: "Segment Plot",
+    title: "Modification View",
     src: "./heatmap_view.html",
     visible: true,
     active: true,
@@ -30,3 +30,18 @@ let tab1 = tabGroup.addTab({
         contextIsolation: false
     }
 });
+
+let tab2 = tabGroup.addTab({
+    title: "Segment Plot",
+    src: "./segment_plot.html",
+    visible: true,
+        webviewAttributes: {
+        nodeintegration: true,
+        contextIsolation: false
+    }
+});
+
+tabGroup.on("tab-active", (tab, tabGroup) => {
+    // console.log("test");
+});
+

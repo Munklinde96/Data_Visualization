@@ -26,19 +26,7 @@
         <h2>Protein Modfication Tab</h2>
       </div>
       <div>
-        <div class="card" style="width: 26rem;">
-          <div class="card-body">
-            <h5 class="card-title">Current State</h5>
-            <p class="card-text" style="display:inline">Selcted protein: <p id="state_selected_protein" style="display:inline"/></p>
-            <br/>
-            <p class="card-text" style="display:inline">Selcted samples: <p id="state_selected_samples" style="display:inline"/></p>
-            <br/>
-            <p class="card-text" style="display:inline">Selcted normalization: <p id="state_selected_normalization" style="display:inline"/></p>
-            <br/>
-            <p class="card-text" style="display:inline">Min modification count: <p id="state_selected_min_count" style="display:inline"/></p>
-          </div>
-        </div>
-      </div>
+    </div>
     </div>        
     <table cellspacing="0" cellpadding="0" class="m-2">
         <tr>
@@ -48,9 +36,7 @@
               <select aria-label="Select normalization value" id="normalization_select"">
                 <option value="">No normalization</option>
                 <option value="protein_intensity">Intensity</option>
-                <option value="protein_total_mod_count">
-                  Total modification count
-                </option>
+                <option value="protein_total_mod_count">Total modification count</option>
               </select>
               with total count above 
               <input type="number" id="min_mod_count_input" min="0" max="30000"/>
@@ -64,24 +50,8 @@
         </tr>
     </table>    
     <!-- Scripts -->
-    <script>
-    // init global state
-      minModificationCount = 0;
-      normalizationType = "";
-    </script>
-    <script type="text/javascript">
-    // init global state
-      minModificationCount = 0;
-      normalizationType = "";
-      selectedProtein = "";
-      selectedSample = [];
-      // init global state
-      document.getElementById("min_mod_count_input").value =
-        minModificationCount;
-      document.getElementById("normalization_select").value = normalizationType;
-      document.getElementById("state_selected_protein").value = selectedProtein;
-      document.getElementById("state_selected_samples").value = selectedSample;
-    </script>
+    <script type="text/javascript" src="./static/init_views.js"></script>
+    <script>setDocumentLabels();</script>
     <script
       type="text/javascript"
       src="./static/mod_sample_heatmap.js"
@@ -92,16 +62,11 @@
     ></script>
     <script>
       function onNormalizationFormSubmit() {
-        minModificationCount = document.getElementById(
-          "min_mod_count_input"
-        ).value;
-        normalizationType = document.getElementById(
-          "normalization_select"
-        ).value;
-        document.getElementById("state_selected_normalization").textContent = normalizationType;
-        document.getElementById("state_selected_min_count").textContent = minModificationCount;
+        // remeber selected variables in local storage
+        setMinModificationCount(document.getElementById("min_mod_count_input").value);
+        setSelectedNormalization(document.getElementById("normalization_select").value);
+        setDocumentLabels();
         renderProteinModPlot();
-        //renderSampleModPlot();
       }
     </script>
   </body>

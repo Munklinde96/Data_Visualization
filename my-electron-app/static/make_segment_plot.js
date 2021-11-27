@@ -1,5 +1,5 @@
 function renderSegmentPlot(){
-    if(selectedProtein === ""){
+    if(getSelectedProtein() === ""){
         d3.select("#graphDiv3").select("svg").remove();
         document.getElementById('no_protein_div_3').innerHTML = '<div style="width: 640px; height: 440px;"><h3>Select a protein to get started.</h3></div>';
         return;
@@ -13,13 +13,13 @@ function renderSegmentPlot(){
     
     // get <p> paragraph field inside the graphDiv3 div to change Peptide Segments Plot text
     var p = document.getElementById("graphDiv3").getElementsByTagName("p")[0];
-    p.innerHTML = "Peptide Segments Plot - Protein: " + selectedProtein;
+    p.innerHTML = "Peptide Segments Plot - Protein: " + getSelectedProtein();
     p.style.fontWeight = "bold";
     p.style.fontStyle = "italic";
 
     
     
-    d3.json("http://127.0.0.1:5000/get-segment-data?protein="+selectedProtein+"&samples="+selectedSample, function(error, data) {
+    d3.json("http://127.0.0.1:5000/get-segment-data?protein="+getSelectedProtein()+"&samples="+getSelectedSamples(), function(error, data) {
     if (error) throw error;
     var rect_patches = data.peptide_patches;
     var mod_patches = data.mod_patches;
@@ -52,11 +52,11 @@ function renderSegmentPlot(){
 
     // set the dimensions and margins of the graph
     var margin = {top: 30, right: 20, bottom: 30, left: 20};
-    var width = screen.width *0.65;
+    var width = screen.width;
     var height = plot_height*5;
 
     var margin_overview = {top: 30, right: 15, bottom: 10, left: 15};
-    var width = screen.width *0.7;
+    var width = screen.width;
     var mod_label_size = 10
     var color_bar_width = 20;
     var color_bar_height = 180;
@@ -317,13 +317,8 @@ function renderSegmentPlot(){
     legend.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top) + ")");
     legend_text.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top) + ")");
 
-<<<<<<< HEAD
-    var color_bar_width = 20;
-    var color_bar_height = 180;
-=======
 
     if(rect_patches.length > 1) {
->>>>>>> b72e2f6d7757d772a9ca6e665279bdd7dc488428
 
     // find difrence in magnintude and use as steps
     var max_exp = expo(max_intensity,1);
@@ -400,65 +395,6 @@ function renderSegmentPlot(){
     
     rect.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top + 100) + ")");
 
-<<<<<<< HEAD
-    if (isScrollDisplayed){
-        var sub_segment_height = selector_height/height * segment_height;
-        var sub_values_distance = width/peptide_length;
-        var selector_width = Math.round(parseFloat((width/values_distance*width)/peptide_length));
-
-        var sub_segments = svg.selectAll("sub_foo")
-            .data(rect_patches)
-            .enter()
-            .append("rect")
-            .attr("x", d => d[0]*sub_values_distance)
-            .attr("y", d=>  d[1]*sub_segment_height)
-            .attr("width", d=> d[2]*sub_values_distance)
-            .attr("height", d=> d[3]*sub_segment_height)
-            .attr("fill", d=> d[4])
-            .attr("opacity", 0.5);
-
-        var displayed = d3.scaleQuantize()
-            .domain([0, width])
-            .range(d3.range(peptide_length));
-
-        var selector = svg.append("rect")
-            .attr("transform", "translate(0, 0)")
-            .attr("class", "mover")
-            .attr("x", 0)
-            .attr("y", 0)
-            .attr("height", selector_height)
-            .attr("width", selector_width)
-            .attr("fill", "gray")
-            .attr("opacity", 0.5)
-            .attr("stroke", "red")
-            .attr("stroke-width", 0.2)
-            .attr("pointer-events", "all")
-            .attr("cursor", "ew-resize")
-            .call(d3.drag().on("drag", display));
-
-
-        function display() {
-            var x = parseInt(d3.select(this).attr("x")),
-                nx = x + d3.event.dx,
-                w = parseInt(d3.select(this).attr("width")),
-                f, nf;
-
-            if(nx < 0 || nx + w > width) return;
-
-            d3.select(this).attr("x", nx);
-
-            var f = displayed(x);
-            var nf = displayed(nx);
-
-            // if(f == nf) return;
-
-            rects.attr("transform", "translate(" + -width/selector_width * nx + "," + 0 + ")");
-            mod_rects.attr("transform", "translate(" + -width/selector_width * nx + "," + 0 + ")");
-            x_ticks.attr("transform", "translate(" + -width/selector_width * nx + "," + (selector_height + margin_overview.bottom - 1+12) + ")");
-            x_labels.attr("transform", "translate(" + -width/selector_width * nx + "," + 0 + ")");
-        }
-    }});
-=======
     // make color_legend text label on top of color bar
     var color_legend_text_label = svg.append("text")
         .attr("x", color_legend_x - color_bar_width)
@@ -561,7 +497,6 @@ function renderSegmentPlot(){
         selector.attr("transform", "scale(" + x/(nx + w) + "," + 1 + ")");
     }
 });
->>>>>>> b72e2f6d7757d772a9ca6e665279bdd7dc488428
 }
 
 $('document').ready(function(){
