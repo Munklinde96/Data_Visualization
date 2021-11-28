@@ -1,4 +1,5 @@
 import pandas as pd
+import seaborn as sns
 import numpy as np
 import matplotlib.patches as patches
 from matplotlib import pyplot as plt
@@ -306,6 +307,29 @@ def plot_peptide_segments(peptide_patches, mod_patches, height, modification_col
     plt.show()
     return ax
 
+
+def create_histogram_over_mod_positions(mod_patches, modtypes_color_map, peptide_seq):
+    mod_positions = []
+    # make map from color to modtype
+    color_to_modtype = {}
+    mod_types = list(modtypes_color_map.keys())
+    colors = list(modtypes_color_map.values())
+    for i in range(len(colors)): # make map from colors to modtypes
+        color_to_modtype[colors[i]] = mod_types[i]
+
+    mod_positions_df = pd.DataFrame(mod_patches)
+    columns = ['x', 'y', 'width', 'height', 'color', 'intensity']
+    mod_positions_df.columns = columns
+    # apply color_to_modtype to color column
+    mod_positions_df['mod_type'] = mod_positions_df['color'].apply(lambda x: color_to_modtype[x])
+    # drop all other than x, color and modtype
+    mod_positions_df = mod_positions_df[['x', 'mod_type', 'color']]
+    # set x as index
+    plt.figure(figsize=(20,10))
+    sns.histplot(data=mod_positions_df, x = 'x',  hue = 'mod_type', multiple='stack', bins=50)
+    plt.show()
+    return mod_positions_df
+
 """
    Poetry. slam poetry. Slam Poetry is a collection of poems written by the poet, slam poet.
     The poems are collected in the slam poetry collection.
@@ -327,6 +351,8 @@ def create_data_for_segment_plot(df, _protein="P02666", spacing=0.2, colors = Tr
     rects_and_attribute = map_to_attribute(colors, color_scale, is_log_scaled, res_intensities, rectangles_and_mods)
     peptide_patches, mod_patches, height = get_patch_attributes(rects_and_attribute, spacing = spacing, standard_height=standard_height)
     seqq = get_protein_sequence(_protein)
+
+    create_histogram_over_mod_positions(mod_patches, modtypes_color_map, seqq)
 
     min_ind = np.argmin(res_intensities)
     max_ind = np.argmax(res_intensities)
