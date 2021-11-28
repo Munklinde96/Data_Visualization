@@ -434,6 +434,7 @@ function renderSegmentPlot(){
         .call(d3.drag().on("drag", drag_plt));
 
     var left_selector_border = svg.append("rect")
+        .attr("class", "left_selector_border")
         .attr("x", 0)
         .attr("y", 0)
         .attr("height", selector_height)
@@ -459,18 +460,22 @@ function renderSegmentPlot(){
     function drag_plt() {
         var selector_width = parseInt(d3.select('.mover').attr('width'));
 
+        var left_selector_border_x = parseInt(d3.select('.left_selector_border').attr('x'));
+
+        var overview_scale = selector_range / selector_width;
+
         var x = parseInt(d3.select(this).attr("x"));
         var nx = x + d3.event.dx,
             w = parseInt(d3.select(this).attr("width"));
 
-        if(nx < 0 || nx + w > selector_range) return;
+        if(nx < 0 - left_selector_border_x || nx + w > selector_range - left_selector_border_x) return;
 
         d3.select(this).attr("x", nx);
 
-        rects.attr("transform", "translate(" + -width/selector_width * nx + "," + 0 + ")");
-        mod_rects.attr("transform", "translate(" + -width/selector_width * nx + "," + 0 + ")");
-        x_ticks.attr("transform", "translate(" + -width/selector_width * nx + "," + (selector_height + margin_overview.bottom - 1+12) + ")");
-        x_labels.attr("transform", "translate(" + -width/selector_width * nx + "," + 0 + ")");
+        rects.attr("transform", "translate(" + (-selector_range/selector_width * nx - overview_scale *left_selector_border_x) + "," + 0 + ")");
+        mod_rects.attr("transform", "translate(" + (-selector_range/selector_width * nx - overview_scale *left_selector_border_x) + "," + 0 + ")");
+        x_ticks.attr("transform", "translate(" + (-selector_range/selector_width * nx - overview_scale *left_selector_border_x) + "," + (selector_height + margin_overview.bottom - 1+12) + ")");
+        x_labels.attr("transform", "translate(" + (-selector_range/selector_width * nx - overview_scale *left_selector_border_x) + "," + 0 + ")");
         left_selector_border.attr("transform", "translate(" + nx + "," + 0 + ")");
         right_selector_border.attr("transform", "translate(" + nx + "," + 0 + ")");
 
@@ -480,17 +485,19 @@ function renderSegmentPlot(){
         var selector_x = parseInt(d3.select('.mover').attr('x')),
             selector_width = parseInt(d3.select('.mover').attr('width'));
 
+        var left_selector_border_x = parseInt(d3.select('.left_selector_border').attr('x'));
+
         var x = parseInt(d3.select(this).attr("x"));
         var nx = d3.event.x,
             ndx = x + d3.event.dx;
 
-        var scaleFactor = selector_width/(nx-selector_x);
-        var scale = width / selector_width;
+        var scaleFactor = selector_width/(nx-selector_x - left_selector_border_x);
+        var overview_scale = selector_range / selector_width;
 
-        if(nx < selector_x + 40 || nx > selector_range) return;
+        if(nx < selector_x - left_selector_border_x + 40 || nx > selector_range) return;
 
-        right_selector_border.attr("x", nx - selector_x);
-        selector.attr("width", nx - selector_x);
+        d3.select(this).attr("x", ndx)
+        selector.attr("width", nx - selector_x - left_selector_border_x);
         rects.attr("width", function() {
             return this.getAttribute('width') * scaleFactor;
             });
@@ -504,51 +511,45 @@ function renderSegmentPlot(){
         mod_rects.attr("x", function() {
             return this.getAttribute('x') * scaleFactor;
         });
-        mod_rects.attr("transform", "translate(" +  (scaleFactor * (width/ndx) - selector_x *scale)  + "," + 0 + ")");
-        rects.attr("transform", "translate(" + (scaleFactor * (width/ndx) - selector_x * scale)  + "," + 0 + ")");
-
-
-        
-
+        mod_rects.attr("transform", "translate(" +  (scaleFactor * (selector_range/ndx) - (selector_x + left_selector_border_x) *overview_scale)  + "," + 0 + ")");
+        rects.attr("transform", "translate(" + (scaleFactor * (selector_range/ndx) - (selector_x + left_selector_border_x) * overview_scale)  + "," + 0 + ")");
     }
 
     function zoom_plt_left() {
-        var selector_x = parseInt(d3.select('.mover').attr('x'));
         var selector_width = parseInt(d3.select('.mover').attr('width'));
+        var selector_x = parseInt(d3.select('.mover').attr('x'));
 
         var right_selector_border_x = parseInt(d3.select('.right_selector_border').attr('x'));
-
+        
         var x = parseInt(d3.select(this).attr("x"));
         var nx = d3.event.x;
-        // var ndx = x + d3.event.dx;
-
-        var scaleFactor = selector_width/(nx-selector_x);
-        var scale = width / selector_width;
-
-        console.log(nx)
-        // console.log(selector_x)
-        // console.log(selector_width)
+        var ndx = x + d3.event.dx;
+        
+        var scaleFactor = selector_width/(right_selector_border_x - ndx);
+        var overview_scale = selector_range / selector_width;
+        
         if(nx < 0 || nx > right_selector_border_x - 40) return;
+        
+        d3.select(this).attr("x", ndx)
+        selector.attr("transform", "translate(" + ndx + "," + 0 + ")");
+        selector.attr('width', right_selector_border_x - ndx);
 
-        selector.attr("width", right_selector_border_x - nx);
-        selector.attr("x", right_selector_border_x - selector_width);
-        left_selector_border.attr("x", right_selector_border_x - selector_width);
-
-        // selector.attr("width", selector_width - );
-        // selector.attr('width', selector_width - (nx - selector_x));
-        // rects.attr("width", function() {
-        //     return this.getAttribute('width') * scaleFactor;
-        //     });
-        // rects.attr("x", function() {
-        //     return this.getAttribute('x') * scaleFactor;
-        //     });
+        rects.attr("width", function() {
+            return this.getAttribute('width') * scaleFactor;
+            });
+        rects.attr("x", function() {
+            return this.getAttribute('x') * scaleFactor;
+            });
            
-        // mod_rects.attr("width", function() {
-        //     return this.getAttribute('width') * scaleFactor;
-        // });
-        // mod_rects.attr("x", function() {
-        //     return this.getAttribute('x') * scaleFactor;
-        // });
+        mod_rects.attr("width", function() {
+            return this.getAttribute('width') * scaleFactor;
+        });
+        mod_rects.attr("x", function() {
+            return this.getAttribute('x') * scaleFactor;
+        });
+
+        mod_rects.attr("transform", "translate(" +  (scaleFactor * (selector_range/selector_width) - (x + selector_x) * overview_scale)  + "," + 0 + ")");
+        rects.attr("transform", "translate(" + (scaleFactor * (selector_range/selector_width)  -(x + selector_x) * overview_scale) + "," + 0 + ")");
     }
 });
 }
