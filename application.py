@@ -75,7 +75,8 @@ def buildSegmentData(df, protein, _samples=[]):
     print(intSamples)
     # Create SegmentPlotData
     if protein == "":
-        peptide_patches, mod_patches, height, seqq, modification_color_map, min_peptide, max_peptide = create_data_for_segment_plot(df, selected_samples_indices=intSamples, spacing=0.0)
+        peptide_patches, mod_patches, height, seqq, modification_color_map, min_peptide, max_peptide, histogram_df = create_data_for_segment_plot(df, selected_samples_indices=intSamples, spacing=0.0)
+        histogram_data_json = json.loads(histogram_df.to_json())
         segmentObject = {
         'peptide_patches': peptide_patches,
         'mod_patches': mod_patches,
@@ -83,12 +84,14 @@ def buildSegmentData(df, protein, _samples=[]):
         'seqq': seqq,
         'modification_color_map': modification_color_map,
         'min_peptide': min_peptide,
-        'max_peptide': max_peptide
+        'max_peptide': max_peptide,
+        'histogram_data': histogram_data_json
         }
         segmentPlotJson = json.dumps(segmentObject)
         return segmentPlotJson
     else:
-        peptide_patches, mod_patches, height, seqq, modification_color_map, min_peptide, max_peptide = create_data_for_segment_plot(df, _protein=protein, selected_sample_indices=intSamples, spacing = 0.0)
+        peptide_patches, mod_patches, height, seqq, modification_color_map, min_peptide, max_peptide, histogram_df = create_data_for_segment_plot(df, _protein=protein, selected_sample_indices=intSamples, spacing = 0.0)
+        histogram_data_json = json.loads(histogram_df.to_json())
         segmentObject = {
         'peptide_patches': peptide_patches,
         'mod_patches': mod_patches,
@@ -96,7 +99,8 @@ def buildSegmentData(df, protein, _samples=[]):
         'seqq': seqq,
         'modification_color_map': modification_color_map,
         'min_peptide': min_peptide,
-        'max_peptide': max_peptide
+        'max_peptide': max_peptide,
+        'histogram_data': histogram_data_json 
         }
         segmentPlotJson = json.dumps(segmentObject)
         return segmentPlotJson

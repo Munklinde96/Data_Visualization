@@ -325,9 +325,9 @@ def create_histogram_over_mod_positions(mod_patches, modtypes_color_map, peptide
     # drop all other than x, color and modtype
     mod_positions_df = mod_positions_df[['x', 'mod_type', 'color']]
     # set x as index
-    plt.figure(figsize=(20,10))
-    sns.histplot(data=mod_positions_df, x = 'x',  hue = 'mod_type', multiple='stack', bins=50)
-    plt.show()
+    # plt.figure(figsize=(20,10))
+    # sns.histplot(data=mod_positions_df, x = 'x',  hue = 'mod_type', multiple='stack', bins=50)
+    # plt.show()
     return mod_positions_df
 
 """
@@ -352,7 +352,7 @@ def create_data_for_segment_plot(df, _protein="P02666", spacing=0.2, colors = Tr
     peptide_patches, mod_patches, height = get_patch_attributes(rects_and_attribute, spacing = spacing, standard_height=standard_height)
     seqq = get_protein_sequence(_protein)
 
-    create_histogram_over_mod_positions(mod_patches, modtypes_color_map, seqq)
+    histogram_df = create_histogram_over_mod_positions(mod_patches, modtypes_color_map, seqq)
 
     min_ind = np.argmin(res_intensities)
     max_ind = np.argmax(res_intensities)
@@ -361,5 +361,5 @@ def create_data_for_segment_plot(df, _protein="P02666", spacing=0.2, colors = Tr
     min_color = peptide_patches[min_ind][4]
     max_color = peptide_patches[max_ind][4]
 
-    return peptide_patches, mod_patches, height, seqq, modtypes_color_map, (min_intensity, min_color), (max_intensity, max_color)
+    return peptide_patches, mod_patches, height, seqq, modtypes_color_map, (min_intensity, min_color), (max_intensity, max_color), histogram_df
 

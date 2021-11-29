@@ -30,6 +30,7 @@ function renderSegmentPlot(){
     var max_peptide = data.max_peptide;
     var min_intensity = min_peptide[0];
     var max_intensity = max_peptide[0];
+    var histogram_data = data.histogram_data;
     //round min_intensity and max_intensity to 10 decimals
     min_intensity = Math.round(min_intensity * 100000000) / 100000000;
     max_intensity = Math.round(max_intensity * 100000000) / 100000000;
@@ -504,26 +505,56 @@ function renderSegmentPlot(){
         selector.attr("transform", "scale(" + x/(nx + w) + "," + 1 + ")");
     }
 
-    // make histogram with number of modifications per x value in data
+    // get modification positions
+    var modification_positions = Object.values(histogram_data.x);
+    var unique_values = Array.from(new Set(modification_positions)).length; // get number of unique modification positions
+    var num_bins = unique_values/2; // determine bin size based on number of unique modification positions
+    var histogram_height = selector_height/2;
+    
+    // make histogram from values
+    var histogram = d3.histogram()
+        .domain(d3.extent(modification_positions)) // then the domain of the graphic
+        .thresholds(num_bins); // then the numbers of bins
+    var bins = histogram(modification_positions);
+    
+    // make histogram x and y axis
+    var x = d3.scaleLinear()
+        .domain([0, peptide_length])
+        .range([0, width]);
+    var y = d3.scaleLinear()
+        .domain([0, d3.max(bins, d => d.length)])
+        .range([histogram_height, 0]);
+    var xAxis = d3.axisBottom(x);
+    var yAxis = d3.axisLeft(y);
+   
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(" + 0 + "," + histogram_height + ")")
+        // .attr("transform", "translate(" + 0 + "," + (histogram_height + margin_overview.bottom - 1) + ")")
+        .call(xAxis);
+    svg.append("g")
+        .attr("class", "y axis")
+        .attr("transform", "translate(" + 0 + "," + 0 + ")")
+        .call(yAxis);
+    // make histogram bars
+    var bar = svg.selectAll(".bar")
+        .data(bins)
+        .enter().append("g")
+        .attr("class", "bar")
+        .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; });
+    bar.append("rect")
+        .attr("x", 1)
+        .attr('fill', 'grey')
+        .attr("width", x(bins[0].x1) - x(bins[0].x0) - 1)
+        .attr("height", function(d) { return histogram_height - y(d.length); });
 
-    // make array with number and type of modifications per position in mod_patches
-    // GET MODS PER POSITION FROM PYTHON INSTEAD
-    // var mod_counts = [];
-    // for(var i = 0; i < peptide_length; i++) {
-    //     mod_counts.push([[] , []]);
-    // }
-    // for(var i = 0; i < mod_patches.length; i++) {
-    //     // add 1 to mod_counts[mod_patches[i][0]][0]
-    //     mod_counts[mod_patches[i][0]][0] += 1;
-    //     // get type from color
-    //     var color_ = mod_patches[i][4];
-    //     // convert color to type using colors_to_mod_map
-    //     var type_ = colors_to_mod_map[color_];
-    //     // add type to mod_counts[mod_patches[i][0]][1]
-    //     mod_counts[mod_patches[i][0]][1].push(type_);
-    // }
+    // delete x-axis ticks and labels
+    svg.selectAll(".x.axis .tick").remove();
+    svg.selectAll(".x.axis .domain").remove();
+    console.log(peptide_length)
+
     
-    
+
     
     
 
