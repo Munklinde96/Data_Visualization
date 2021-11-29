@@ -506,27 +506,39 @@ function renderSegmentPlot(){
     }
 
     // get modification positions
+    makeHistogramPlot(histogram_data, selector_height, peptide_length, width, svg);
+    
+    
+
+    });
+}
+
+$('document').ready(function(){
+    renderSegmentPlot();
+});
+
+function makeHistogramPlot(histogram_data, selector_height, peptide_length, width, svg) {
     var modification_positions = Object.values(histogram_data.x);
     var unique_values = Array.from(new Set(modification_positions)).length; // get number of unique modification positions
-    var num_bins = unique_values/2; // determine bin size based on number of unique modification positions
-    var histogram_height = selector_height/2;
-    
+    var num_bins = unique_values ; // determine bin size based on number of unique modification positions
+    var histogram_height = selector_height / 2;
+
     // make histogram from values
     var histogram = d3.histogram()
         .domain(d3.extent(modification_positions)) // then the domain of the graphic
         .thresholds(num_bins); // then the numbers of bins
     var bins = histogram(modification_positions);
-    
+
     // make histogram x and y axis
     var x = d3.scaleLinear()
-        .domain([0, peptide_length])
+        .domain([1, peptide_length+1])
         .range([0, width]);
     var y = d3.scaleLinear()
         .domain([0, d3.max(bins, d => d.length)])
         .range([histogram_height, 0]);
     var xAxis = d3.axisBottom(x);
     var yAxis = d3.axisLeft(y);
-   
+
     svg.append("g")
         .attr("class", "x axis")
         .attr("transform", "translate(" + 0 + "," + histogram_height + ")")
@@ -541,29 +553,17 @@ function renderSegmentPlot(){
         .data(bins)
         .enter().append("g")
         .attr("class", "bar")
-        .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; });
+        .attr("transform", function (d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; });
     bar.append("rect")
         .attr("x", 1)
         .attr('fill', 'grey')
-        .attr("width", x(bins[0].x1) - x(bins[0].x0) - 1)
-        .attr("height", function(d) { return histogram_height - y(d.length); });
+        .attr("width", x(bins[0].x1) - x(bins[0].x0) - 1)        
+        .attr("height", function (d) { return histogram_height - y(d.length); });
 
     // delete x-axis ticks and labels
     svg.selectAll(".x.axis .tick").remove();
     svg.selectAll(".x.axis .domain").remove();
-    console.log(peptide_length)
-
-    
-
-    
-    
-
-    });
 }
-
-$('document').ready(function(){
-    renderSegmentPlot();
-});
 
 function getModificationPositions(mod_patches, d, colors_to_mod_map, peptide_sequence) {
     var mod_types_and_positions = [];
