@@ -507,8 +507,6 @@ function renderSegmentPlot(){
 
     // get modification positions
     makeHistogramPlot(histogram_data, selector_height, peptide_length, width, svg);
-    
-    
 
     });
 }
@@ -542,12 +540,12 @@ function makeHistogramPlot(histogram_data, selector_height, peptide_length, widt
     svg.append("g")
         .attr("class", "x axis")
         .attr("transform", "translate(" + 0 + "," + histogram_height + ")")
-        // .attr("transform", "translate(" + 0 + "," + (histogram_height + margin_overview.bottom - 1) + ")")
         .call(xAxis);
     svg.append("g")
         .attr("class", "y axis")
         .attr("transform", "translate(" + 0 + "," + 0 + ")")
         .call(yAxis);
+        
     // make histogram bars
     var bar = svg.selectAll(".bar")
         .data(bins)
