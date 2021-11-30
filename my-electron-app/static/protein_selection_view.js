@@ -1,21 +1,23 @@
+function removeProteinSelectionPlot(){
+    d3.select("#peptide_selection_view").select("svg").remove();
+    return;
+}
+
 function renderProteinSelectionPlot(){
     if(proteinStartPos === 0 && proteinEndPos === 0){
-        d3.select("#proteinSelectionView").select("svg").remove();
-        return;
+        renderProteinSelectionPlot();
     }
-
     
     // remove old svg
-    d3.select("#proteinSelectionView").select("svg").remove();
+    d3.select("#peptide_selection_view").select("svg").remove();
     
-    //var p = document.getElementById("proteinSelectionView").getElementsByTagName("p")[0];
+    //var p = document.getElementById("peptide_selection_view").getElementsByTagName("p")[0];
     //p.innerHTML = "Peptide Segments Plot - Protein: " + selectedProtein;
     //p.style.fontWeight = "bold";
     //p.style.fontStyle = "italic";
 
     
-    
-    d3.json("http://127.0.0.1:5000/get-segment-protein-data?protein="+selectedProtein+"&samples="+selectedSample+"&start_pos="+proteinStartPos+"&end_pos="+proteinEndPos, function(error, data) {
+    d3.json("http://127.0.0.1:5000/get-segment-protein-data?protein="+getSelectedProtein()+"&samples="+getSelectedSamples()+"&start_pos="+proteinStartPos+"&end_pos="+proteinEndPos, function(error, data) {
         if (error) throw error;
         var rect_patches = data.peptide_patches;
         var mod_patches = data.mod_patches;
@@ -45,11 +47,11 @@ function renderProteinSelectionPlot(){
 
     // set the dimensions and margins of the graph
     var margin = {top: 30, right: 30, bottom: 30, left: 30},
-        width = screen.width*0.25,
-        height = 700 - margin.top - margin.bottom;
+        width = 300,
+        height = 300 - margin.top - margin.bottom;
         
     // append the svg object to the body of the page
-    var svg = d3.select("#proteinSelectionView")
+    var svg = d3.select("#peptide_selection_view")
     .append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
@@ -61,57 +63,6 @@ function renderProteinSelectionPlot(){
     var segment_height = 6;
     var values_distance = 10;
 
-    var peptide_chars = peptide_seq_prot.split("");
-    var peptide_length = peptide_seq_prot.length;
-
-    var xScale_ticks = d3.scaleLinear()
-        .domain([0, peptide_length])
-        .range([0, peptide_length*values_distance]);
-    
-    var xScale_labels = d3.scaleLinear()
-        .domain([0, peptide_length])
-        .range([values_distance/2, peptide_length*values_distance + values_distance/2]);
-
-    var xAxis_ticks = d3.axisTop()
-        .scale(xScale_ticks).tickPadding(10)
-        .tickValues(d3.range(0, peptide_length))
-        // .tickFormat(function(d,i){ return peptide_chars[d];
-        .tickFormat(function(d,i){ return null
-        });        
-        xAxis_ticks.tickSizeOuter(12);
-    
-    var xAxis_labels = d3.axisTop()
-        .scale(xScale_labels).tickPadding(8)
-        .tickSize(0)
-        .tickValues(d3.range(0, peptide_length))
-        .tickFormat(function(d,i){ 
-            return peptide_chars[d];
-        });
-        
-    svg.append("g")
-        .attr("class", "xAxis_ticks")
-        .attr("transform", "translate(0, -1)")
-        .call(xAxis_ticks);
-    
-    svg.append("g")
-        .attr("class", "xAxis_labels")
-        .attr("transform", "translate(0, -1)")
-        .call(xAxis_labels)
-        .selectAll("text")
-        .style("font-weight", function(d,i){
-            if(i%10 === 0){
-                return "bold";
-            } else {
-                return "normal";
-            }
-        })
-        .style("font-size", function(d,i){
-            if(i%10 === 0){
-                return "1.2em";
-            } else {
-                return "1em";
-            }
-        });
 
     var rx = 3
     var ry = 3
@@ -124,7 +75,8 @@ function renderProteinSelectionPlot(){
         .data(rect_patches)
         .enter()
         .append("rect")
-        .attr("x", d => d[0]*values_distance)
+        //.attr("x", d => d[0]*values_distance)
+        .attr("x", d => 0)
         .attr("y", d=> d[1]*segment_height)
         .attr("width", d=> d[2]*values_distance)
         .attr("height", d=> d[3]*segment_height)
@@ -139,13 +91,20 @@ function renderProteinSelectionPlot(){
     function expo(x, f) {
         return Number.parseFloat(x).toExponential(f);
       }
-
+    
+    var subWidth = 0;
+    if(rect_patches.length > 0){
+        console.log(rect_patches[0][0])
+        console.log(values_distance);
+        subWidth = rect_patches[0][0]*values_distance;
+        console.log(subWidth);
+    }
 
     var mod_rects = svg.selectAll("boo")
         .data(mod_patches)
         .enter()
         .append("rect")
-        .attr("x", d => d[0]*values_distance)
+        .attr("x", d => d[0]*values_distance-subWidth)
         .attr("y", d=> (d[1])*segment_height)
         .attr("width", d=> d[2]*values_distance)
         .attr("height", d=> d[3]*segment_height)
@@ -200,6 +159,6 @@ function renderProteinSelectionPlot(){
         .attr("offset", "100%")
         .attr("stop-color", color(1))
     
-    rect.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top + 100) + ")");
+    //rect.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top + 100) + ")");
     });
 }

@@ -2,6 +2,7 @@ const selectedProteinKey = "SELECTED_PROTEIN_KEY";
 const selectedSamplesKey = "SELECTED_SAMPLES_KEY";
 const selectedNormalizationKey = "SELECTED_NORMALIZATION_KEY";
 const selectedMinModificationCountKey = "SELECTED_MIN_MODIFICATION_COUNT_KEY";
+const tabSelectedKey = "TAB_SELECTED_KEY";
 
 function getSelectedProtein(){
     var protein = window.localStorage.getItem(selectedProteinKey);
@@ -62,6 +63,19 @@ function getMinModificationCount(){
 function setMinModificationCount(count){
     window.localStorage.setItem(selectedMinModificationCountKey, count.toString());
     return;
+}
+
+function getTabPressed(){
+    var tabSelected = window.localStorage.getItem(tabSelectedKey);
+    if (tabSelected === "true"){
+        window.localStorage.setItem(tabSelectedKey, "false");
+        return true;
+    }
+    return false;
+}
+
+function setTabPressed(){
+    window.localStorage.setItem(tabSelectedKey, "true");
 }
 
 function setDocumentLabels(){

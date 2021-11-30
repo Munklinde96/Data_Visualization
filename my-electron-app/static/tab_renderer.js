@@ -42,6 +42,7 @@ let tab2 = tabGroup.addTab({
 });
 
 tabGroup.on("tab-active", (tab, tabGroup) => {
-    // console.log("test");
+    setTabPressed();
+    //renderSegmentPlot();
 });
 
