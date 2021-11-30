@@ -50,18 +50,24 @@ function renderProteinModPlot(){
             }
         }
        
-        // Build color scale 
-        // var myColor = d3.scaleSequential()
-        // .domain([minValue,maxValue])
-        // .interpolator(d3.interpolatePurples);´
-        var myColor = d3.scaleSequential(function(t) {
-            // return d3.interpolatePurples(t/1.15+0.23)
-            return d3.interpolatePurples(t/1.15+0.23)
-        })
-        .domain([minValue,maxValue]);
+          
+        var start = d3.hsl(200, 1, 0.90); // org color min 225°, 100%, 70%
+        var end = d3.hsl(200, 0.3, 0.40);   // org color max 225°, 30%, 20%
+        var myColor = d3.scaleLinear()
+            .domain([minValue, maxValue])
+            .range([
+                start, // <= lower bound of our color scale
+                end  // <= upper bound of our color scale
+            ]);
 
 
 
+        // // Build color scale OLD SCALE
+        // var myColor = d3.scaleSequential(function(t) {
+        //     // return d3.interpolatePurples(t/1.15+0.23)
+        //     return d3.interpolateBlues(t/1.15+0.23);
+        // })
+        // .domain([minValue,maxValue]);
 
         // Protein categories
         var proteins = d3.map(proteinStructData, function(d){return d.protein;}).keys()
@@ -137,10 +143,9 @@ function renderProteinModPlot(){
         tooltip.style("opacity", 1)
         }
         var mousemove = function(d) {
-        tooltip
-            .html("The exact value of<br>this cell is: " + d.value)
-            .style("left", (d3.mouse(this)[0]) + "px")
-            .style("top", (d3.mouse(this)[1]) + "px")
+        tooltip.html("value: " + d.value)
+            .style("left", (d3.event.pageX + 10) + "px")
+            .style("top", (d3.event.pageY - 10) + "px");
         }
         var mouseleave = function(d) {
         tooltip.style("opacity", 0)

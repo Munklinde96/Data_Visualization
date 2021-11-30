@@ -60,15 +60,26 @@ function renderSampleModPlot(){
                 }
             }
         }
-        // Build color scale
-        // var myColor = d3.scaleSequential()
-        // .domain([minValue,maxValue])
-        // .interpolator(d3.interpolateOranges);
-        var myColor = d3.scaleSequential(function(t) {
-            return d3.interpolateOranges(t/1.15+0.23)
 
-        })
-        .domain([minValue,maxValue]);
+
+        
+    
+        var start = d3.hsl(245, 1, 0.90); // org color min 225°, 100%, 70%
+        var end = d3.hsl(245, 0.3, 0.40);     // org color max 225°, 30%, 20%
+        var myColor = d3.scaleLinear()
+            .domain([minValue, maxValue])
+            .range([
+                start, // <= lower bound of our color scale
+                end  // <= upper bound of our color scale
+            ]);
+
+
+        //  OLD:
+        // var myColor = d3.scaleSequential(function(t) {
+        //     return d3.interpolateOranges(t/1.15+0.23)
+
+        // })
+        // .domain([minValue,maxValue]);
 
         // Labels of row and columns
         var samples = d3.map(modStructData, function(d){return d.sample;}).keys()
@@ -123,9 +134,9 @@ function renderSampleModPlot(){
         }
         var mousemove = function(d) {
         tooltip
-            .html("The exact value of<br>this cell is: " + d.value)
-            .style("left", (d3.mouse(this)[0]) + "px")
-            .style("top", (d3.mouse(this)[1]) + "px")
+            .html("value: " + d.value)
+            .style("left", (d3.event.pageX + 10) + "px")
+            .style("top", (d3.event.pageY - 10) + "px");
         }
         var mouseleave = function(d) {
         tooltip.style("opacity", 0)
