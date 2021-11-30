@@ -27,7 +27,7 @@ def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", sample_colum
 
     df["Position of Mass Shift"] = df["Peptide"].apply(get_position_of_mass_shift)
     # get list of modification for each PTM
-    df["Modification_types"] = df["PTM"].apply(lambda x: x if pd.isnull(x) else [s.strip() for s in x.split(";")])    
+    df["Modification_types"] = df["PTM"].apply(lambda x: x if pd.isnull(x) or x == 'Unmodified' else [s.strip() for s in x.split(";")])    
     selected_sample_columns = [col for col in df.columns if sample_column_id in col]
 
     if len(selected_sample_indices) > 0:
@@ -39,13 +39,12 @@ def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", sample_colum
     
     unique_mod_types = get_unique_modification_types(df)
 
-    for col in selected_sample_columns:  #make Area samples Nan values 0
-        df[col] = df[col].fillna(0)
-    df = df[df[selected_sample_columns].sum(axis=1) > 0]  # drop rows where all sample_columns are 0
-
     #Aggregate sample intensity, and normalize it
     df["Agg Intensity"] = df[selected_sample_columns].sum(axis=1)
     df['Agg Intensity'] = df['Agg Intensity'] / df['Agg Intensity'].sum()
+
+    #remove all rows where Agg Intensity is 0
+    df = df[df['Agg Intensity'] > 0]
 
     df["tuple"] = df[["Start", "End", 'Position of Mass Shift', 'Modification_types', 'Agg Intensity']].apply(tuple, axis=1)
 
@@ -104,9 +103,9 @@ def normalize(res_intensities, is_log_scaled = False,  min_val=0):
     return normalized
 
 def colors_(values: list , color_scale = 'Blues', is_log_scaled = True, is_normalized = True):
+    normalized = values
     cmap = plt.cm.get_cmap(color_scale)
     if len(values) == 1:
-        normalized = [1]
         return [cls.rgb2hex(cmap(1.0))]
     elif is_normalized:
         normalized = normalize(values, is_log_scaled,  min_val=0.2)
@@ -140,6 +139,7 @@ def map_to_attribute(colors, color_scale, is_log_scaled, res_intensities, rectan
     if colors:
         rects_and_attribute = map_to_colors(res_intensities, rectangles_and_mods, color_scale = color_scale, is_log_scaled=is_log_scaled)
     else:
+        print("res intensities: ", res_intensities)
         rects_and_attribute = map_to_norm_intensities(res_intensities, rectangles_and_mods)
     return rects_and_attribute
 

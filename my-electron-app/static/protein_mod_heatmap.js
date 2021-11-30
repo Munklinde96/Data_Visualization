@@ -1,9 +1,9 @@
 
 function renderProteinModPlot(){
-    console.log("drawing mod heatap")
+    console.log("drawing mod heatap");
     // set the dimensions and margins of the graph
     var margin = {top: 30, right: 130, bottom: 30, left: 130},
-        width = 900 - margin.left ,
+        width = screen.width*0.35,
         height = 500 - margin.top - margin.bottom;
     // remove old svg
     d3.select("#mod_heatmap").select("svg").remove();
@@ -17,7 +17,7 @@ function renderProteinModPlot(){
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     //Read the data
-    d3.json("http://127.0.0.1:5000/get-protein-mod-data?min_mod_count="+minModificationCount+"&normalization_type="+normalizationType+"&samples="+selectedSample, function(error, data) {
+    d3.json("http://127.0.0.1:5000/get-protein-mod-data?min_mod_count="+getMinModificationCount()+"&normalization_type="+getSelectedNormalization()+"&samples="+getSelectedSamples(), function(error, data) {
         // validate request
         if (error) throw error;
         // build modification and protein categories
@@ -91,8 +91,8 @@ function renderProteinModPlot(){
         .style("text-anchor", "end")
         .attr("dx", "-.8em")
         .attr("dy", ".15em")
-        .attr("transform", "rotate(-45)");  
-
+        .attr("transform", "rotate(-90)");  
+        
         // add label to xaxis
         svg.append("text")
         .attr("transform",
@@ -145,11 +145,11 @@ function renderProteinModPlot(){
         var mouseclick = function(d, i){
             for(let n = 0; n < proteinStructData.length; n++){
                 // remove old
-                if(selectedProtein == proteinStructData[n].protein){
+                if(getSelectedProtein() == proteinStructData[n].protein){
                     let target = d3.select("#mod_prot_id_heatmap_"+n);
                     target.style('stroke', 'none');
                 }
-                if(d.protein === proteinStructData[n].protein && d.protein !== selectedProtein){
+                if(d.protein === proteinStructData[n].protein){
                     let target = d3.select("#mod_prot_id_heatmap_"+n);
                     target.style('stroke', 'red');
                     target.attr('rx', 2)
@@ -157,14 +157,10 @@ function renderProteinModPlot(){
                     target.style('stroke-width', 1);
                 }
             }
-            if(selectedProtein !== d.protein){
-                selectedProtein = d.protein;
-            } else {
-                selectedProtein = "";
-            }
+            setSelectedProtein(d.protein);            
+            setSelectedSamples([]);
             renderSampleModPlot();
-            renderSegmentPlot();
-            selectedSample = [];
+            setDocumentLabels();
         }
 
         svg.selectAll()
@@ -180,21 +176,14 @@ function renderProteinModPlot(){
             .attr("id", function(d, i){return "mod_prot_id_heatmap_"+i })
             .style("fill", function(d) {return myColor(d.value)})
             .style("stroke", function(d){
-                if(d.protein === selectedProtein){
+                if(d.protein === getSelectedProtein()){
                     // egg white
                     return 'red';
                 }
                 return "none";
             })
-            // .style('opacity', function(d){
-            //     if(d.protein !== selectedProtein){
-            //         return 0.5;
-            //     } else {
-            //         return 1;
-            //     }
-            // })
             .style("stroke-width", function(d){
-                if(d.protein === selectedProtein){
+                if(d.protein === getSelectedProtein()){
                     return 2;
                 }
                 return 0;
@@ -257,7 +246,7 @@ function renderProteinModPlot(){
         .tickSize(5)
         .tickFormat( function(d){
             // if normalization is protein_intensity, use scientific notation
-            if(normalizationType === "protein_intensity"){
+            if(getSelectedNormalization() === "protein_intensity"){
                 return d3.format(".2e")(d);
             }
             else return d.toFixed(2);
@@ -298,7 +287,7 @@ function renderProteinModPlot(){
     });
 }
 
-$('document').ready(function(){
+(function() {
     renderProteinModPlot();
 });
 function changeTitleAccordingToNormalization(normalizationType) {

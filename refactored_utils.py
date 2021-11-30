@@ -55,15 +55,25 @@ def get_protein_sequence(protein):
     else:
         return ''
 
-def sanitize_data(df):
+def sanitize_data(df, sample_column_id='Area'):
+    selected_sample_columns = [col for col in df.columns if sample_column_id in col]
+    for col in selected_sample_columns:  #make Area samples Nan values 0
+        df[col] = df[col].fillna(0)
+    df = df[df[selected_sample_columns].sum(axis=1) > 0]
+
+    df["PTM"] = df["PTM"].fillna("Unmodified")
+
+
     protein_sequence = ''
     current_protein = ''
+    dropped_indices = []
     for index, row in df.iterrows():
         peptide = row['Peptide']
         peptide = clean_peptide(peptide)
         if row['Length'] is not len(peptide) and row['End'] - row['Start'] is not len(peptide):
             print('length mismatch')
-            df.drop(index)
+            dropped_indices.append(index)
+            continue
         if(current_protein != row['Protein Accession']):
             current_protein = row['Protein Accession']
             protein_sequence = get_protein_sequence(current_protein)
@@ -71,20 +81,34 @@ def sanitize_data(df):
         protein_sequence_substring = protein_sequence[row['Start'] - 1 : int(row['End'])]
         if protein_sequence_substring != peptide:
             print('peptide mismatch')
-            df.drop(index)
-        return df
+            dropped_indices.append(index)
+            continue
+        # if sum of selected_sample_columns in row is zero, drop the row
+        if sum(row[selected_sample_columns]) == 0:
+            dropped_indices.append(index)
+            continue
+    #drop rows in dropped_indices
+    df = df.drop(dropped_indices)
+    return df
 
 def get_and_prepare_data(data_path = 'UHT milk P036.csv', wanted_columns = ['Protein Accession', 'Peptide', 'PTM', 'Start', 'End', 'Length'], sample_column_id = 'Area'):
     df = get_data_and_remove_unwanted_columns(wanted_columns, data_path, sample_column_id = sample_column_id)
-    df = sanitize_data(df)
+    df = sanitize_data(df, sample_column_id = sample_column_id)
     return df
 
 ##############################################
 ############ USEFUL UTILS METHODS ############
 ##############################################
 
+def normalize_intensities(df, sample_column_id = 'Area'):
+    selected_sample_columns = [col for col in df.columns if sample_column_id in col]
+    for col in selected_sample_columns:
+        df[col] = df[col] / df[col].sum()
+    return df
+
 # nomalize peptide intensity(per sample) over protetin intensity
 def normalize_intensities_by_protein_intensity(df, sample_column_id='Area'):
+    print(df.head())
     protein_start = [0]
     protein_end = []
     protein_id = ""
@@ -108,8 +132,9 @@ def normalize_intensities_by_protein_intensity(df, sample_column_id='Area'):
         for col_name in area_cols:
             intensity_sum = protein_df[col_name].sum()
             protein_df[col_name] = protein_df[col_name].divide(intensity_sum)
-
+        
         dataframes.append(protein_df)
+    print(len(dataframes))
     
     return pd.concat(dataframes, axis=0, ignore_index=True)
 
@@ -138,11 +163,6 @@ def get_color_palette_for_modifications(modification_types = []):
     mod_type_map = {}
     for i in range(len(modification_types)):
         mod_type_map[modification_types[i]] = COLORS[i]
-    # mod_type_map = {'Oxidation (M)': '#E6194B' , 'Phosphorylation (STY)': '#F58231', 'Deamidation (NQ)': '#FFE119', 'lal': '#BFEF45',
-    #                   'Lactosylation': '#3CB44B', 'Pyro-glu from Q': '#42D4F4', 'Glycosylation type b': '#4363D8', 'Dioxidation (M)': '#911EB4',
-    #                  'Glycosylation type e': '#F032E6', 'Glycosylation type a': '#000000','Glycosylation type c/d': '#800000', 'Carbamidomethylation': '#FABED4', 'lan': '#808000'}
-    colors = []
-    
 
     return mod_type_map
 

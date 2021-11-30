@@ -1,5 +1,5 @@
 function renderSegmentPlot(){
-    if(selectedProtein === ""){
+    if(getSelectedProtein() === ""){
         d3.select("#graphDiv3").select("svg").remove();
         document.getElementById('no_protein_div_3').innerHTML = '<div style="width: 640px; height: 440px;"><h3>Select a protein to get started.</h3></div>';
         return;
@@ -13,13 +13,13 @@ function renderSegmentPlot(){
     
     // get <p> paragraph field inside the graphDiv3 div to change Peptide Segments Plot text
     var p = document.getElementById("graphDiv3").getElementsByTagName("p")[0];
-    p.innerHTML = "Peptide Segments Plot - Protein: " + selectedProtein;
+    p.innerHTML = "Peptide Segments Plot - Protein: " + getSelectedProtein();
     p.style.fontWeight = "bold";
     p.style.fontStyle = "italic";
 
     
     
-    d3.json("http://127.0.0.1:5000/get-segment-data?protein="+selectedProtein+"&samples="+selectedSample, function(error, data) {
+    d3.json("http://127.0.0.1:5000/get-segment-data?protein="+getSelectedProtein()+"&samples="+getSelectedSamples(), function(error, data) {
     if (error) throw error;
     var rect_patches = data.peptide_patches;
     var mod_patches = data.mod_patches;
@@ -32,17 +32,15 @@ function renderSegmentPlot(){
     var max_intensity = max_peptide[0];
     var histogram_data = data.histogram_data;
     //round min_intensity and max_intensity to 10 decimals
-    min_intensity = Math.round(min_intensity * 100000000) / 100000000;
-    max_intensity = Math.round(max_intensity * 100000000) / 100000000;
+    var min_intensity = Math.round(min_intensity * 100000000) / 100000000;
+    var max_intensity = Math.round(max_intensity * 100000000) / 100000000;
 
     var min_color = min_peptide[1];
     var max_color = max_peptide[1];
     var color = d3.scaleLinear().range([min_color, max_color]).domain([1, 2]);
 
-    
-    
-    modification_color_map_keys = Object.keys(modification_color_map);
-    modification_color_map_values = Object.values(modification_color_map);
+    var modification_color_map_keys = Object.keys(modification_color_map);
+    var modification_color_map_values = Object.values(modification_color_map);
     // create map from values to keys
     var colors_to_mod_map = new Map();
     for (var i = 0; i < modification_color_map_keys.length; i++) {
@@ -53,8 +51,11 @@ function renderSegmentPlot(){
 
     // set the dimensions and margins of the graph
     var margin = {top: 30, right: 20, bottom: 30, left: 20};
+    var width = screen.width;
+    var height = plot_height*5;
+
     var margin_overview = {top: 30, right: 15, bottom: 10, left: 15};
-    var width = screen.width *0.7;
+    var width = screen.width;
     var mod_label_size = 10
     var color_bar_width = 20;
     var color_bar_height = 180;
@@ -90,7 +91,7 @@ function renderSegmentPlot(){
     
     var xAxis_labels = d3.axisTop()
         .scale(xScale_labels).tickPadding(8)
-        .tickSize(0)
+        .tickSize(0)    
         .tickValues(d3.range(0, peptide_length))
         .tickFormat(function(d,i){ 
             return peptide_chars[d];
@@ -104,8 +105,7 @@ function renderSegmentPlot(){
     var x_labels = svg.append("g")
         .attr("class", "xAxis_labels")
         .attr("transform", "translate(" + 0 + "," + (selector_height + margin_overview.bottom - 1+12) + ")")
-        .call(xAxis_labels)
-        .selectAll("text")
+        .call(xAxis_labels);
 
     // make every other label smaller
     var adjust_xaxis = function (scale) {
@@ -133,6 +133,8 @@ function renderSegmentPlot(){
     var opacity_mod_grey = 0.5
     var opacity_highlight_legend = 0.85
     // sample data for rectangles
+
+
     var rects = svg.selectAll("foo")
         .data(rect_patches)
         .enter()
@@ -149,6 +151,7 @@ function renderSegmentPlot(){
         .attr("stroke-width", stroke_width)
         .on("mouseover",mouseover)
         .on("mousemove", mousemove_segments)
+        .on("click", mouseclick)
         .on("mouseout", mouseleave);
         
 
@@ -192,22 +195,45 @@ function renderSegmentPlot(){
             legend_rects_filtered.style("fill", d[4]);
         }
     }
-    
 
+    function mouseclick (d){
+        try{
+            removeProteinSelectionPlot();
+        }catch(e){}
+        var modPositionsAndTypes = getModificationPositions(mod_patches, d, colors_to_mod_map, peptide_seq);
+        var mod_types_and_positions = modPositionsAndTypes[0];
+        var mod_positions = modPositionsAndTypes[1];
+        var mod_types_and_positions_str = mod_types_and_positions.join(", "); 
+        proteinStartPos = d[0]+1;
+        proteinEndPos = proteinStartPos+d[2];
+        selectedSequence=data.seqq.substring(proteinStartPos, proteinEndPos);
+        tooltip.html('<div class="container"<p>Intensity: ' + expo(d[5], 3) + '</p><p>Modification: ' + mod_types_and_positions_str + '</p><div id="peptide_selection_view"></div></div>')
+        .style("left", (d3.event.pageX + 10) + "px")
+        .style("top", (d3.event.pageY - 10) + "px");
+        if (mod_types_and_positions_str.length > 0) {
+        tooltip.html('<div class="container"<p>Intensity: ' + expo(d[5], 3) + '</p><p>Modification: ' + mod_types_and_positions_str + '</p><div id="peptide_selection_view"></div></div>')
+            .style("left", (d3.event.pageX + 10) + "px")
+            .style("top", (d3.event.pageY - 10) + "px");
+        } else {
+            tooltip.html('<div class="container"<p>Intensity: ' + expo(d[5], 3) + '</p><div id="peptide_selection_view"></div></div>')
+            .style("left", (d3.event.pageX + 10) + "px")
+            .style("top", (d3.event.pageY - 10) + "px");
+        }
+        renderProteinSelectionPlot();
+    }
 
     function mousemove_segments(d) {
         // get all modification on this segments - retuns [mod_types_and_positions, mod_positions]
         var modPositionsAndTypes = getModificationPositions(mod_patches, d, colors_to_mod_map, peptide_seq);
         var mod_types_and_positions = modPositionsAndTypes[0];
         var mod_positions = modPositionsAndTypes[1];
-
         var mod_types_and_positions_str = mod_types_and_positions.join(", "); 
         if (mod_types_and_positions_str.length > 0) {
-        tooltip.html("<p>Intensity: " + expo(d[5], 3) + "</p><p>Modifications: " + mod_types_and_positions_str + "</p>")
+        tooltip.html('<div class="container"><p>Intensity:' + expo(d[5], 3) + "</p><p>Modifications: " + mod_types_and_positions_str + "</p></div>")
             .style("left", (d3.event.pageX + 10) + "px")
             .style("top", (d3.event.pageY - 10) + "px");
         } else {
-            tooltip.html("<p>Intensity: " + expo(d[5], 3) + "</p>")
+            tooltip.html('<div class="container"><p>Intensity: ' + expo(d[5], 3) + "</p></div>")
             .style("left", (d3.event.pageX + 10) + "px")
             .style("top", (d3.event.pageY - 10) + "px");
         }
@@ -345,7 +371,6 @@ function renderSegmentPlot(){
     legend.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top) + ")");
     legend_text.attr("transform", "translate(" + 0 + "," + (height/2 - margin.top) + ")");
 
-
     if(rect_patches.length > 1) {
 
     // find difrence in magnintude and use as steps
@@ -459,70 +484,173 @@ function renderSegmentPlot(){
         .attr("fill", d=> d[4])
         .attr("opacity", 0.5);
 
-    var displayed = d3.scaleQuantize()
-        .domain([0, width])
-        .range(d3.range(peptide_length));
-
     var selector = svg.append("rect")
         .attr("class", "mover")
         .attr("x", 0)
         .attr("y", 0)
         .attr("height", selector_height)
         .attr("width", selector_width)
-        .attr("fill", "gray")
+        .attr("fill", "grey")
         .attr("opacity", 0.5)
         .attr("pointer-events", "all")
         .attr("cursor", "ew-resize")
         .call(d3.drag().on("drag", drag_plt));
 
     var left_selector_border = svg.append("rect")
+        .attr("class", "left_selector_border")
         .attr("x", 0)
         .attr("y", 0)
         .attr("height", selector_height)
-        .attr("width", 1)
-        .attr("fill", "red")
-        .attr("opacity", 0.5)
+        .attr("width", 4)
+        .attr("fill", "grey")
+        .attr("opacity", 1)
         .attr("pointer-events", "all")
         .attr("cursor", "ew-resize")
-        .call(d3.drag().on("drag", zoom_plt));
+        .call(d3.drag().on("drag", zoom_plt_left));
     
     var right_selector_border = svg.append("rect")
+        .attr("class", "right_selector_border")
         .attr("x", selector_width)
         .attr("y", 0)
         .attr("height", selector_height)
-        .attr("width", 1)
-        .attr("fill", "red")
-        .attr("opacity", 0.5)
+        .attr("width", 4)
+        .attr("fill", "grey")
+        .attr("opacity", 1)
         .attr("pointer-events", "all")
         .attr("cursor", "ew-resize")
-        .call(d3.drag().on("drag", zoom_plt));
+        .call(d3.drag().on("drag", zoom_plt_right));
 
     function drag_plt() {
-        var x = parseInt(d3.select(this).attr("x")),
-            nx = x + d3.event.dx,
+        var selector_width = parseInt(d3.select('.mover').attr('width'));
+
+        var left_selector_border_x = parseInt(d3.select('.left_selector_border').attr('x'));
+
+        var overview_scale = selector_range / selector_width;
+
+        var x = parseInt(d3.select(this).attr("x"));
+        var nx = x + d3.event.dx,
             w = parseInt(d3.select(this).attr("width"));
 
-        if(nx < 0 || nx + w > selector_range) return;
+        if(nx < 0 - left_selector_border_x || nx + w > selector_range - left_selector_border_x) return;
 
         d3.select(this).attr("x", nx);
 
-        rects.attr("transform", "translate(" + -width/selector_width * nx + "," + 0 + ")");
-        mod_rects.attr("transform", "translate(" + -width/selector_width * nx + "," + 0 + ")");
-        x_ticks.attr("transform", "translate(" + -width/selector_width * nx + "," + (selector_height + margin_overview.bottom - 1+12) + ")");
-        x_labels.attr("transform", "translate(" + -width/selector_width * nx + "," + 0 + ")");
+        rects.attr("transform", "translate(" + (-selector_range/selector_width * nx - overview_scale *left_selector_border_x) + "," + 0 + ")");
+        mod_rects.attr("transform", "translate(" + (-selector_range/selector_width * nx - overview_scale *left_selector_border_x) + "," + 0 + ")");
+        x_ticks.attr("transform", "translate(" + (-selector_range/selector_width * nx - overview_scale *left_selector_border_x) + "," + (selector_height + margin_overview.bottom - 1+12) + ")");
+        x_labels.attr("transform", "translate(" + (-selector_range/selector_width * nx - overview_scale *left_selector_border_x) + "," + (selector_height + margin_overview.bottom - 1+12) + ")");
         left_selector_border.attr("transform", "translate(" + nx + "," + 0 + ")");
         right_selector_border.attr("transform", "translate(" + nx + "," + 0 + ")");
-
     }
 
-    function zoom_plt() {
-        var x = parseInt(d3.select(this).attr("x")),
-            nx = x + d3.event.dx,
-            w = parseInt(d3.select(this).attr("width"));
+    function zoom_plt_right() {
+        var selector_x = parseFloat(d3.select('.mover').attr('x')),
+            selector_width = parseFloat(d3.select('.mover').attr('width'));
+        var left_selector_border_x = parseFloat(d3.select('.left_selector_border').attr('x'));
 
-        if(nx < 0 || nx + w > selector_range) return;
+        var x = parseFloat(d3.select(this).attr("x"));
+        var nx = parseFloat(d3.event.x),
+            ndx = parseFloat(x + d3.event.dx);
 
-        selector.attr("transform", "scale(" + x/(nx + w) + "," + 1 + ")");
+        if(nx < selector_x + left_selector_border_x + 40 || nx > selector_range) return;
+        var scaleFactor = parseFloat(selector_width/(ndx - left_selector_border_x));
+
+        d3.select(this).attr("x", ndx)
+        selector.attr("width", ndx - left_selector_border_x);
+
+        rects.attr("width", function() {
+            return this.getAttribute('width') * scaleFactor;
+        });
+        rects.attr("x", function() {
+            return this.getAttribute('x') * scaleFactor;
+        });
+           
+        mod_rects.attr("width", function() {
+            return this.getAttribute('width') * scaleFactor;
+        });
+        mod_rects.attr("x", function() {
+            return this.getAttribute('x') * scaleFactor;
+        });
+
+        var new_selector_width = parseFloat(ndx - left_selector_border_x);
+        var overview_scale = parseFloat(selector_range / new_selector_width);
+
+        mod_rects.attr("transform", function(){
+            return "translate(" +  (scaleFactor * (selector_range/ndx) - (selector_x + left_selector_border_x) *overview_scale)  + "," + 0 + ")";
+        });
+        rects.attr("transform", function() {
+            return "translate(" + (scaleFactor * (selector_range/ndx) - (selector_x + left_selector_border_x) *overview_scale) + "," + 0 + ")";
+        });
+
+        var tick_r = xScale_ticks.range();
+        xScale_ticks.range([0, tick_r[1] * scaleFactor]);
+
+        var label_r = xScale_labels.range();
+        xScale_labels.range([label_r[0]*scaleFactor, label_r[1] * scaleFactor]);
+
+        x_ticks
+            .attr("transform", "translate(" + (scaleFactor * (selector_range/ndx) - (selector_x + left_selector_border_x) *overview_scale) + "," + (selector_height + margin_overview.bottom - 1+12) + ")")
+            .call(xAxis_ticks);
+
+        x_labels
+            .attr("transform", "translate(" + (scaleFactor * (selector_range/ndx) - (selector_x + left_selector_border_x) *overview_scale) + "," + (selector_height + margin_overview.bottom - 1+12) + ")")
+            .call(xAxis_labels);
+    }
+
+    function zoom_plt_left() {
+        var selector_width = parseFloat(d3.select('.mover').attr('width'));
+        var selector_x = parseFloat(d3.select('.mover').attr('x'));
+        var right_selector_border_x = parseFloat(d3.select('.right_selector_border').attr('x'));
+        
+        var x = parseFloat(d3.select(this).attr("x"));
+        var nx = parseFloat(d3.event.x),
+            ndx = parseFloat(x + d3.event.dx);
+        
+        if(nx < 0 || ndx > right_selector_border_x - 40) return;
+        var scaleFactor = parseFloat(selector_width/(right_selector_border_x - ndx));
+
+        d3.select(this).attr("x", ndx)
+        selector.attr("transform", "translate(" + ndx + "," + 0 + ")");
+        selector.attr('width', right_selector_border_x - ndx);
+
+        rects.attr("width", function() {
+            return this.getAttribute('width') * scaleFactor;
+        });
+
+        rects.attr("x", function() {
+            return this.getAttribute('x') * scaleFactor;
+        });
+           
+        mod_rects.attr("width", function() {
+            return this.getAttribute('width') * scaleFactor;
+        });
+        mod_rects.attr("x", function() {
+            return this.getAttribute('x') * scaleFactor;
+        });
+
+        var new_selector_width = parseFloat(right_selector_border_x - ndx);
+        var overview_scale = parseFloat(selector_range / new_selector_width);
+
+        mod_rects.attr("transform", function(){
+            return "translate(" +  (scaleFactor * (selector_range/right_selector_border_x) - (ndx + selector_x) * overview_scale)  + "," + 0 + ")";
+        });
+        rects.attr("transform", function() {
+            return "translate(" + (scaleFactor * (selector_range/right_selector_border_x)  - (ndx + selector_x) * overview_scale) + "," + 0 + ")";
+        });
+
+        var tick_r = xScale_ticks.range();
+        xScale_ticks.range([0, tick_r[1] * scaleFactor]);
+
+        var label_r = xScale_labels.range();
+        xScale_labels.range([label_r[0]*scaleFactor, label_r[1] * scaleFactor]);
+
+        x_ticks
+            .attr("transform", "translate(" + (scaleFactor * (selector_range/right_selector_border_x)  - (ndx + selector_x) * overview_scale) + "," + (selector_height + margin_overview.bottom - 1+12) + ")")
+            .call(xAxis_ticks);
+
+        x_labels
+            .attr("transform", "translate(" + (scaleFactor * (selector_range/right_selector_border_x)  - (ndx + selector_x) * overview_scale) + "," + (selector_height + margin_overview.bottom - 1+12) + ")")
+            .call(xAxis_labels);
     }
 
     // get modification positions
@@ -531,9 +659,16 @@ function renderSegmentPlot(){
     });
 }
 
-$('document').ready(function(){
+(function() {
     renderSegmentPlot();
-});
+    // check if pressed
+    window.setInterval(function(){
+        if (getTabPressed() == true){
+            renderSegmentPlot();
+            setDocumentLabels();
+        }
+      }, 500);     
+ })();
 
 
 function highlightSegmentAndModInXaxis(rect_patches, d, mod_patches, colors_to_mod_map, peptide_seq, svg) {
