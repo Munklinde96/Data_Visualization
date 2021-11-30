@@ -19,6 +19,7 @@ function renderProteinModPlot(){
     //Read the data
     d3.json("http://127.0.0.1:5000/get-protein-mod-data?min_mod_count="+getMinModificationCount()+"&normalization_type="+getSelectedNormalization()+"&samples="+getSelectedSamples(), function(error, data) {
         // validate request
+        console.log("####",data);
         if (error) throw error;
         // build modification and protein categories
         var maxValue = null;

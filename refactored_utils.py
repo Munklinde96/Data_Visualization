@@ -93,7 +93,7 @@ def sanitize_data(df, sample_column_id='Area'):
 
 def get_and_prepare_data(data_path = 'UHT milk P036.csv', wanted_columns = ['Protein Accession', 'Peptide', 'PTM', 'Start', 'End', 'Length'], sample_column_id = 'Area'):
     df = get_data_and_remove_unwanted_columns(wanted_columns, data_path, sample_column_id = sample_column_id)
-    df = sanitize_data(df, sample_column_id = sample_column_id)
+    # df = sanitize_data(df, sample_column_id = sample_column_id)
     return df
 
 ##############################################

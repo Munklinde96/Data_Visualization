@@ -55,6 +55,7 @@ def buildSampleModData(df, protein):
     data = None
     if protein == "":
         data = get_sample_heatmap_data(df)
+        print("data", data)
     else:
         data = get_sample_heatmap_data(df, _protein=protein)
     return data.to_json()
@@ -74,7 +75,7 @@ def buildSegmentData(df, protein, _samples=[], start_pos=0, end_pos=0, _stacked=
         print("check this out", start_end_indicies)
     # Create SegmentPlotData
     if protein == "":
-        peptide_patches, mod_patches, height, seqq, modification_color_map, min_peptide, max_peptide, histogram_df = create_data_for_segment_plot(df, selected_samples_indices=intSamples, spacing=0.0)
+        peptide_patches, mod_patches, height, seqq, modification_color_map, min_peptide, max_peptide, histogram_df = create_data_for_segment_plot(df, spacing=0.0, start_end_indicies =start_end_indicies, is_stacked=_stacked)
         histogram_data_json = json.loads(histogram_df.to_json())
         segmentObject = {
         'peptide_patches': peptide_patches,
@@ -89,7 +90,7 @@ def buildSegmentData(df, protein, _samples=[], start_pos=0, end_pos=0, _stacked=
         segmentPlotJson = json.dumps(segmentObject)
         return segmentPlotJson
     else:
-        peptide_patches, mod_patches, height, seqq, modification_color_map, min_peptide, max_peptide, histogram_df = create_data_for_segment_plot(df, _protein=protein, selected_sample_indices=intSamples, spacing = 0.0)
+        peptide_patches, mod_patches, height, seqq, modification_color_map, min_peptide, max_peptide, histogram_df = create_data_for_segment_plot(df, _protein=protein, selected_sample_indices=intSamples, spacing = 0.0, start_end_indicies =start_end_indicies, is_stacked=_stacked)
         histogram_data_json = json.loads(histogram_df.to_json())
         segmentObject = {
         'peptide_patches': peptide_patches,
