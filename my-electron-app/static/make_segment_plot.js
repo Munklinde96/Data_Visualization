@@ -1,5 +1,5 @@
 function renderSegmentPlot(){
-    if(selectedProtein === ""){
+    if(getSelectedProtein() === ""){
         d3.select("#graphDiv3").select("svg").remove();
         document.getElementById('no_protein_div_3').innerHTML = '<div style="width: 640px; height: 440px;"><h3>Select a protein to get started.</h3></div>';
         return;
@@ -13,13 +13,13 @@ function renderSegmentPlot(){
     
     // get <p> paragraph field inside the graphDiv3 div to change Peptide Segments Plot text
     var p = document.getElementById("graphDiv3").getElementsByTagName("p")[0];
-    p.innerHTML = "Peptide Segments Plot - Protein: " + selectedProtein;
+    p.innerHTML = "Peptide Segments Plot - Protein: " + getSelectedProtein();
     p.style.fontWeight = "bold";
     p.style.fontStyle = "italic";
 
     
     
-    d3.json("http://127.0.0.1:5000/get-segment-data?protein="+selectedProtein+"&samples="+selectedSample, function(error, data) {
+    d3.json("http://127.0.0.1:5000/get-segment-data?protein="+getSelectedProtein()+"&samples="+getSelectedSamples(), function(error, data) {
     if (error) throw error;
     var rect_patches = data.peptide_patches;
     var mod_patches = data.mod_patches;
@@ -38,8 +38,6 @@ function renderSegmentPlot(){
     var max_color = max_peptide[1];
     var color = d3.scaleLinear().range([min_color, max_color]).domain([1, 2]);
 
-    
-    
     var modification_color_map_keys = Object.keys(modification_color_map);
     var modification_color_map_values = Object.values(modification_color_map);
     // create map from values to keys
@@ -52,11 +50,11 @@ function renderSegmentPlot(){
 
     // set the dimensions and margins of the graph
     var margin = {top: 30, right: 20, bottom: 30, left: 20};
-    var width = screen.width *0.65;
+    var width = screen.width;
     var height = plot_height*5;
 
     var margin_overview = {top: 30, right: 15, bottom: 10, left: 15};
-    var width = screen.width *0.9;
+    var width = screen.width;
     var mod_label_size = 10
     var color_bar_width = 20;
     var color_bar_height = 180;
@@ -115,12 +113,8 @@ function renderSegmentPlot(){
     var opacity_mod = 0.8
     var opacity_mod_grey = 0.5
     // sample data for rectangles
-    var mouseclick = function(d, i){
-        proteinStartPos = d[0];
-        proteinEndPos = d[0]+d[2];
-        selectedSequence=data.seqq.substring(proteinStartPos-1, proteinEndPos-1);
-        renderProteinSelectionPlot();
-    }
+
+
     var rects = svg.selectAll("foo")
         .data(rect_patches)
         .enter()
@@ -158,7 +152,8 @@ function renderSegmentPlot(){
     function mousemove_modification(d) {
         // get modification type from colors_to_mod_map map
         var mod_type = colors_to_mod_map.get(d[4]);
-        tooltip.html("<p>Intensity: " + expo(d[5], 3) + "</p><p>Modification Type: " + mod_type + "</p>")
+        console.log("test this:"+d);
+        tooltip.html('<div class="container"><p>Intensity: ' + expo(d[5], 3) + '</p><p>Modification Type: ' + mod_type + '</p><div id="peptide_selection_view"></div></div>')
             .style("left", (d3.event.pageX + 10) + "px")
             .style("top", (d3.event.pageY - 10) + "px");
 
@@ -173,19 +168,45 @@ function renderSegmentPlot(){
         var specific_mod_pos = d[0];
         var x_axis_highlight = highlightSeqInXAxis(svg, segment[0], mod_positions, specific_mod_pos, true);
     }
+
+    function mouseclick (d){
+        try{
+            removeProteinSelectionPlot();
+        }catch(e){}
+        var modPositionsAndTypes = getModificationPositions(mod_patches, d, colors_to_mod_map, peptide_seq);
+        var mod_types_and_positions = modPositionsAndTypes[0];
+        var mod_positions = modPositionsAndTypes[1];
+        var mod_types_and_positions_str = mod_types_and_positions.join(", "); 
+        proteinStartPos = d[0]+1;
+        proteinEndPos = proteinStartPos+d[2];
+        selectedSequence=data.seqq.substring(proteinStartPos, proteinEndPos);
+        tooltip.html('<div class="container"<p>Intensity: ' + expo(d[5], 3) + '</p><p>Modification: ' + mod_types_and_positions_str + '</p><div id="peptide_selection_view"></div></div>')
+        .style("left", (d3.event.pageX + 10) + "px")
+        .style("top", (d3.event.pageY - 10) + "px");
+        if (mod_types_and_positions_str.length > 0) {
+        tooltip.html('<div class="container"<p>Intensity: ' + expo(d[5], 3) + '</p><p>Modification: ' + mod_types_and_positions_str + '</p><div id="peptide_selection_view"></div></div>')
+            .style("left", (d3.event.pageX + 10) + "px")
+            .style("top", (d3.event.pageY - 10) + "px");
+        } else {
+            tooltip.html('<div class="container"<p>Intensity: ' + expo(d[5], 3) + '</p><div id="peptide_selection_view"></div></div>')
+            .style("left", (d3.event.pageX + 10) + "px")
+            .style("top", (d3.event.pageY - 10) + "px");
+        }
+        renderProteinSelectionPlot();
+    }
+
     function mousemove_segments(d) {
         // get all modification on this segments - retuns [mod_types_and_positions, mod_positions]
         var modPositionsAndTypes = getModificationPositions(mod_patches, d, colors_to_mod_map, peptide_seq);
         var mod_types_and_positions = modPositionsAndTypes[0];
         var mod_positions = modPositionsAndTypes[1];
-
         var mod_types_and_positions_str = mod_types_and_positions.join(", "); 
         if (mod_types_and_positions_str.length > 0) {
-        tooltip.html("<p>Intensity: " + expo(d[5], 3) + "</p><p>Modifications: " + mod_types_and_positions_str + "</p>")
+        tooltip.html('<div class="container"><p>Intensity:' + expo(d[5], 3) + "</p><p>Modifications: " + mod_types_and_positions_str + "</p></div>")
             .style("left", (d3.event.pageX + 10) + "px")
             .style("top", (d3.event.pageY - 10) + "px");
         } else {
-            tooltip.html("<p>Intensity: " + expo(d[5], 3) + "</p>")
+            tooltip.html('<div class="container"><p>Intensity: ' + expo(d[5], 3) + "</p></div>")
             .style("left", (d3.event.pageX + 10) + "px")
             .style("top", (d3.event.pageY - 10) + "px");
         }
@@ -223,7 +244,7 @@ function renderSegmentPlot(){
         .attr("stroke", "black")
         .attr("stroke-width", stroke_width)
         .on("mouseover",mouseover)
-        .on("mousemove", mousemove_modification)
+        .on("mouseenter", mousemove_modification)
         .on("mouseout", mouseleave);    
 
     // Inspired by: https://www.d3-graph-gallery.com/graph/custom_legend.html
@@ -600,9 +621,16 @@ function renderSegmentPlot(){
 });
 }
 
-$('document').ready(function(){
+(function() {
     renderSegmentPlot();
-});
+    // check if pressed
+    window.setInterval(function(){
+        if (getTabPressed() == true){
+            renderSegmentPlot();
+            setDocumentLabels();
+        }
+      }, 500);     
+ })();
 
 function getModificationPositions(mod_patches, d, colors_to_mod_map, peptide_sequence) {
     var mod_types_and_positions = [];
