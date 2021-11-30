@@ -60,9 +60,6 @@ function renderSampleModPlot(){
                 }
             }
         }
-
-
-        
     
         var start = d3.hsl(245, 1, 0.90); // org color min 225°, 100%, 70%
         var end = d3.hsl(245, 0.3, 0.40);     // org color max 225°, 30%, 20%
@@ -72,14 +69,6 @@ function renderSampleModPlot(){
                 start, // <= lower bound of our color scale
                 end  // <= upper bound of our color scale
             ]);
-
-
-        //  OLD:
-        // var myColor = d3.scaleSequential(function(t) {
-        //     return d3.interpolateOranges(t/1.15+0.23)
-
-        // })
-        // .domain([minValue,maxValue]);
 
         // Labels of row and columns
         var samples = d3.map(modStructData, function(d){return d.sample;}).keys()

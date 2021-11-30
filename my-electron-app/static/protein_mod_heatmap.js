@@ -60,15 +60,6 @@ function renderProteinModPlot(){
                 end  // <= upper bound of our color scale
             ]);
 
-
-
-        // // Build color scale OLD SCALE
-        // var myColor = d3.scaleSequential(function(t) {
-        //     // return d3.interpolatePurples(t/1.15+0.23)
-        //     return d3.interpolateBlues(t/1.15+0.23);
-        // })
-        // .domain([minValue,maxValue]);
-
         // Protein categories
         var proteins = d3.map(proteinStructData, function(d){return d.protein;}).keys()
         var initial_proteins = proteins;
