@@ -62,13 +62,16 @@ function renderSampleModPlot(){
         }
     
         var start = d3.hsl(245, 1, 0.90); // org color min 225°, 100%, 70%
-        var end = d3.hsl(245, 0.3, 0.40);     // org color max 225°, 30%, 20%
-        var myColor = d3.scaleLinear()
-            .domain([minValue, maxValue])
-            .range([
-                start, // <= lower bound of our color scale
-                end  // <= upper bound of our color scale
-            ]);
+        var end = d3.hsl(245, 0.3, 0.20);     // org color max 225°, 30%, 20%
+        // make seqeuntial color scale between start and end
+        var myColor = d3.scaleSequential(d3.interpolateHsl(start, end))
+            .domain([minValue, maxValue]);
+        // var myColor = d3.scaleLinear()
+        //     .domain([minValue, maxValue])
+        //     .range([
+        //         start, // <= lower bound of our color scale
+        //         end  // <= upper bound of our color scale
+        //     ]);
 
         // Labels of row and columns
         var samples = d3.map(modStructData, function(d){return d.sample;}).keys()

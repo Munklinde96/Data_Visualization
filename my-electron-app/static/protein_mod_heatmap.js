@@ -25,6 +25,9 @@ function renderProteinModPlot(){
         var maxValue = null;
         var minValue = 0;
         var proteinStructData = null;
+        var sortingOrderProteins = {}; //QUICK FIX - make inside  html file instead
+        var normalizationType = getSelectedNormalization();
+
         for (const [protein, mods] of Object.entries(data)) {
             for (const [mod, value] of Object.entries(mods)){
                 if(maxValue == null || value > maxValue){
@@ -52,14 +55,16 @@ function renderProteinModPlot(){
         }
        
           
-        var start = d3.hsl(200, 1, 0.90); // org color min 225°, 100%, 70%
-        var end = d3.hsl(200, 0.3, 0.40);   // org color max 225°, 30%, 20%
-        var myColor = d3.scaleLinear()
-            .domain([minValue, maxValue])
-            .range([
-                start, // <= lower bound of our color scale
-                end  // <= upper bound of our color scale
-            ]);
+        var start = d3.hsl(205, 1, 0.90); // org color min 225°, 100%, 70%
+        var end = d3.hsl(205, 0.3, 0.20);   // org color max 225°, 30%, 20%
+        var myColor = d3.scaleSequential(d3.interpolateHsl(start, end))
+            .domain([minValue, maxValue]);
+        // var myColor = d3.scaleLinear()
+        //     .domain([minValue, maxValue])
+        //     .range([
+        //         start, // <= lower bound of our color scale
+        //         end  // <= upper bound of our color scale
+        //     ]);
 
         // Protein categories
         var proteins = d3.map(proteinStructData, function(d){return d.protein;}).keys()
