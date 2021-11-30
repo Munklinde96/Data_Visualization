@@ -13,12 +13,15 @@ function initializeBackend(){
 }
 
 const loadMainWindow = () => {
+    process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
     initializeBackend().onreadystatechange = (e) => {
             const mainWindow = new BrowserWindow({
                 width : 1200,
                 height: 800,
                 webPreferences: {
-                    nodeIntegration: true
+                    nodeIntegration: true,
+                    webviewTag: true,                
+                    contextIsolation: false
                 }
             });
             mainWindow.maximize();

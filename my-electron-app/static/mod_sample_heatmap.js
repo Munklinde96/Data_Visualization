@@ -8,7 +8,7 @@ function renderSampleModPlot(){
     }
     // set the dimensions and margins of the graph
     var margin = {top: 30, right: 130, bottom: 30, left: 130},
-        width = 900 - margin.right,
+        width = screen.width*0.3,
         height = 500 - margin.top - margin.bottom;
     
     // remove old svg
@@ -129,7 +129,7 @@ function renderSampleModPlot(){
         var mouseclick = function(d, i){
             for(let n = 0; n < modStructData.length; n++){
                 // remove old if clicked on one it already contains
-                if(differentSamples.length === selectedSample.length || (modStructData[n].sample === d.sample && selectedSample.includes(Number(d.sample)))){
+                if(modStructData[n].sample === d.sample && selectedSample.includes(Number(d.sample))){
                     let target = d3.select("#sample_id_heatmap_"+n);
                     target.style('stroke', 'none');
                 } else if(Number(d.sample) === Number(modStructData[n].sample)){
@@ -144,6 +144,12 @@ function renderSampleModPlot(){
                 selectedSample = selectedSample.filter(function(val, index, err){
                     return val != d.sample;
                 });
+            }
+            selectedSample.sort();
+            if(selectedSample.length === 0){
+                document.getElementById("state_selected_samples").textContent = myGroups.toString();
+            } else {
+                document.getElementById("state_selected_samples").textContent = selectedSample.toString();
             }
             renderSegmentPlot();
         }
@@ -225,6 +231,6 @@ function renderSampleModPlot(){
     });
 }
 
-$('document').ready(function(){
+(function() {
     renderSampleModPlot();
-});
+ })();
