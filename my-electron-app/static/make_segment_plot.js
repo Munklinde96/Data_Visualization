@@ -104,8 +104,7 @@ function renderSegmentPlot(){
     var x_labels = svg.append("g")
         .attr("class", "xAxis_labels")
         .attr("transform", "translate(" + 0 + "," + (selector_height + margin_overview.bottom - 1+12) + ")")
-        .call(xAxis_labels)
-        .selectAll("text")
+        .call(xAxis_labels);
 
     var rx = 2
     var ry = 2
@@ -475,7 +474,7 @@ function renderSegmentPlot(){
         rects.attr("transform", "translate(" + (-selector_range/selector_width * nx - overview_scale *left_selector_border_x) + "," + 0 + ")");
         mod_rects.attr("transform", "translate(" + (-selector_range/selector_width * nx - overview_scale *left_selector_border_x) + "," + 0 + ")");
         x_ticks.attr("transform", "translate(" + (-selector_range/selector_width * nx - overview_scale *left_selector_border_x) + "," + (selector_height + margin_overview.bottom - 1+12) + ")");
-        x_labels.attr("transform", "translate(" + (-selector_range/selector_width * nx - overview_scale *left_selector_border_x) + "," + 0 + ")");
+        x_labels.attr("transform", "translate(" + (-selector_range/selector_width * nx - overview_scale *left_selector_border_x) + "," + (selector_height + margin_overview.bottom - 1+12) + ")");
         left_selector_border.attr("transform", "translate(" + nx + "," + 0 + ")");
         right_selector_border.attr("transform", "translate(" + nx + "," + 0 + ")");
     }
@@ -518,7 +517,21 @@ function renderSegmentPlot(){
         rects.attr("transform", function() {
             return "translate(" + (scaleFactor * (selector_range/ndx) - (selector_x + left_selector_border_x) *overview_scale) + "," + 0 + ")";
         });
-        }
+
+        var tick_r = xScale_ticks.range();
+        xScale_ticks.range([0, tick_r[1] * scaleFactor]);
+
+        var label_r = xScale_labels.range();
+        xScale_labels.range([label_r[0]*scaleFactor, label_r[1] * scaleFactor]);
+
+        x_ticks
+            .attr("transform", "translate(" + (scaleFactor * (selector_range/ndx) - (selector_x + left_selector_border_x) *overview_scale) + "," + (selector_height + margin_overview.bottom - 1+12) + ")")
+            .call(xAxis_ticks);
+
+        x_labels
+            .attr("transform", "translate(" + (scaleFactor * (selector_range/ndx) - (selector_x + left_selector_border_x) *overview_scale) + "," + (selector_height + margin_overview.bottom - 1+12) + ")")
+            .call(xAxis_labels);
+    }
 
     function zoom_plt_left() {
         var selector_width = parseFloat(d3.select('.mover').attr('width'));
@@ -561,8 +574,19 @@ function renderSegmentPlot(){
             return "translate(" + (scaleFactor * (selector_range/right_selector_border_x)  - (ndx + selector_x) * overview_scale) + "," + 0 + ")";
         });
 
-        
+        var tick_r = xScale_ticks.range();
+        xScale_ticks.range([0, tick_r[1] * scaleFactor]);
 
+        var label_r = xScale_labels.range();
+        xScale_labels.range([label_r[0]*scaleFactor, label_r[1] * scaleFactor]);
+
+        x_ticks
+            .attr("transform", "translate(" + (scaleFactor * (selector_range/right_selector_border_x)  - (ndx + selector_x) * overview_scale) + "," + (selector_height + margin_overview.bottom - 1+12) + ")")
+            .call(xAxis_ticks);
+
+        x_labels
+            .attr("transform", "translate(" + (scaleFactor * (selector_range/right_selector_border_x)  - (ndx + selector_x) * overview_scale) + "," + (selector_height + margin_overview.bottom - 1+12) + ")")
+            .call(xAxis_labels);
     }
 });
 }
