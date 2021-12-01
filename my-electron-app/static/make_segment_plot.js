@@ -67,7 +67,7 @@ function renderSegmentPlot(){
     var svg = d3.select("#graphDiv3")
     .append("svg")
     .attr("width", width)
-    .attr("height", height + selector_height + histogram_height)
+    .attr("height", height + selector_height + histogram_height + 50)
     .append("g")
     
     var segment_height = 5;

@@ -19,9 +19,18 @@ def split_data_in_samples(df, sample_column_id='Area'):
 
 def combine_and_aggregate_intensity(dataframes: list, sample_column_id='Area'):
     sample_columns = [col for col in dataframes[0].columns if sample_column_id in col]
+
     df_collection = []
     for i, df in enumerate(dataframes):
+        if(df.empty):
+            df = pd.DataFrame(columns=[['PTM', 'Intensity', 'Sample']])
+            df['Sample'] = i+1
+            df['PTM'] = 'Unmodified'
+            df['Intensity'] = 0.0000001
+            df_collection.append(df)
+            continue
         df = df.copy()
+        print(df.head())
         df['#modifications'] = df['#modifications'].fillna(0)
         df['#modifications'] = df['#modifications'].replace(0,1)
         df['Intensity'] = df[sample_columns[i]].divide(df['#modifications'])

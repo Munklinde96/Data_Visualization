@@ -120,7 +120,7 @@ function renderSampleModPlot(){
         }
         var mousemove = function(d) {
         tooltip
-            .html(d.value)
+            .html(d3.format(".2f")(d.value * 100) + "%")
             .style("left", (d3.event.pageX + 10) + "px")
             .style("top", (d3.event.pageY - 10) + "px");
         }
@@ -217,6 +217,9 @@ function renderSampleModPlot(){
         // set tick for last value also
         legendAxis.tickValues(legendAxis.scale().ticks(5).concat(legendAxis.scale().domain()));
 
+        //multiply tickvalues by 100
+        legendAxis.tickFormat(function(d){return d3.format(".1f")(d*100) + "%"});
+
         // add the legend axis to the svg
         svg.append("g")
         .attr("transform", "translate(" + (width + color_bar_width + 5) + ",0)")
@@ -225,8 +228,8 @@ function renderSampleModPlot(){
         // add text label on top of colorbar
         svg.append("text")
         .attr("text-anchor", "middle")
-        .attr("transform", "translate("+ (width + color_bar_width + 35 + color_bar_width/2) +","+(color_bar_height/2)+")rotate(-90)")
-        .text("Modification Frequency");
+        .attr("transform", "translate("+ (width + color_bar_width + 40 + color_bar_width/2) +","+(color_bar_height/2)+")rotate(-90)")
+        .text("Modification Intensity In Percentage");
 
         
     });
