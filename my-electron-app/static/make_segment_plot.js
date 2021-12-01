@@ -12,8 +12,12 @@ function renderSegmentPlot(){
     d3.select("#graphDiv3").select("svg").remove();
     
     // get <p> paragraph field inside the graphDiv3 div to change Peptide Segments Plot text
+    var selectedSamplesKey = "all";
+    if(getSelectedSamples().length > 0){
+        selectedSamplesKey = getSelectedSamples();
+    }
     var p = document.getElementById("graphDiv3").getElementsByTagName("p")[0];
-    p.innerHTML = "Peptide Segments Plot - Protein: " + getSelectedProtein();
+    p.innerHTML = "Peptide Segments Plot - Protein: " + getSelectedProtein()+"; Samples: "+getSelectedSamples();
     p.style.fontWeight = "bold";
     p.style.fontStyle = "italic";
 
