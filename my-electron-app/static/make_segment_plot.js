@@ -6,7 +6,6 @@ function renderSegmentPlot(){
     } else {
         document.getElementById('no_protein_div_3').innerHTML = "<div></div>";
     }
-
     
     // remove old svg
     d3.select("#graphDiv3").select("svg").remove();

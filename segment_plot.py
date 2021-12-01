@@ -70,8 +70,8 @@ def get_rectangles_for_peptides_and_mods(data, modtypes_color_map):
     for i in range (len(data)):
         modifications = []
         low, hi, mod_positions, mod_types, agg_intensity = data[i]
-        width = hi-low
-        low = low-1
+        width = hi-low + 100
+        low = low - 1
         if i == 0:
             print(low, width)
         rec = (low, width, agg_intensity)
@@ -79,7 +79,7 @@ def get_rectangles_for_peptides_and_mods(data, modtypes_color_map):
         if len(mod_positions) > 0:
             for _ms_pos, mod_type in zip(mod_positions, mod_types): #add mass shift color on rectangles if present
                 ms_color = modtypes_color_map[mod_type]
-                modifications.append((_ms_pos, ms_color, agg_intensity))
+                modifications.append(((_ms_pos), ms_color, agg_intensity))
         rectangles_and_mods.append((rec, modifications))
         
     return res_intensities, rectangles_and_mods
