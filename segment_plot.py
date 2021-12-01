@@ -24,6 +24,9 @@ def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", sample_colum
     if start_end_indices is not None:
         df = df[(df.Start == start_end_indices[0]) & (df.End == start_end_indices[1])]
 
+    #print start and end of first row of df
+    print(df.iloc[0]['Start'], df.iloc[0]['End'])
+
     df["Position of Mass Shift"] = df["Peptide"].apply(get_position_of_mass_shift)
     # get list of modification for each PTM
     df["Modification_types"] = df["PTM"].apply(lambda x: x if pd.isnull(x) or x == 'Unmodified' else [s.strip() for s in x.split(";")])    
@@ -67,8 +70,10 @@ def get_rectangles_for_peptides_and_mods(data, modtypes_color_map):
     for i in range (len(data)):
         modifications = []
         low, hi, mod_positions, mod_types, agg_intensity = data[i]
-        low = low-1
         width = hi-low
+        low = low-1
+        if i == 0:
+            print(low, width)
         rec = (low, width, agg_intensity)
         res_intensities.append(agg_intensity)
         if len(mod_positions) > 0:
@@ -138,7 +143,6 @@ def map_to_attribute(colors, color_scale, is_log_scaled, res_intensities, rectan
     if colors:
         rects_and_attribute = map_to_colors(res_intensities, rectangles_and_mods, color_scale = color_scale, is_log_scaled=is_log_scaled)
     else:
-        print("res intensities: ", res_intensities)
         rects_and_attribute = map_to_norm_intensities(res_intensities, rectangles_and_mods)
     return rects_and_attribute
 
@@ -274,7 +278,6 @@ def plot_peptide_segments(peptide_patches, mod_patches, height, modification_col
     for patch in mod_patches:
         ax.add_patch(patch)
 
-    #ax.grid(axis='x')
     seqq = get_protein_sequence(_protein)
     ax.set_xlabel("Full Protein Sequence")
     ax.set_xticks(range(0,len(seqq)))
