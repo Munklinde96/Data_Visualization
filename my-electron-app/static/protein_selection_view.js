@@ -13,7 +13,7 @@ function renderProteinSelectionPlot(){
     //p.style.fontStyle = "italic";
 
     
-    d3.json("http://127.0.0.1:5000/get-segment-protein-data?protein="+getSelectedProtein()+"&samples="+getSelectedSamples()+"&start_pos="+proteinStartPos+"&end_pos="+proteinEndPos, function(error, data) {
+    d3.json("http://127.0.0.1:5000/get-segment-protein-data?protein="+getSelectedProtein()+"&samples="+getSelectedSamples()+"&start_pos="+proteinStartPos+"&end_pos="+proteinEndPos+"&intensity="+selectedProteinIntensity, function(error, data) {
         if (error) throw error;
         var rect_patches = data.peptide_patches;
         var mod_patches = data.mod_patches;
@@ -135,7 +135,9 @@ function renderProteinSelectionPlot(){
         .attr("width", d=> d[2]*values_distance)
         .attr("height", d=> d[3]*segment_height)
         // .attr("fill", d=> d[4])
-        .attr("fill", 'grey')
+        .attr("fill", function(d){
+            return 'grey';
+        })
         .attr("rx", rx)
         .attr("ry", ry)
         .attr("opacity", opacity_mod)

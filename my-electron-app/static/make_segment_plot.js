@@ -204,6 +204,8 @@ function renderSegmentPlot(){
         var mod_types_and_positions = modPositionsAndTypes[0];
         var mod_positions = modPositionsAndTypes[1];
         var mod_types_and_positions_str = mod_types_and_positions.join(", "); 
+        console.log("protein is here: ");
+        selectedProteinIntensity = d[5];
         proteinStartPos = d[0]+1;
         proteinEndPos = proteinStartPos+d[2] - 1;
         console.log("(" + proteinStartPos + "-" + proteinEndPos + ")");
