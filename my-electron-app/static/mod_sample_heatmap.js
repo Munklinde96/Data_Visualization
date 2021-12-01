@@ -7,8 +7,8 @@ function renderSampleModPlot(){
         document.getElementById('no_protein_div_2').innerHTML = "<div></div>";
     }
     // set the dimensions and margins of the graph
-    var margin = {top: 30, right: 130, bottom: 30, left: 130},
-        width = screen.width*0.35,
+    var margin = {top: 30, right: 65, bottom: 30, left: 130},
+        width = screen.width*0.40,
         height = 500 - margin.top - margin.bottom;
     
     // remove old svg
