@@ -102,10 +102,12 @@ def normalize(res_intensities, is_log_scaled = False,  min_val=0):
     normalized = values * (1 - min_val) + min_val
     return normalized
 
-def colors_(values: list , color_scale = 'Blues', is_log_scaled = True, is_normalized = True):
+def colors_(values: list , color_scale = 'Blues', is_log_scaled = True, is_normalized = True, intensity_value = None):
     normalized = values
     cmap = plt.cm.get_cmap(color_scale)
-    if len(values) == 1:
+    if(intensity_value is not None):
+        normalized = normalized / intensity_value
+    elif len(values) == 1:
         return [cls.rgb2hex(cmap(1.0))]
     elif is_normalized:
         normalized = normalize(values, is_log_scaled,  min_val=0.2)
@@ -114,9 +116,9 @@ def colors_(values: list , color_scale = 'Blues', is_log_scaled = True, is_norma
     return color_list
 
 
-def map_to_colors(res_intensities, res_rectangles_and_mods, color_scale = 'Blues', is_log_scaled = True):
+def map_to_colors(res_intensities, res_rectangles_and_mods, color_scale = 'Blues', is_log_scaled = True, intensity_value = None):
     rects = [r[0] for r in res_rectangles_and_mods]
-    color_values = colors_(res_intensities, color_scale=color_scale, is_log_scaled=is_log_scaled)
+    color_values = colors_(res_intensities, color_scale=color_scale, is_log_scaled=is_log_scaled, intensity_value=intensity_value)
     rects_and_colors = list(zip(rects, color_values))
     mods = [r[1] for r in res_rectangles_and_mods]
     rects_and_colors_mods = list(zip(rects_and_colors, mods))
@@ -135,9 +137,9 @@ def map_to_norm_intensities(res_intensities, res_rectangles_and_mods, is_log_sca
     rects_and_intensities = list(zip(rects_and_intensities, mods))
     return rects_and_intensities
 
-def map_to_attribute(colors, color_scale, is_log_scaled, res_intensities, rectangles_and_mods):
+def map_to_attribute(colors, color_scale, is_log_scaled, res_intensities, rectangles_and_mods, intensity_value = None):
     if colors:
-        rects_and_attribute = map_to_colors(res_intensities, rectangles_and_mods, color_scale = color_scale, is_log_scaled=is_log_scaled)
+        rects_and_attribute = map_to_colors(res_intensities, rectangles_and_mods, color_scale = color_scale, is_log_scaled=is_log_scaled, intensity_value=intensity_value)
     else:
         rects_and_attribute = map_to_norm_intensities(res_intensities, rectangles_and_mods)
     return rects_and_attribute
@@ -338,7 +340,7 @@ def create_and_plot_segment_plot(df, _protein="P02666", spacing=0.2, colors = Tr
     plot_peptide_segments(peptide_patches, mod_patches, height, modification_color_map, colors = colors, color_scale=color_scale, is_log_scaled=is_log_scaled, _protein = _protein)
 
 
-def create_data_for_segment_plot(df, _protein="P02666", spacing=0.2, colors = True, color_scale='Blues', is_log_scaled = True, standard_height = 2, start_end_indicies = None, is_stacked = True, sample_column_id = 'Area' , selected_sample_indices = []):
+def create_data_for_segment_plot(df, _protein="P02666", spacing=0.2, colors = True, color_scale='Blues', is_log_scaled = True, standard_height = 2, start_end_indicies = None, is_stacked = True, sample_column_id = 'Area' , selected_sample_indices = [], intensity_value = None):
     # alterntive protein sequence P80457|XDH_BOVIN
     data, unique_mod_types= preprocess_data_for_peptide_segment_plot(df, _protein, sample_column_id=sample_column_id, selected_sample_indices=selected_sample_indices, start_end_indicies=start_end_indicies)
     modtypes_color_map = get_color_palette_for_modifications(unique_mod_types)
@@ -346,7 +348,7 @@ def create_data_for_segment_plot(df, _protein="P02666", spacing=0.2, colors = Tr
     
     if(is_stacked):
         res_intensities, rectangles_and_mods = stack_recs(rectangles_and_mods)
-    rects_and_attribute = map_to_attribute(colors, color_scale, is_log_scaled, res_intensities, rectangles_and_mods)
+    rects_and_attribute = map_to_attribute(colors, color_scale, is_log_scaled, res_intensities, rectangles_and_mods, intensity_value=intensity_value)
     peptide_patches, mod_patches, height = get_patch_attributes(rects_and_attribute, spacing = spacing, standard_height=standard_height)
     seqq = get_protein_sequence(_protein)
 
