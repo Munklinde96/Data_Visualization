@@ -350,6 +350,4 @@ function sortProteinsBySumOfAllModifications(proteins, proteinStructData) {
 }
 
 
-(function() {
-    renderProteinModPlot();
-});
+ renderProteinModPlot();
