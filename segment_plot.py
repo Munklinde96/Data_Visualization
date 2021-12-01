@@ -1,4 +1,5 @@
 import pandas as pd
+import seaborn as sns
 import numpy as np
 import matplotlib.patches as patches
 from matplotlib import pyplot as plt
@@ -18,14 +19,11 @@ def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
         cmap(np.linspace(minval, maxval, n)))
     return new_cmap
 
-def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", sample_column_id = 'Area', selected_sample_indices = [], start_end_indices =None):
+def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", sample_column_id = 'Area', selected_sample_indices = [], start_end_indicies =None):
     df = df.copy()
     df = df[df["Protein Accession"] == _protein]
-    if start_end_indices is not None:
-        df = df[(df.Start == start_end_indices[0]) & (df.End == start_end_indices[1])]
-
-    #print start and end of first row of df
-    print(df.iloc[0]['Start'], df.iloc[0]['End'])
+    if start_end_indicies is not None:
+        df = df[(df.Start == start_end_indicies[0]) & (df.End == start_end_indicies[1])]
 
     df["Position of Mass Shift"] = df["Peptide"].apply(get_position_of_mass_shift)
     # get list of modification for each PTM
@@ -70,10 +68,8 @@ def get_rectangles_for_peptides_and_mods(data, modtypes_color_map):
     for i in range (len(data)):
         modifications = []
         low, hi, mod_positions, mod_types, agg_intensity = data[i]
-        width = hi-low + 100
+        width = hi-low + 1
         low = low - 1
-        if i == 0:
-            print(low, width)
         rec = (low, width, agg_intensity)
         res_intensities.append(agg_intensity)
         if len(mod_positions) > 0:
@@ -309,19 +305,42 @@ def plot_peptide_segments(peptide_patches, mod_patches, height, modification_col
     plt.show()
     return ax
 
+
+def create_histogram_over_mod_positions(mod_patches, modtypes_color_map, peptide_seq):
+    mod_positions = []
+    # make map from color to modtype
+    color_to_modtype = {}
+    mod_types = list(modtypes_color_map.keys())
+    colors = list(modtypes_color_map.values())
+    for i in range(len(colors)): # make map from colors to modtypes
+        color_to_modtype[colors[i]] = mod_types[i]
+
+    mod_positions_df = pd.DataFrame(mod_patches)
+    columns = ['x', 'y', 'width', 'height', 'color', 'intensity']
+    mod_positions_df.columns = columns
+    # apply color_to_modtype to color column
+    mod_positions_df['mod_type'] = mod_positions_df['color'].apply(lambda x: color_to_modtype[x])
+    # drop all other than x, color and modtype
+    mod_positions_df = mod_positions_df[['x', 'mod_type', 'color']]
+    # set x as index
+    # plt.figure(figsize=(20,10))
+    # sns.histplot(data=mod_positions_df, x = 'x',  hue = 'mod_type', multiple='stack', bins=50)
+    # plt.show()
+    return mod_positions_df
+
 """
    Poetry. slam poetry. Slam Poetry is a collection of poems written by the poet, slam poet.
     The poems are collected in the slam poetry collection.
 """
-def create_and_plot_segment_plot(df, _protein="P02666", spacing=0.2, colors = True, color_scale='Blues', is_log_scaled = True, standard_height = 2, start_end_indices = None, is_stacked = True, sample_column_id = 'Area' , selected_sample_indices = []):
-    peptide_patches, mod_patches, height, seqq, modification_color_map, min_ind, max_ind = create_data_for_segment_plot(df, _protein, spacing=spacing, colors=colors, color_scale=color_scale, is_log_scaled=is_log_scaled, standard_height=standard_height, start_end_indices=start_end_indices, is_stacked=is_stacked, sample_column_id=sample_column_id, selected_sample_indices=selected_sample_indices)
+def create_and_plot_segment_plot(df, _protein="P02666", spacing=0.2, colors = True, color_scale='Blues', is_log_scaled = True, standard_height = 2, start_end_indicies = None, is_stacked = True, sample_column_id = 'Area' , selected_sample_indices = []):
+    peptide_patches, mod_patches, height, seqq, modification_color_map, min_ind, max_ind = create_data_for_segment_plot(df, _protein, spacing=spacing, colors=colors, color_scale=color_scale, is_log_scaled=is_log_scaled, standard_height=standard_height, start_end_indicies=start_end_indicies, is_stacked=is_stacked, sample_column_id=sample_column_id, selected_sample_indices=selected_sample_indices)
     peptide_patches, mod_patches = get_patches_from_patch_attributes(peptide_patches, mod_patches)
     plot_peptide_segments(peptide_patches, mod_patches, height, modification_color_map, colors = colors, color_scale=color_scale, is_log_scaled=is_log_scaled, _protein = _protein)
 
 
-def create_data_for_segment_plot(df, _protein="P02666", spacing=0.2, colors = True, color_scale='Blues', is_log_scaled = True, standard_height = 2, start_end_indices = None, is_stacked = True, sample_column_id = 'Area' , selected_sample_indices = []):
+def create_data_for_segment_plot(df, _protein="P02666", spacing=0.2, colors = True, color_scale='Blues', is_log_scaled = True, standard_height = 2, start_end_indicies = None, is_stacked = True, sample_column_id = 'Area' , selected_sample_indices = []):
     # alterntive protein sequence P80457|XDH_BOVIN
-    data, unique_mod_types= preprocess_data_for_peptide_segment_plot(df, _protein, sample_column_id=sample_column_id, selected_sample_indices=selected_sample_indices, start_end_indices=start_end_indices)
+    data, unique_mod_types= preprocess_data_for_peptide_segment_plot(df, _protein, sample_column_id=sample_column_id, selected_sample_indices=selected_sample_indices, start_end_indicies=start_end_indicies)
     modtypes_color_map = get_color_palette_for_modifications(unique_mod_types)
     res_intensities, rectangles_and_mods = get_rectangles_for_peptides_and_mods(data, modtypes_color_map)
     
@@ -331,6 +350,8 @@ def create_data_for_segment_plot(df, _protein="P02666", spacing=0.2, colors = Tr
     peptide_patches, mod_patches, height = get_patch_attributes(rects_and_attribute, spacing = spacing, standard_height=standard_height)
     seqq = get_protein_sequence(_protein)
 
+    histogram_df = create_histogram_over_mod_positions(mod_patches, modtypes_color_map, seqq)
+
     min_ind = np.argmin(res_intensities)
     max_ind = np.argmax(res_intensities)
     min_intensity = res_intensities[min_ind]
@@ -338,5 +359,5 @@ def create_data_for_segment_plot(df, _protein="P02666", spacing=0.2, colors = Tr
     min_color = peptide_patches[min_ind][4]
     max_color = peptide_patches[max_ind][4]
 
-    return peptide_patches, mod_patches, height, seqq, modtypes_color_map, (min_intensity, min_color), (max_intensity, max_color)
+    return peptide_patches, mod_patches, height, seqq, modtypes_color_map, (min_intensity, min_color), (max_intensity, max_color), histogram_df
 

@@ -13,7 +13,7 @@ function initializeBackend(){
 }
 
 const loadMainWindow = () => {
-    process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
+    //process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
     initializeBackend().onreadystatechange = (e) => {
             const mainWindow = new BrowserWindow({
                 width : 1200,
@@ -25,8 +25,8 @@ const loadMainWindow = () => {
                 }
             });
             mainWindow.maximize();
-            // mainWindow.loadFile(path.join(__dirname, "segment_plot.html"));
-            mainWindow.loadFile(path.join(__dirname, "index.html"));
+            mainWindow.loadFile(path.join(__dirname, "segment_plot.html"));
+            // mainWindow.loadFile(path.join(__dirname, "index.html"));
 
     }
 }

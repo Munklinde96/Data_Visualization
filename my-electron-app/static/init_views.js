@@ -2,11 +2,34 @@ const selectedProteinKey = "SELECTED_PROTEIN_KEY";
 const selectedSamplesKey = "SELECTED_SAMPLES_KEY";
 const selectedNormalizationKey = "SELECTED_NORMALIZATION_KEY";
 const selectedMinModificationCountKey = "SELECTED_MIN_MODIFICATION_COUNT_KEY";
+const sortingOrderProteinsKey = "SORTING_ORDER_PROTEINS";
 const tabSelectedKey = "TAB_SELECTED_KEY";
+
+function getSortingOrderProteins(){
+    var order = window.localStorage.getItem(sortingOrderProteinsKey);
+    if(order && order !== ""){
+        var jsonOrder = JSON.parse(order);
+        if(jsonOrder){
+            return jsonOrder.order;
+        }
+    }
+    return [];
+}
+
+function setSortingOrderProteins(order){
+    if(order.length != 0){
+        const Order = {
+            "order": order,
+        }
+        var jsonOrder = JSON.stringify(Order);
+        window.localStorage.setItem(sortingOrderProteinsKey, jsonOrder);
+        return;
+    }
+    window.localStorage.setItem(sortingOrderProteinsKey, "");
+}
 
 function getSelectedProtein(){
     var protein = window.localStorage.getItem(selectedProteinKey);
-    console.log("protein: "+protein);
     return protein;
 }
 

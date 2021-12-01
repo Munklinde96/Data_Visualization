@@ -153,7 +153,10 @@ def get_color_palette_for_modifications(modification_types = []):
     if modification_types == []:
         # use keys from mod_type map harcoded 
         modification_types = ['lal', 'Glycosylation type e', 'lan', 'Glycosylation type a', 'Glycosylation type b', 'Glycosylation type c/d', 'Phosphorylation (STY)', 'Dioxidation (M)', 'Oxidation (M)', 'Lactosylation', 'Carbamidomethylation', 'Deamidation (NQ)', 'Pyro-glu from Q']
-    COLORS = ['#3CB44B',  '#FFE119', '#F032E6', '#808000', '#000000','#BFEF45','#42D4F4', '#4363D8','#FABED4', '#800000', '#F58231', '#911EB4', '#E6194B']
+    # COLORS = ['#3CB44B',  '#FFE119', '#F032E6', '#808000', '#000000','#BFEF45','#42D4F4', '#4363D8','#FABED4', '#800000', '#F58231', '#911EB4', '#E6194B']    
+    # remove navy, blue, cyan and grey from colors from: https://sashamaps.net/docs/resources/20-colors/
+    COLORS = '#e6194b', '#3cb44b', '#ffe119', '#f58231', '#911eb4',  '#f032e6', '#bcf60c', '#fabebe', '#008080', '#e6beff', '#9a6324', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000000'
+    # show color palette
     
     mod_type_map = {}
     for i in range(len(modification_types)):
