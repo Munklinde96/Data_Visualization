@@ -70,7 +70,6 @@ def buildSegmentData(df, protein, _samples=[], start_pos=0, end_pos=0, _stacked=
     start_end_indicies = None
     if start_pos != 0 and end_pos != 0:
         start_end_indicies = (start_pos, end_pos)
-        print("check this out", start_end_indicies)
     # Create SegmentPlotData
     if protein == "" or protein == "null":
         peptide_patches, mod_patches, height, seqq, modification_color_map, min_peptide, max_peptide, histogram_df = create_data_for_segment_plot(df, spacing=0.0, start_end_indicies =start_end_indicies, is_stacked=_stacked)

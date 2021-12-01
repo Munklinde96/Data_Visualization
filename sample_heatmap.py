@@ -46,6 +46,5 @@ def get_sample_heatmap_data(df, _protein='P02666', sample_column_id='Area'):
     df_list = split_data_in_samples(df, sample_column_id=sample_column_id)
     combined = combine_and_aggregate_intensity(df_list, sample_column_id=sample_column_id).sort_values(by=['PTM'])
 
-    print("combined: ", combined)
     data = pd.pivot_table(data = combined, index = 'PTM', values = 'Intensity', columns='Sample')
     return data

@@ -25,9 +25,6 @@ def preprocess_data_for_peptide_segment_plot(df, _protein="P02666", sample_colum
     if start_end_indicies is not None:
         df = df[(df.Start == start_end_indicies[0]) & (df.End == start_end_indicies[1])]
 
-    #print start and end of first row of df
-    print(df.iloc[0]['Start'], df.iloc[0]['End'])
-
     df["Position of Mass Shift"] = df["Peptide"].apply(get_position_of_mass_shift)
     # get list of modification for each PTM
     df["Modification_types"] = df["PTM"].apply(lambda x: x if pd.isnull(x) or x == 'Unmodified' else [s.strip() for s in x.split(";")])    
@@ -73,8 +70,6 @@ def get_rectangles_for_peptides_and_mods(data, modtypes_color_map):
         low, hi, mod_positions, mod_types, agg_intensity = data[i]
         width = hi-low
         low = low-1
-        if i == 0:
-            print(low, width)
         rec = (low, width, agg_intensity)
         res_intensities.append(agg_intensity)
         if len(mod_positions) > 0:
