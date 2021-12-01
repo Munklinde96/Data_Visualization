@@ -60,19 +60,22 @@ function renderSampleModPlot(){
                 }
             }
         }
-        // Build color scale
-        var myColor = d3.scaleSequential()
-        .domain([minValue,maxValue])
-        .interpolator(d3.interpolateOranges);
+    
+        var start = d3.hsl(240, 1, 0.90); // org color min 225°, 100%, 70%
+        var end = d3.hsl(240, 0.3, 0.20);     // org color max 225°, 30%, 20%
+        // make seqeuntial color scale between start and end
+        var myColor = d3.scaleSequential(d3.interpolateHsl(start, end))
+            .domain([minValue, maxValue]);
 
         // Labels of row and columns
-        var myGroups = d3.map(modStructData, function(d){return d.sample;}).keys()
-        var myVars = d3.map(modStructData, function(d){return d.mod;}).keys();
+        var samples = d3.map(modStructData, function(d){return d.sample;}).keys()
+        var modifications = d3.map(modStructData, function(d){return d.mod;}).keys();
+        sortModificationsAndMoveUnmofifiedToTop(modifications);
                 
         // Build X scales and axis:
         var x = d3.scaleBand()
         .range([ 0, width ])
-        .domain(myGroups)
+        .domain(samples)
         .padding(0.01);
         svg.append("g")
         .attr("transform", "translate(0," + height + ")")
@@ -87,7 +90,7 @@ function renderSampleModPlot(){
         // Build Y scales and axis:
         var y = d3.scaleBand()
         .range([ height, 0 ])
-        .domain(myVars)
+        .domain(modifications)
         .padding(0.01);
         svg.append("g").call(d3.axisLeft(y));
 
@@ -99,7 +102,6 @@ function renderSampleModPlot(){
         .attr("dy", "1em")
         .style("text-anchor", "middle")
         .text("Modification Type");
-
 
         // create a tooltip
         var tooltip = d3.select("#graphDiv2")
@@ -118,7 +120,7 @@ function renderSampleModPlot(){
         }
         var mousemove = function(d) {
         tooltip
-            .html("The exact value of<br>this cell is: " + d.value)
+            .html(d.value)
             .style("left", (d3.event.pageX + 10) + "px")
             .style("top", (d3.event.pageY - 10) + "px");
         }
@@ -167,6 +169,8 @@ function renderSampleModPlot(){
             .on("mousemove", mousemove)
             .on("mouseleave", mouseleave)
             .on("click", mouseclick)
+
+        makeUnmodifiedLabelItalic(svg);
 
         // COLORBAR LEGEND
         color_bar_width = 30;
@@ -228,6 +232,22 @@ function renderSampleModPlot(){
     });
 }
 
-(function() {
-    renderSampleModPlot();
- })();
+
+
+function sortSamplesBySumOfAllModifications(proteins, proteinStructData) {
+    proteins.sort(function (a, b) {
+        var aSum = 0;
+        var bSum = 0;
+        for (var i = 0; i < proteinStructData.length; i++) {
+            if (proteinStructData[i].sample == a) {
+                aSum += proteinStructData[i].value;
+            }
+            if (proteinStructData[i].sample == b) {
+                bSum += proteinStructData[i].value;
+            }
+        }
+        return bSum - aSum;
+    });
+}
+
+renderSampleModPlot();
