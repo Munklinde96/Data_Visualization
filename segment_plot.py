@@ -98,10 +98,10 @@ def normalize(res_intensities, is_log_scaled = False,  min_val=0, intensity_valu
     values = np.array(res_intensities)
     if is_log_scaled:
         values = np.log(values)
-    values = (values - min(values)) / (max(values) - min(values)) # normalize
+    normalized = (values - min(values)) / (max(values) - min(values)) # normalize
+    normalized = normalized * (1 - min_val) + min_val
     if intensity_value is not None:
-        values = values * intensity_value       
-    normalized = values * (1 - min_val) + min_val
+        normalized = normalized * intensity_value       
     return normalized
 
 def colors_(values: list , color_scale = 'Blues', is_log_scaled = True, is_normalized = True, intensity_value = None):
