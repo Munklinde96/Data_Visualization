@@ -94,23 +94,24 @@ def make_continous_color_scale(intervals: dict):
     """
     #make continuous grey color scale
 
-def normalize(res_intensities, is_log_scaled = False,  min_val=0):
+def normalize(res_intensities, is_log_scaled = False,  min_val=0, intensity_value= None):
     values = np.array(res_intensities)
     if is_log_scaled:
         values = np.log(values)
-    values = (values - min(values)) / (max(values) - min(values)) # normalize
+    if intensity_value is not None:
+        values = intensity_value / values
+    else:
+        values = (values - min(values)) / (max(values) - min(values)) # normalize
     normalized = values * (1 - min_val) + min_val
     return normalized
 
 def colors_(values: list , color_scale = 'Blues', is_log_scaled = True, is_normalized = True, intensity_value = None):
     normalized = np.asarray(values)
     cmap = plt.cm.get_cmap(color_scale)
-    if(intensity_value is not None):
-        normalized = intensity_value / normalized
-    elif len(values) == 1:
+    if len(values) == 1:
         return [cls.rgb2hex(cmap(1.0))]
     elif is_normalized:
-        normalized = normalize(values, is_log_scaled,  min_val=0.2)
+        normalized = normalize(values, is_log_scaled,  min_val=0.2, intensity_value=intensity_value)
     #get max value from cmap
     color_list = [cls.rgb2hex(cmap(i)) for i in normalized]
     return color_list
