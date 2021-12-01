@@ -152,7 +152,6 @@ function renderSegmentPlot(){
     function mousemove_modification(d) {
         // get modification type from colors_to_mod_map map
         var mod_type = colors_to_mod_map.get(d[4]);
-        console.log("test this:"+d);
         tooltip.html('<div class="container"><p>Intensity: ' + expo(d[5], 3) + '</p><p>Modification Type: ' + mod_type + '</p><div id="peptide_selection_view"></div></div>')
             .style("left", (d3.event.pageX + 10) + "px")
             .style("top", (d3.event.pageY - 10) + "px");
@@ -192,6 +191,7 @@ function renderSegmentPlot(){
             .style("left", (d3.event.pageX + 10) + "px")
             .style("top", (d3.event.pageY - 10) + "px");
         }
+        console.log(d);
         renderProteinSelectionPlot();
     }
 
@@ -280,7 +280,8 @@ function renderSegmentPlot(){
                 if (color_val == dd[4]) {
                     // check color
                     col = d3.select(this).style("fill");
-                    if (col == "rgb(128, 128, 128)" || col == 'grey') {// if grey
+                    if (col == "rgb(128, 128, 128)" || col == 'grey') {
+                        // if grey
                         // console.log("color is grey");
                         d3.select(this).style("fill", color_val);
                         d3.select(this).attr("opacity", opacity_mod);

@@ -4,12 +4,8 @@ function removeProteinSelectionPlot(){
 }
 
 function renderProteinSelectionPlot(){
-    if(proteinStartPos === 0 && proteinEndPos === 0){
-        renderProteinSelectionPlot();
-    }
-    
     // remove old svg
-    d3.select("#peptide_selection_view").select("svg").remove();
+    removeProteinSelectionPlot();
     
     //var p = document.getElementById("peptide_selection_view").getElementsByTagName("p")[0];
     //p.innerHTML = "Peptide Segments Plot - Protein: " + selectedProtein;
@@ -19,9 +15,10 @@ function renderProteinSelectionPlot(){
     
     d3.json("http://127.0.0.1:5000/get-segment-protein-data?protein="+getSelectedProtein()+"&samples="+getSelectedSamples()+"&start_pos="+proteinStartPos+"&end_pos="+proteinEndPos, function(error, data) {
         if (error) throw error;
+        console.log("data is here");
+        console.log(data);
         var rect_patches = data.peptide_patches;
         var mod_patches = data.mod_patches;
-        var plot_height = data.height;
         var peptide_seq_prot = selectedSequence;
         console.log(peptide_seq_prot);
         var modification_color_map = data.modification_color_map;
@@ -45,10 +42,15 @@ function renderProteinSelectionPlot(){
             colors_to_mod_map.set(modification_color_map_values[i], modification_color_map_keys[i]);
         }
 
+    var segment_height = 6;
+    var values_distance = 10;
     // set the dimensions and margins of the graph
+    console.log("test 1");
+    console.log("width is: "+data.peptide_patches[0][2]*10);
+    console.log("test 2");
     var margin = {top: 30, right: 30, bottom: 30, left: 30},
-        width = 300,
-        height = 300 - margin.top - margin.bottom;
+        width = data.peptide_patches[0][2]*10,
+        height = data.height*5;
         
     // append the svg object to the body of the page
     var svg = d3.select("#peptide_selection_view")
@@ -60,8 +62,6 @@ function renderProteinSelectionPlot(){
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     
-    var segment_height = 6;
-    var values_distance = 10;
 
 
     var rx = 3

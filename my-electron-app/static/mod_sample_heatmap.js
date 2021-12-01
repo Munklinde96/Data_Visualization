@@ -119,8 +119,8 @@ function renderSampleModPlot(){
         var mousemove = function(d) {
         tooltip
             .html("The exact value of<br>this cell is: " + d.value)
-            .style("left", (d3.mouse(this)[0]) + "px")
-            .style("top", (d3.mouse(this)[1]) + "px")
+            .style("left", (d3.event.pageX + 10) + "px")
+            .style("top", (d3.event.pageY - 10) + "px");
         }
         var mouseleave = function(d) {
         tooltip.style("opacity", 0)
