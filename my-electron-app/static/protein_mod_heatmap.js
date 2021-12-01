@@ -140,7 +140,7 @@ function renderProteinModPlot(){
         tooltip.style("opacity", 1)
         }
         var mousemove = function(d) {
-        tooltip.html("value: " + d.value)
+        tooltip.html( d.value)
             .style("left", (d3.event.pageX + 10) + "px")
             .style("top", (d3.event.pageY - 10) + "px");
         }
