@@ -103,7 +103,7 @@ def normalize(res_intensities, is_log_scaled = False,  min_val=0):
     return normalized
 
 def colors_(values: list , color_scale = 'Blues', is_log_scaled = True, is_normalized = True, intensity_value = None):
-    normalized = values
+    normalized = np.asarray(values)
     cmap = plt.cm.get_cmap(color_scale)
     if(intensity_value is not None):
         normalized = normalized / intensity_value
