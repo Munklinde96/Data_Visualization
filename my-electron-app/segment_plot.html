@@ -24,25 +24,6 @@
   </head>
 
   <body class="m-2">
-    <div class="d-flex justify-content-between">
-      <div>
-        <h2>Segment Tab</h2>
-      </div>
-      <div>
-        <div class="card" style="width: 26rem;">
-          <div class="card-body">
-            <h5 class="card-title">Current State</h5>
-            <p class="card-text" style="display:inline">Selcted protein: <p id="state_selected_protein" style="display:inline"/></p>
-            <br/>
-            <p class="card-text" style="display:inline">Selcted samples: <p id="state_selected_samples" style="display:inline"/></p>
-            <br/>
-            <p class="card-text" style="display:inline">Selcted normalization: <p id="state_selected_normalization" style="display:inline"/></p>
-            <br/>
-            <p class="card-text" style="display:inline">Min modification count: <p id="state_selected_min_count" style="display:inline"/></p>
-          </div>
-        </div>
-      </div>
-    </div>    
       <table style="padding-top: 50px;">
         <td id="graphDiv3" style="padding: 30px;">
           <div id="no_protein_div_3"></div>
@@ -66,7 +47,10 @@
       type="text/javascript"
       src="./static/protein_selection_view.js"
     ></script>
-    <script type="text/javascript" src="./static/make_segment_plot.js"></script>
+    <script 
+      type="text/javascript" 
+      src="./static/make_segment_plot.js">
+    </script>
     
   </body>
 </html>

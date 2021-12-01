@@ -253,8 +253,6 @@ def get_protein_total_intensity(df, protein):
 
 def get_modification_count_per_protein(df, countFilter, normalize):
     df_protein_mods = df[["PTM", "Protein Accession"]]
-    print("normalization: "+normalize)
-    df_protein_mods["PTM"] = df_protein_mods["PTM"].fillna("Unmodified")
     modificationCountByProtein = {}
     totalProteinModCount = {}
     for modString, proteinName in df_protein_mods.itertuples(index=False):

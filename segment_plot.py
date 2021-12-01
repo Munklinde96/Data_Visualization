@@ -68,14 +68,14 @@ def get_rectangles_for_peptides_and_mods(data, modtypes_color_map):
     for i in range (len(data)):
         modifications = []
         low, hi, mod_positions, mod_types, agg_intensity = data[i]
-        width = hi-low
-        low = low-1
+        width = hi-low + 1
+        low = low - 1
         rec = (low, width, agg_intensity)
         res_intensities.append(agg_intensity)
         if len(mod_positions) > 0:
             for _ms_pos, mod_type in zip(mod_positions, mod_types): #add mass shift color on rectangles if present
                 ms_color = modtypes_color_map[mod_type]
-                modifications.append((_ms_pos, ms_color, agg_intensity))
+                modifications.append(((_ms_pos), ms_color, agg_intensity))
         rectangles_and_mods.append((rec, modifications))
         
     return res_intensities, rectangles_and_mods
@@ -98,12 +98,12 @@ def normalize(res_intensities, is_log_scaled = False,  min_val=0):
     values = np.array(res_intensities)
     if is_log_scaled:
         values = np.log(values)
-    values = (values - min(values)) / (max(values) - min(values)) # normalize
-    normalized = values * (1 - min_val) + min_val
+    normalized = (values - min(values)) / (max(values) - min(values)) # normalize     
+    normalized = normalized * (1 - min_val) + min_val
     return normalized
 
 def colors_(values: list , color_scale = 'Blues', is_log_scaled = True, is_normalized = True):
-    normalized = values
+    normalized = np.asarray(values)
     cmap = plt.cm.get_cmap(color_scale)
     if len(values) == 1:
         return [cls.rgb2hex(cmap(1.0))]

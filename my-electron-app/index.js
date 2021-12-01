@@ -25,6 +25,7 @@ const loadMainWindow = () => {
                 }
             });
             mainWindow.maximize();
+            // mainWindow.loadFile(path.join(__dirname, "segment_plot.html"));
             mainWindow.loadFile(path.join(__dirname, "index.html"));
     }
 }

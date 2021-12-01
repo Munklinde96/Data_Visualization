@@ -15,7 +15,6 @@ function renderProteinSelectionPlot(){
     
     d3.json("http://127.0.0.1:5000/get-segment-protein-data?protein="+getSelectedProtein()+"&samples="+getSelectedSamples()+"&start_pos="+proteinStartPos+"&end_pos="+proteinEndPos, function(error, data) {
         if (error) throw error;
-        console.log(data);
         var rect_patches = data.peptide_patches;
         var mod_patches = data.mod_patches;
         var peptide_seq_prot = selectedSequence;
@@ -42,13 +41,40 @@ function renderProteinSelectionPlot(){
 
     var segment_height = 6;
     var values_distance = 10;
+    var selector_height = -25;
+
+    var peptide_chars = peptide_seq_prot.split("");
+    var peptide_length = peptide_seq_prot.length;
+
+    var xScale_ticks = d3.scaleLinear()
+        .domain([0, peptide_length])
+        .range([0, peptide_length*values_distance]);
+    
+    var xScale_labels = d3.scaleLinear()
+        .domain([0, peptide_length])
+        .range([values_distance/2, peptide_length*values_distance + values_distance/2]);
+
+    var xAxis_ticks = d3.axisTop()
+        .scale(xScale_ticks).tickPadding(10)
+        .tickValues(d3.range(0, peptide_length))
+        .tickFormat(function(d,i){ return null
+        });        
+        xAxis_ticks.tickSizeOuter(6);
+    
+    var xAxis_labels = d3.axisTop()
+        .scale(xScale_labels).tickPadding(8)
+        .tickSize(0)    
+        .tickValues(d3.range(0, peptide_length))
+        .tickFormat(function(d,i){ 
+            return peptide_chars[d];
+        });
+        
     // set the dimensions and margins of the graph
-    console.log("test 1");
-    console.log("width is: "+data.peptide_patches[0][2]*10);
-    console.log("test 2");
     var margin = {top: 30, right: 30, bottom: 30, left: 30},
-        width = data.peptide_patches[0][2]*10,
-        height = data.height*5;
+        width = toolTipWidth*0.8,
+        height = data.height*6;
+    var margin_overview = {top: 30, right: 15, bottom: 10, left: 15};
+
         
     // append the svg object to the body of the page
     var svg = d3.select("#peptide_selection_view")
@@ -59,8 +85,18 @@ function renderProteinSelectionPlot(){
     // make scrolable svg
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    
+    var x_ticks = svg.append("g")
+    .attr("class", "xAxis_ticks")
+    .attr("transform", "translate(" + 0 + "," + (selector_height + margin_overview.bottom - 1+12) + ")")
+    .call(xAxis_ticks);
 
+    var x_labels = svg.append("g")
+    .attr("class", "xAxis_labels")
+    .attr("transform", "translate(" + 0 + "," + (selector_height + margin_overview.bottom - 1+12) + ")")
+    .call(xAxis_labels);
+
+    
+    const subMod = rect_patches[0][0]*values_distance;
 
     var rx = 3
     var ry = 3
@@ -89,22 +125,19 @@ function renderProteinSelectionPlot(){
     function expo(x, f) {
         return Number.parseFloat(x).toExponential(f);
       }
-    
-    if(rect_patches.length > 0){
-        console.log(rect_patches[0][0])
-        console.log(rect_patches[0][2])
-    }
 
     var mod_rects = svg.selectAll("boo")
         .data(mod_patches)
         .enter()
         .append("rect")
-        .attr("x", d => d[0]*values_distance)
+        .attr("x", d => d[0]*values_distance-subMod)
         .attr("y", d=> (d[1])*segment_height)
         .attr("width", d=> d[2]*values_distance)
         .attr("height", d=> d[3]*segment_height)
         // .attr("fill", d=> d[4])
-        .attr("fill", 'grey')
+        .attr("fill", function(d){
+            return 'grey';
+        })
         .attr("rx", rx)
         .attr("ry", ry)
         .attr("opacity", opacity_mod)
