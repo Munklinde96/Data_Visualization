@@ -211,19 +211,25 @@ function renderSegmentPlot(){
         proteinStartPos = d[0]+1;
         proteinEndPos = proteinStartPos+d[2];
         selectedSequence=data.seqq.substring(proteinStartPos, proteinEndPos);
-        tooltip.html('<div class="container"<p>Intensity: ' + expo(d[5], 3) + '</p><p>Modification: ' + mod_types_and_positions_str + '</p><div id="peptide_selection_view"></div></div>')
+        toolTipWidth = selectedSequence.length*15;
+        if(toolTipWidth > 600){
+            toolTipWidth = 600;
+        }
+        if (toolTipWidth < 150) {
+            toolTipWidth = 150;
+        } 
+        tooltip.html('<div class="container" style="width: '+toolTipWidth+'px;"><p>Intensity: ' + expo(d[5], 3) + '</p><p>Modification: ' + mod_types_and_positions_str + '</p><div id="peptide_selection_view"></div></div>')
         .style("left", (d3.event.pageX + 10) + "px")
         .style("top", (d3.event.pageY - 10) + "px");
         if (mod_types_and_positions_str.length > 0) {
-        tooltip.html('<div class="container"<p>Intensity: ' + expo(d[5], 3) + '</p><p>Modification: ' + mod_types_and_positions_str + '</p><div id="peptide_selection_view"></div></div>')
+        tooltip.html('<div class="container" style="width: '+toolTipWidth+'px;"><p>Intensity: ' + expo(d[5], 3) + '</p><p>Modification: ' + mod_types_and_positions_str + '</p><div id="peptide_selection_view"></div></div>')
             .style("left", (d3.event.pageX + 10) + "px")
             .style("top", (d3.event.pageY - 10) + "px");
         } else {
-            tooltip.html('<div class="container"<p>Intensity: ' + expo(d[5], 3) + '</p><div id="peptide_selection_view"></div></div>')
+            tooltip.html('<div class="container" style="width: '+toolTipWidth+'px"><p>Intensity: ' + expo(d[5], 3) + '</p><div id="peptide_selection_view"></div></div>')
             .style("left", (d3.event.pageX + 10) + "px")
             .style("top", (d3.event.pageY - 10) + "px");
         }
-        console.log(d);
         renderProteinSelectionPlot();
     }
 
@@ -233,12 +239,22 @@ function renderSegmentPlot(){
         var mod_types_and_positions = modPositionsAndTypes[0];
         var mod_positions = modPositionsAndTypes[1];
         var mod_types_and_positions_str = mod_types_and_positions.join(", "); 
+        var tempProteinStartPos = d[0]+1;
+        var tempProteinEndPos = proteinStartPos+d[2];
+        var tempSelectedSequence=data.seqq.substring(tempProteinStartPos, tempProteinEndPos);
+        var tempToolTipWidth = tempSelectedSequence.length*15;
+        if(tempToolTipWidth > 600){
+            tempToolTipWidth = 600;
+        }
+        if (tempToolTipWidth < 150) {
+            tempToolTipWidth = 150;
+        } 
         if (mod_types_and_positions_str.length > 0) {
-        tooltip.html('<div class="container"><p>Intensity:' + expo(d[5], 3) + "</p><p>Modifications: " + mod_types_and_positions_str + "</p></div>")
+        tooltip.html('<div class="container" style="width: '+tempToolTipWidth+'px"><p>Intensity:' + expo(d[5], 3) + "</p><p>Modifications: " + mod_types_and_positions_str + "</p></div>")
             .style("left", (d3.event.pageX + 10) + "px")
             .style("top", (d3.event.pageY - 10) + "px");
         } else {
-            tooltip.html('<div class="container"><p>Intensity: ' + expo(d[5], 3) + "</p></div>")
+            tooltip.html('<div class="container" style="width: '+tempToolTipWidth+'px"><p>Intensity:'  + expo(d[5], 3) + "</p></div>")
             .style("left", (d3.event.pageX + 10) + "px")
             .style("top", (d3.event.pageY - 10) + "px");
         }

@@ -43,11 +43,9 @@ function renderProteinSelectionPlot(){
     var segment_height = 6;
     var values_distance = 10;
     // set the dimensions and margins of the graph
-    console.log("test 1");
-    console.log("width is: "+data.peptide_patches[0][2]*10);
-    console.log("test 2");
+    console.log("width is: "+peptide_seq_prot.length*5);
     var margin = {top: 30, right: 30, bottom: 30, left: 30},
-        width = data.peptide_patches[0][2]*10,
+        width = toolTipWidth*0.8,
         height = data.height*5;
         
     // append the svg object to the body of the page
