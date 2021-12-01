@@ -44,7 +44,7 @@ function renderProteinSelectionPlot(){
     // set the dimensions and margins of the graph
     var margin = {top: 30, right: 30, bottom: 30, left: 30},
         width = toolTipWidth*0.8,
-        height = data.height*5;
+        height = data.height*6;
         
     // append the svg object to the body of the page
     var svg = d3.select("#peptide_selection_view")
@@ -56,7 +56,7 @@ function renderProteinSelectionPlot(){
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     
-
+    const subMod = rect_patches[0][0]*values_distance;
 
     var rx = 3
     var ry = 3
@@ -90,7 +90,7 @@ function renderProteinSelectionPlot(){
         .data(mod_patches)
         .enter()
         .append("rect")
-        .attr("x", d => d[0]*values_distance)
+        .attr("x", d => d[0]*values_distance-subMod)
         .attr("y", d=> (d[1])*segment_height)
         .attr("width", d=> d[2]*values_distance)
         .attr("height", d=> d[3]*segment_height)
