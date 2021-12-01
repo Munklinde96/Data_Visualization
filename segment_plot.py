@@ -96,14 +96,18 @@ def make_continous_color_scale(intervals: dict):
 
 def normalize(res_intensities, is_log_scaled = False,  min_val=0, intensity_value= None):
     values = np.array(res_intensities)
-    print("values",values)
     if is_log_scaled:
         values = np.log(values)
     normalized = (values - min(values)) / (max(values) - min(values)) # normalize
+    print("normalized pre intensity value", normalized)
+    print("normalized sum pre intensity value", normalized.sum())
     if intensity_value is not None:
-        normalized = normalized * intensity_value       
+        normalized = normalized * intensity_value 
+    print("intensity_value", intensity_value)
+    print("normalized pre push ", normalized)
+    print("normalized sum ", normalized.sum())      
     normalized = normalized * (1 - min_val) + min_val
-    print("normalized",normalized)
+    print("normalized after push ", normalized)
     return normalized
 
 def colors_(values: list , color_scale = 'Blues', is_log_scaled = True, is_normalized = True, intensity_value = None):
@@ -111,7 +115,7 @@ def colors_(values: list , color_scale = 'Blues', is_log_scaled = True, is_norma
     cmap = plt.cm.get_cmap(color_scale)
     if len(values) == 1:
         if intensity_value is not None:
-            return [cls.rgb2hex(cmap(intensity_value))]
+            return [cls.rgb2hex(cmap(intensity_value * (1 - 0.2) + 0.2))]
         return [cls.rgb2hex(cmap(1.0))]
     elif is_normalized:
         normalized = normalize(values, is_log_scaled,  min_val=0.2, intensity_value=intensity_value)
