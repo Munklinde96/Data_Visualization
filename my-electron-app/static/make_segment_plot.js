@@ -34,6 +34,7 @@ function renderSegmentPlot(){
     var max_peptide = data.max_peptide;
     var min_intensity = min_peptide[0];
     var max_intensity = max_peptide[0];
+    var histogram_data = data.histogram_data;
     //round min_intensity and max_intensity to 10 decimals
     var min_intensity = Math.round(min_intensity * 100000000) / 100000000;
     var max_intensity = Math.round(max_intensity * 100000000) / 100000000;
@@ -110,12 +111,31 @@ function renderSegmentPlot(){
         .attr("transform", "translate(" + 0 + "," + (selector_height + margin_overview.bottom - 1+12) + ")")
         .call(xAxis_labels);
 
+    // make every other label smaller
+    var adjust_xaxis = function (scale) {
+        // make every second label have font size by scale smaller
+        x_labels.attr("font-size", function(d,i){
+            if (i % 2 == 0) {
+                return scale * mod_label_size;
+            } else {
+                return mod_label_size;
+            }
+        });
+    }
+
+    //make zoom fuctionality for x axis
+    
+    // TODO
+    // adjust_xaxis(2);
+    
+    
     var rx = 2
     var ry = 2
     var stroke_width = 0.1
     var opacity = 0.7
     var opacity_mod = 0.8
     var opacity_mod_grey = 0.5
+    var opacity_highlight_legend = 0.85
     // sample data for rectangles
 
 
@@ -150,26 +170,34 @@ function renderSegmentPlot(){
         .style("padding", "5px")
 
     // Three function that change the tooltip when user hover / move / leave a cell
-    function mouseover(d) {
-        tooltip.style("opacity", 1)
+    function mouseover(d){
+        tooltip.style("opacity", 1);
     }
-    function mousemove_modification(d) {
-        // get modification type from colors_to_mod_map map
+
+    function mouseover_mod(d) {
+        makeModificationTooltip(colors_to_mod_map, d, tooltip);
+        
+        highlightSegmentAndModInXaxis(rect_patches, d, mod_patches, colors_to_mod_map, peptide_seq, svg);
+
+        // COLORING of modificaiton in legend and in segment
+        d3.select(this)  // Highlight color of mod in segment
+           .style("fill", d[4])
+           .attr("opacity", opacity_mod);
+
         var mod_type = colors_to_mod_map.get(d[4]);
-        tooltip.html('<div class="container"><p>Intensity: ' + expo(d[5], 3) + '</p><p>Modification Type: ' + mod_type + '</p><div id="peptide_selection_view"></div></div>')
-            .style("left", (d3.event.pageX + 10) + "px")
-            .style("top", (d3.event.pageY - 10) + "px");
-
-        // get segment in rect_patches where d[0] and d[1] are located and call highlightSeqInXAxis
-        var segment = rect_patches.filter(function(rect) {
-            return (rect[0] <= d[0] && d[0] <= rect[0] + rect[2] && rect[1] <= d[1] && d[1] < rect[1] + rect[3]);
+        // Highlight color in  mod legend
+        var legend_rects_ = d3.selectAll(".legend_rects");
+        var legend_rects_filtered = legend_rects_.filter(function(rect) {
+            return (rect == mod_type)
         });
-
-        // get all modification on this segments - retuns [mod_types_and_positions, mod_positions]
-        var modPositionsAndTypes = getModificationPositions(mod_patches, segment[0], colors_to_mod_map, peptide_seq);
-        var mod_positions = modPositionsAndTypes[1];
-        var specific_mod_pos = d[0];
-        var x_axis_highlight = highlightSeqInXAxis(svg, segment[0], mod_positions, specific_mod_pos, true);
+        var legend_rects_filtered_fill = legend_rects_filtered.style("fill");
+        var legend_rects_filtered_fill_hex = d3.rgb(legend_rects_filtered_fill).toString();
+        var mod_rect_hex_color = d3.rgb(d[4]).toString();
+        // if color of mod rect is NOT same as color of mod legend rect change legend rect color
+        if (legend_rects_filtered_fill_hex != mod_rect_hex_color){ 
+            legend_rects_filtered.style("opacity", opacity_highlight_legend);
+            legend_rects_filtered.style("fill", d[4]);
+        }
     }
 
     function mouseclick (d){
@@ -220,17 +248,44 @@ function renderSegmentPlot(){
     
     function mouseleave(d) {
         tooltip.style("opacity", 0)
-        var x_axis_highlight = svg.selectAll(".xAxis_labels")
-        .selectAll("text")
-        .style("fill", 'black')
-        .style("font-size", "1em")
-        .style("font-weight", "normal")
-        .style("opacity", 1);
+        setXaxisNormal(svg);
     }
 
-    function expo(x, f) {
-        return Number.parseFloat(x).toExponential(f);
+    function mouseleave_mod(d) {
+        tooltip.style("opacity", 0)
+        var x_axis_highlight = setXaxisNormal(svg);
+        var mod_fill = d3.select(this).style("fill");
+        if (mod_fill != "grey" && mod_fill != "rgb(128, 128, 128)") {
+            var legend_rects_ = d3.selectAll(".legend_rects");
+            // check if mod_fill is in legend_rects fill
+            var legend_rects_filtered = legend_rects_.filter(function(rect, i) {
+                var opacity_rect = d3.select(legend_rects_.nodes()[i]).style("opacity");
+                var rect_fill = d3.select(legend_rects_.nodes()[i]).style("fill");
+                return (rect_fill == mod_fill) && (opacity_rect != opacity_highlight_legend); //if selected and not temporarily selected (determined by highligt legend opacity)
+            });
+            // if legend_rects_filtered is empty, then the mod type is not selected in legend
+            if (legend_rects_filtered.empty()) {
+                d3.select(this)
+                    .style("fill", "grey")
+                    .attr("opacity", opacity);
+            }
+        }
+        // make all legend rects grey if they have opacity = opacity_highlight_legend
+        var legend_rects_ = d3.selectAll(".legend_rects");
+        var legend_rects_length = legend_rects_.size();
+        for (var i = 0; i < legend_rects_length; i++) {
+            var legend_rects_opacity = legend_rects_.nodes()[i].style.opacity;
+            if (legend_rects_opacity == opacity_highlight_legend) {
+                legend_rects_.nodes()[i].style.fill = "grey";
+                legend_rects_.nodes()[i].style.opacity = opacity_mod;
+                // set attr fill grey
+                d3.select(legend_rects_.nodes()[i])
+                    .style("fill", "grey")
+                    .attr("opacity", opacity_mod);
+            }           
+        }
     }
+           
 
     var mod_rects = svg.selectAll("boo")
         .data(mod_patches)
@@ -247,9 +302,9 @@ function renderSegmentPlot(){
         .attr("opacity", opacity_mod)
         .attr("stroke", "black")
         .attr("stroke-width", stroke_width)
-        .on("mouseover",mouseover)
-        .on("mouseenter", mousemove_modification)
-        .on("mouseout", mouseleave);    
+        .on("mouseover",mouseover_mod)
+        .on("mouseleave", mouseleave_mod);
+
 
     // Inspired by: https://www.d3-graph-gallery.com/graph/custom_legend.html
     //   modification labels
@@ -258,6 +313,7 @@ function renderSegmentPlot(){
         .data(modification_color_map_keys)
         .enter()
         .append("rect")
+        .attr("class", "legend_rects")
         .attr("x", 0)
         .attr("y", function(d,i){ return 100 + i*(mod_label_size+5)}) // 100 is where the first dot appears. 25 is the distance between dots
         .attr("width", mod_label_size)
@@ -279,29 +335,8 @@ function renderSegmentPlot(){
         .on("click", function(d,i){
             // iterate over all modifications where the color is the same as the one clicked
             // and change the opacity to 0
-            mod_rects.filter(function(dd){
-                color_val = modification_color_map[d];
-                if (color_val == dd[4]) {
-                    // check color
-                    col = d3.select(this).style("fill");
-                    if (col == "rgb(128, 128, 128)" || col == 'grey') {
-                        // if grey
-                        // console.log("color is grey");
-                        d3.select(this).style("fill", color_val);
-                        d3.select(this).attr("opacity", opacity_mod);
-                    } else {
-                        d3.select(this).style("fill", "grey");
-                        d3.select(this).attr("opacity", opacity_mod);
-                    }
-                    // opacity_ = d3.select(this).attr("opacity");
-                    // // change opacity
-                    // if (opacity_ == 0) {
-                    //     d3.select(this).attr("opacity", opacity_mod);
-                    // } else {
-                    //     d3.select(this).attr("opacity", 0);
-                    // }
-                }
-            })
+            color_val = modification_color_map[d];
+            toggleColorModRects(mod_rects, color_val, opacity_mod);
             // fill box with color of text next to it (if it is grey)
             var box_fill = d3.select(this).style("fill");
             if (box_fill == "rgb(128, 128, 128)" || box_fill == "grey") {
@@ -309,7 +344,6 @@ function renderSegmentPlot(){
             } else {
                 d3.select(this).style("fill", "grey");
             }
-            
         });
 
     
@@ -623,7 +657,11 @@ function renderSegmentPlot(){
             .attr("transform", "translate(" + (scaleFactor * (selector_range/right_selector_border_x)  - (ndx + selector_x) * overview_scale) + "," + (selector_height + margin_overview.bottom - 1+12) + ")")
             .call(xAxis_labels);
     }
-});
+
+    // get modification positions
+    makeHistogramPlot(histogram_data, selector_height, peptide_length, width, svg);
+
+    });
 }
 
 (function() {
@@ -636,6 +674,101 @@ function renderSegmentPlot(){
         }
       }, 500);     
  })();
+
+
+function highlightSegmentAndModInXaxis(rect_patches, d, mod_patches, colors_to_mod_map, peptide_seq, svg) {
+    // get segment in rect_patches where d[0] and d[1] are located and call highlightSeqInXAxis
+    var segment = rect_patches.filter(function (rect) {
+        return (rect[0] <= d[0] && d[0] <= rect[0] + rect[2] && rect[1] <= d[1] && d[1] < rect[1] + rect[3]);
+    });
+
+    // get all modification on this segments - retuns [mod_types_and_positions, mod_positions]
+    var modPositionsAndTypes = getModificationPositions(mod_patches, segment[0], colors_to_mod_map, peptide_seq);
+    var mod_positions = modPositionsAndTypes[1];
+    var specific_mod_pos = d[0];
+    var x_axis_highlight = highlightSeqInXAxis(svg, segment[0], mod_positions, specific_mod_pos, true);
+}
+
+function makeModificationTooltip(colors_to_mod_map, d, tooltip) {
+    tooltip.style("opacity", 1);
+    var mod_type = colors_to_mod_map.get(d[4]);
+    tooltip.html("<p>Intensity: " + expo(d[5], 3) + "</p><p>Modification Type: " + mod_type + "</p>")
+        .style("left", (d3.event.pageX + 10) + "px")
+        .style("top", (d3.event.pageY - 10) + "px");
+}
+
+function setXaxisNormal(svg) {
+    return svg.selectAll(".xAxis_labels")
+        .selectAll("text")
+        .style("fill", 'black')
+        .style("font-size", "1em")
+        .style("font-weight", "normal")
+        .style("opacity", 1);
+}
+
+function toggleColorModRects(mod_rects, color_val, opacity_mod) {
+    mod_rects.filter(function (dd) {
+        if (color_val == dd[4]) {
+            // check color
+            col = d3.select(this).style("fill");
+            if (col == "rgb(128, 128, 128)" || col == 'grey') { // if grey
+                d3.select(this).style("fill", color_val);
+                d3.select(this).attr("opacity", opacity_mod);
+            } else {
+                d3.select(this).style("fill", "grey");
+                d3.select(this).attr("opacity", opacity_mod);
+            }
+        }
+    }); 
+}
+
+function makeHistogramPlot(histogram_data, selector_height, peptide_length, width, svg) {
+    var modification_positions = Object.values(histogram_data.x);
+    var unique_values = Array.from(new Set(modification_positions)).length; // get number of unique modification positions
+    var num_bins = unique_values ; // determine bin size based on number of unique modification positions
+    var histogram_height = selector_height / 2;
+
+    // make histogram from values
+    var histogram = d3.histogram()
+        .domain(d3.extent(modification_positions)) // then the domain of the graphic
+        .thresholds(num_bins); // then the numbers of bins
+    var bins = histogram(modification_positions);
+
+    // make histogram x and y axis
+    var x = d3.scaleLinear()
+        .domain([1, peptide_length+1])
+        .range([0, width]);
+    var y = d3.scaleLinear()
+        .domain([0, d3.max(bins, d => d.length)])
+        .range([histogram_height, 0]);
+    var xAxis = d3.axisBottom(x);
+    var yAxis = d3.axisLeft(y);
+
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(" + 0 + "," + histogram_height + ")")
+        .call(xAxis);
+    svg.append("g")
+        .attr("class", "y axis")
+        .attr("transform", "translate(" + 0 + "," + 0 + ")")
+        .call(yAxis);
+
+    // make histogram bars
+    var bar = svg.selectAll(".bar")
+        .data(bins)
+        .enter().append("g")
+        .attr("class", "bar")
+        .attr("transform", function (d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; });
+    bar.append("rect")
+        .attr("x", 1)
+        .attr('fill', 'grey')
+        .attr("width", x(bins[0].x1) - x(bins[0].x0) - 1)        
+        .attr("height", function (d) { return histogram_height - y(d.length); });
+
+    // delete x-axis ticks and labels
+    svg.selectAll(".x.axis .tick").remove();
+    svg.selectAll(".x.axis .domain").remove();
+}
 
 function getModificationPositions(mod_patches, d, colors_to_mod_map, peptide_sequence) {
     var mod_types_and_positions = [];
@@ -687,3 +820,8 @@ function highlightSeqInXAxis(svg, d, mod_positions, specific_mod_pos, has_specif
                 return 0.4;
             }
         })};
+
+
+    function expo(x, f) {
+        return Number.parseFloat(x).toExponential(f);
+    }
