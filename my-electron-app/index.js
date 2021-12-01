@@ -25,8 +25,7 @@ const loadMainWindow = () => {
                 }
             });
             mainWindow.maximize();
-            mainWindow.loadFile(path.join(__dirname, "heatmap_view.html"));
-            // mainWindow.loadFile(path.join(__dirname, "heatmap_view.html"));
+            mainWindow.loadFile(path.join(__dirname, "index.html"));
     }
 }
 

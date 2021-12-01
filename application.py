@@ -55,7 +55,6 @@ def buildSampleModData(df, protein):
     data = None
     if protein == "":
         data = get_sample_heatmap_data(df)
-        print("data", data)
     else:
         data = get_sample_heatmap_data(df, _protein=protein)
     return data.to_json()
@@ -149,11 +148,9 @@ def returnProteinModData():
     minModCount = request.args.get('min_mod_count', default = 0, type = int)
     normalization = request.args.get('normalization_type', default = "", type = str)
     samples = request.args.get('samples', default = "", type = str).split(",")
-    print(samples)
     proteinModJson = buildProteinModData(data.DataFrame, minModCount, normalization)
     data.ProteinModData = json.loads(proteinModJson)
     f=data.ProteinModData
-    print("fss", f)
     return f
 
 @application.route("/get-sample-mod-data",methods=["GET","POST"])
