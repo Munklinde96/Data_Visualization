@@ -13,7 +13,7 @@ function initializeBackend(){
 }
 
 const loadMainWindow = () => {
-    process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
+    //process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
     initializeBackend().onreadystatechange = (e) => {
             const mainWindow = new BrowserWindow({
                 width : 1200,
@@ -21,11 +21,11 @@ const loadMainWindow = () => {
                 webPreferences: {
                     nodeIntegration: true,
                     webviewTag: true,                
-                    contextIsolation: false
+                    //contextIsolation: false
                 }
             });
             mainWindow.maximize();
-            mainWindow.loadFile(path.join(__dirname, "index.html"));
+            mainWindow.loadFile(path.join(__dirname, "heatmap_view.html"));
             // mainWindow.loadFile(path.join(__dirname, "heatmap_view.html"));
     }
 }

@@ -256,6 +256,4 @@ function sortSamplesBySumOfAllModifications(proteins, proteinStructData) {
     });
 }
 
-(function() {
-    renderSampleModPlot();
-});
+renderSampleModPlot();
