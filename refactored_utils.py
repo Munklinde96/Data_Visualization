@@ -60,9 +60,7 @@ def sanitize_data(df, sample_column_id='Area'):
     for col in selected_sample_columns:  #make Area samples Nan values 0
         df[col] = df[col].fillna(0)
     df = df[df[selected_sample_columns].sum(axis=1) > 0]
-
     df["PTM"] = df["PTM"].fillna("Unmodified")
-
 
     protein_sequence = ''
     current_protein = ''

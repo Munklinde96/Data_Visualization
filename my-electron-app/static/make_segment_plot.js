@@ -6,7 +6,6 @@ function renderSegmentPlot(){
     } else {
         document.getElementById('no_protein_div_3').innerHTML = "<div></div>";
     }
-
     
     // remove old svg
     d3.select("#graphDiv3").select("svg").remove();
@@ -55,11 +54,8 @@ function renderSegmentPlot(){
 
     // set the dimensions and margins of the graph
     var margin = {top: 30, right: 20, bottom: 30, left: 20};
-    var width = screen.width;
-    var height = plot_height*5;
-
     var margin_overview = {top: 30, right: 15, bottom: 10, left: 15};
-    var width = screen.width;
+    var width = screen.width * 0.9;
     var mod_label_size = 10
     var color_bar_width = 20;
     var color_bar_height = 180;
@@ -209,7 +205,8 @@ function renderSegmentPlot(){
         var mod_positions = modPositionsAndTypes[1];
         var mod_types_and_positions_str = mod_types_and_positions.join(", "); 
         proteinStartPos = d[0]+1;
-        proteinEndPos = proteinStartPos+d[2];
+        proteinEndPos = proteinStartPos+d[2] - 1;
+        console.log("(" + proteinStartPos + "-" + proteinEndPos + ")");
         selectedSequence=data.seqq.substring(proteinStartPos, proteinEndPos);
         toolTipWidth = selectedSequence.length*15;
         if(toolTipWidth > 600){

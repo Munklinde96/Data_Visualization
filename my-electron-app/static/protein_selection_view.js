@@ -15,7 +15,6 @@ function renderProteinSelectionPlot(){
     
     d3.json("http://127.0.0.1:5000/get-segment-protein-data?protein="+getSelectedProtein()+"&samples="+getSelectedSamples()+"&start_pos="+proteinStartPos+"&end_pos="+proteinEndPos, function(error, data) {
         if (error) throw error;
-        console.log(data);
         var rect_patches = data.peptide_patches;
         var mod_patches = data.mod_patches;
         var peptide_seq_prot = selectedSequence;
@@ -43,7 +42,6 @@ function renderProteinSelectionPlot(){
     var segment_height = 6;
     var values_distance = 10;
     // set the dimensions and margins of the graph
-    console.log("width is: "+peptide_seq_prot.length*5);
     var margin = {top: 30, right: 30, bottom: 30, left: 30},
         width = toolTipWidth*0.8,
         height = data.height*5;
@@ -87,11 +85,6 @@ function renderProteinSelectionPlot(){
     function expo(x, f) {
         return Number.parseFloat(x).toExponential(f);
       }
-    
-    if(rect_patches.length > 0){
-        console.log(rect_patches[0][0])
-        console.log(rect_patches[0][2])
-    }
 
     var mod_rects = svg.selectAll("boo")
         .data(mod_patches)
