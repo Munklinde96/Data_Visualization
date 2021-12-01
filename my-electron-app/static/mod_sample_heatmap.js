@@ -61,8 +61,8 @@ function renderSampleModPlot(){
             }
         }
     
-        var start = d3.hsl(245, 1, 0.90); // org color min 225°, 100%, 70%
-        var end = d3.hsl(245, 0.3, 0.20);     // org color max 225°, 30%, 20%
+        var start = d3.hsl(240, 1, 0.90); // org color min 225°, 100%, 70%
+        var end = d3.hsl(240, 0.3, 0.20);     // org color max 225°, 30%, 20%
         // make seqeuntial color scale between start and end
         var myColor = d3.scaleSequential(d3.interpolateHsl(start, end))
             .domain([minValue, maxValue]);
@@ -238,9 +238,7 @@ function renderSampleModPlot(){
     });
 }
 
-(function() {
-    renderSampleModPlot();
-});
+
 
 function sortSamplesBySumOfAllModifications(proteins, proteinStructData) {
     proteins.sort(function (a, b) {
@@ -257,3 +255,7 @@ function sortSamplesBySumOfAllModifications(proteins, proteinStructData) {
         return bSum - aSum;
     });
 }
+
+(function() {
+    renderSampleModPlot();
+});

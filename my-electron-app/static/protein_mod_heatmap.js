@@ -19,13 +19,12 @@ function renderProteinModPlot(){
     //Read the data
     d3.json("http://127.0.0.1:5000/get-protein-mod-data?min_mod_count="+getMinModificationCount()+"&normalization_type="+getSelectedNormalization()+"&samples="+getSelectedSamples(), function(error, data) {
         // validate request
-        console.log("####",data);
         if (error) throw error;
         // build modification and protein categories
         var maxValue = null;
         var minValue = 0;
         var proteinStructData = null;
-        var sortingOrderProteins = {}; //QUICK FIX - make inside  html file instead
+        var sortingOrderProteins = getSortingOrderProteins();
         var normalizationType = getSelectedNormalization();
 
         for (const [protein, mods] of Object.entries(data)) {
@@ -55,8 +54,8 @@ function renderProteinModPlot(){
         }
        
           
-        var start = d3.hsl(205, 1, 0.90); // org color min 225°, 100%, 70%
-        var end = d3.hsl(205, 0.3, 0.20);   // org color max 225°, 30%, 20%
+        var start = d3.hsl(210, 1, 0.90); // org color min 225°, 100%, 70%
+        var end = d3.hsl(210, 0.3, 0.20);   // org color max 225°, 30%, 20%
         var myColor = d3.scaleSequential(d3.interpolateHsl(start, end))
             .domain([minValue, maxValue]);
         // var myColor = d3.scaleLinear()
@@ -71,7 +70,8 @@ function renderProteinModPlot(){
         var initial_proteins = proteins;
         if ( Object.keys(sortingOrderProteins).length === 0) {
             sortProteinsBySumOfAllModifications(proteins, proteinStructData);
-            sortingOrderProteins = proteins;
+            sortingOrderProteins = proteins; 
+            setSortingOrderProteins(proteins);
         } else {
             proteins = sortingOrderProteins
             for (var i = 0; i < proteins.length; i++) { // remove proteins that are not in initial_proteins 
@@ -293,9 +293,7 @@ function renderProteinModPlot(){
     });
 }
 
-(function() {
-    renderProteinModPlot();
-});
+
 function changeTitleAccordingToNormalization(normalizationType) {
     if (normalizationType === "protein_intensity") {
         d3.select("#mod_protein_title").text("Modification count per protein - normalized by protein intensity");
@@ -351,3 +349,7 @@ function sortProteinsBySumOfAllModifications(proteins, proteinStructData) {
     });
 }
 
+
+(function() {
+    renderProteinModPlot();
+});

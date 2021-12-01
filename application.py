@@ -153,6 +153,7 @@ def returnProteinModData():
     proteinModJson = buildProteinModData(data.DataFrame, minModCount, normalization)
     data.ProteinModData = json.loads(proteinModJson)
     f=data.ProteinModData
+    print("fss", f)
     return f
 
 @application.route("/get-sample-mod-data",methods=["GET","POST"])
