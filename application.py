@@ -64,7 +64,6 @@ def buildSegmentData(df, protein, _samples=[], start_pos=0, end_pos=0, _stacked=
     intSamples = []
     for sample in _samples:
         intSamples.append(int(sample))
-    print(intSamples)
     # Create start and end indicies
     start_end_indicies = None
     if start_pos != 0 and end_pos != 0:
