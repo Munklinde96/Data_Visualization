@@ -207,7 +207,7 @@ function renderSegmentPlot(){
         proteinStartPos = d[0]+1;
         proteinEndPos = proteinStartPos+d[2] - 1;
         console.log("(" + proteinStartPos + "-" + proteinEndPos + ")");
-        selectedSequence=data.seqq.substring(proteinStartPos, proteinEndPos);
+        selectedSequence=data.seqq.substring(proteinStartPos-1, proteinEndPos);
         toolTipWidth = selectedSequence.length*15;
         if(toolTipWidth > 600){
             toolTipWidth = 600;
