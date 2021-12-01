@@ -316,6 +316,8 @@ def create_histogram_over_mod_positions(mod_patches, modtypes_color_map, peptide
         color_to_modtype[colors[i]] = mod_types[i]
 
     mod_positions_df = pd.DataFrame(mod_patches)
+    if(len(mod_patches) == 0):
+        return mod_positions_df
     columns = ['x', 'y', 'width', 'height', 'color', 'intensity']
     mod_positions_df.columns = columns
     # apply color_to_modtype to color column
