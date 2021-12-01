@@ -99,7 +99,7 @@ def normalize(res_intensities, is_log_scaled = False,  min_val=0, intensity_valu
     if is_log_scaled:
         values = np.log(values)
     if intensity_value is not None:
-        values = intensity_value / values        
+        values = values * intensity_value       
     values = (values - min(values)) / (max(values) - min(values)) # normalize
     normalized = values * (1 - min_val) + min_val
     return normalized
