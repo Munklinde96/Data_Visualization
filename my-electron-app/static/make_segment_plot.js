@@ -351,6 +351,11 @@ function renderSegmentPlot(){
             // iterate over all modifications where the color is the same as the one clicked
             // and change the opacity to 0
             color_val = modification_color_map[d];
+            if(selectedMods.has(d)){
+                selectedMods.delete(d);
+            } else {
+                selectedMods.set(d, color_val);
+            }
             toggleColorModRects(mod_rects, color_val, opacity_mod);
             // fill box with color of text next to it (if it is grey)
             var box_fill = d3.select(this).style("fill");
@@ -722,6 +727,8 @@ function setXaxisNormal(svg) {
 }
 
 function toggleColorModRects(mod_rects, color_val, opacity_mod) {
+    selectionColorVal = color_val;
+    selectionOpacityVal = opacity_mod;
     mod_rects.filter(function (dd) {
         if (color_val == dd[4]) {
             // check color

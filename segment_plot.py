@@ -75,7 +75,7 @@ def get_rectangles_for_peptides_and_mods(data, modtypes_color_map):
         if len(mod_positions) > 0:
             for _ms_pos, mod_type in zip(mod_positions, mod_types): #add mass shift color on rectangles if present
                 ms_color = modtypes_color_map[mod_type]
-                modifications.append(((_ms_pos), ms_color, agg_intensity))
+                modifications.append(((_ms_pos), ms_color, agg_intensity, mod_type))
         rectangles_and_mods.append((rec, modifications))
         
     return res_intensities, rectangles_and_mods
@@ -244,13 +244,19 @@ def get_patch_attributes(rectangles, spacing=0.2, colors = True, standard_height
             normalized_intensities_mods = np.asarray(intensities) / intensity
             y_pos = last_y
             for i in range(len(mods_list)):
-                m_pos, m_color, _ = mods_list[i]
+                m_pos = None
+                m_color = None 
+                mod_type = ""
+                if len(mods_list[i]) == 4:
+                    m_pos, m_color, _, mod_type = mods_list[i]
+                else:
+                    m_pos, m_color, _ = mods_list[i]
                 if colors:
                     mod_height = standard_height * normalized_intensities_mods[i]
-                    mod_attributes = (last_x+m_pos,y_pos, 1, mod_height, m_color, intensities[i]) # add in d3.js ec='black', lw=1, alpha=1
+                    mod_attributes = (last_x+m_pos,y_pos, 1, mod_height, m_color, intensities[i], mod_type) # add in d3.js ec='black', lw=1, alpha=1
                 else:
                     mod_height =  attribute * normalized_intensities_mods[i]
-                    mod_attributes = (last_x+m_pos, y_pos, 1, mod_height, m_color, intensities[i]) # add in d3.js ec='black', lw=1, alpha=1
+                    mod_attributes = (last_x+m_pos, y_pos, 1, mod_height, m_color, intensities[i], mod_type) # add in d3.js ec='black', lw=1, alpha=1
                 y_pos = y_pos + mod_height
                 mod_patches.append(mod_attributes)
     height = y_spaces.index(0)
@@ -322,7 +328,7 @@ def create_histogram_over_mod_positions(mod_patches, modtypes_color_map, peptide
         color_to_modtype[colors[i]] = mod_types[i]
 
     mod_positions_df = pd.DataFrame(mod_patches)
-    columns = ['x', 'y', 'width', 'height', 'color', 'intensity']
+    columns = ['x', 'y', 'width', 'height', 'color', 'intensity', 'mod_type']
     mod_positions_df.columns = columns
     # apply color_to_modtype to color column
     mod_positions_df['mod_type'] = mod_positions_df['color'].apply(lambda x: color_to_modtype[x])
@@ -353,6 +359,9 @@ def create_data_for_segment_plot(df, _protein="P02666", spacing=0.2, colors = Tr
     if(is_stacked):
         res_intensities, rectangles_and_mods = stack_recs(rectangles_and_mods)
     rects_and_attribute = map_to_attribute(colors, color_scale, is_log_scaled, res_intensities, rectangles_and_mods, intensity_value=intensity_value)
+    print("here")
+    print(rectangles_and_mods)
+    print("here")
     peptide_patches, mod_patches, height = get_patch_attributes(rects_and_attribute, spacing = spacing, standard_height=standard_height)
     seqq = get_protein_sequence(_protein)
 

@@ -161,7 +161,6 @@ def get_color_palette_for_modifications(modification_types = []):
     mod_type_map = {}
     for i in range(len(modification_types)):
         mod_type_map[modification_types[i]] = COLORS[i]
-
     return mod_type_map
 
 def get_color_legend_mods(modification_types_to_color_map):

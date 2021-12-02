@@ -6,7 +6,8 @@ function removeProteinSelectionPlot(){
 function renderProteinSelectionPlot(){
     // remove old svg
     removeProteinSelectionPlot();
-    
+
+
     //var p = document.getElementById("peptide_selection_view").getElementsByTagName("p")[0];
     //p.innerHTML = "Peptide Segments Plot - Protein: " + selectedProtein;
     //p.style.fontWeight = "bold";
@@ -136,6 +137,11 @@ function renderProteinSelectionPlot(){
         .attr("height", d=> d[3]*segment_height)
         // .attr("fill", d=> d[4])
         .attr("fill", function(d){
+            console.log(selectedMods);
+            console.log(d);
+            if(selectedMods.has(d[6])){
+                return selectedMods.get(d[6]);
+            }
             return 'grey';
         })
         .attr("rx", rx)
