@@ -14,7 +14,7 @@ uniprot = 'https://www.uniprot.org/uniprot/'
 def count_no_of_modifications(ptm_str):
     #check if NaN value
     if pd.isnull(ptm_str):
-        return None
+        return 0
     return 1 + ptm_str.count(';')
     
 

@@ -2,8 +2,8 @@
 function renderProteinModPlot(){
     console.log("drawing mod heatap");
     // set the dimensions and margins of the graph
-    var margin = {top: 30, right: 130, bottom: 30, left: 130},
-        width = screen.width*0.35,
+    var margin = {top: 30, right: 65, bottom: 30, left: 130},
+        width = screen.width*0.4,
         height = 500 - margin.top - margin.bottom;
     // remove old svg
     d3.select("#mod_heatmap").select("svg").remove();
@@ -77,7 +77,6 @@ function renderProteinModPlot(){
         // Modification categories
         var modifications = d3.map(proteinStructData, function(d){return d.mod;}).keys();
         sortModificationsAndMoveUnmofifiedToTop(modifications);
-
         
         // Build X scales and axis:
         var x = d3.scaleBand()
@@ -88,11 +87,18 @@ function renderProteinModPlot(){
         .call(d3.axisBottom(x))
         .selectAll("text")  
         .style("text-anchor", "end")
+        .attr("transform", "rotate(-90)")
         .attr("dx", "-.8em")
-        .attr("dy", ".15em")
-        .attr("transform", "rotate(-90)");  
+        .attr("dy", "-0.6em");
         
-        // add label to xaxis
+        // Build Y scales and axis:
+        var y = d3.scaleBand()
+        .range([ height, 0 ])
+        .domain(modifications)
+        svg.append("g")
+        .call(d3.axisLeft(y));
+
+        // add the text label for the x axis
         svg.append("text")
         .attr("transform",
             "translate(" + (width/2) + " ," +
@@ -100,7 +106,18 @@ function renderProteinModPlot(){
         .style("text-anchor", "middle")
         .text("Protein");
 
+         // add label to y axis
+         svg.append("text")
+         .attr("transform", "rotate(-90)")
+         .attr("y", 0 - margin.left)
+         .attr("x",0 - (height / 2))
+         .attr("dy", "1em")
+         .style("text-anchor", "middle")
+         .text("Modification Type");
 
+        // add the subtitle
+        var normalizationType = getSelectedNormalization();
+        
         // Build Y scales and axis:
         var y = d3.scaleBand()
         .range([ height, 0 ])
@@ -118,15 +135,6 @@ function renderProteinModPlot(){
         .style("border-width", "2px")
         .style("border-radius", "5px")
         .style("padding", "5px")
-
-        // add label to y axis
-        svg.append("text")
-        .attr("transform", "rotate(-90)")
-        .attr("y", 0 - margin.left)
-        .attr("x",0 - (height / 2))
-        .attr("dy", "1em")
-        .style("text-anchor", "middle")
-        .text("Modification Type");
 
         // Three function that change the tooltip when user hover / move / leave a cell
         var mouseover = function(d) {
@@ -153,7 +161,7 @@ function renderProteinModPlot(){
                     target.style('stroke', 'red');
                     target.attr('rx', 2)
                     target.attr('ry', 2)
-                    target.style('stroke-width', 1);
+                    target.style('stroke-width', 2);
                 }
             }
             setSelectedProtein(d.protein);            
@@ -257,45 +265,18 @@ function renderProteinModPlot(){
         svg.append("g")
         .attr("transform", "translate(" + (width + color_bar_width + 5) + ",0)")
         .call(legendAxis);
-
-        // svg.append("text")
-        // .attr("x", width - 30 )
-        // .attr("y", -10)
-        // .style("text-anchor", "start")
-        // .text("Modification Count");
         
-        // add text label on to colorbar
+        // add text label to colorbar
         svg.append("text")
         .attr("transform", "translate("+ (width + color_bar_width + 35 + color_bar_width) +","+(color_bar_height/2)+")rotate(-90)")
         .style("text-anchor", "middle")
         .text(function(){
-            // if(normalizationType === "protein_intensity"){
-            //     return "Modification Count - normalized by protein intensity";
-            // }
-            
-            // else if (normalizationType === "protein_total_mod_count"){
-            //     return "Modification Count - normalized by total modification count in protein";
-            // }
-            // else return "Modification Count";
             return "Modification Count";
         });
-        
-        // change title of heatmap
-        changeTitleAccordingToNormalization(normalizationType);
         
     });
 }
 
-
-function changeTitleAccordingToNormalization(normalizationType) {
-    if (normalizationType === "protein_intensity") {
-        d3.select("#mod_protein_title").text("Modification count per protein - normalized by protein intensity");
-    } else if (normalizationType === "protein_total_mod_count") {
-        d3.select("#mod_protein_title").text("Modification count per protein - normalized by total modification count in protein");
-    } else {
-        d3.select("#mod_protein_title").text("Modification count per protein");
-    }
-}
 
 function makeUnmodifiedLabelItalic(svg) {
     svg.selectAll(".tick text")

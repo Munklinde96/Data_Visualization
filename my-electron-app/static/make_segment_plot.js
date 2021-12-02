@@ -24,6 +24,7 @@ function renderSegmentPlot(){
     
     d3.json("http://127.0.0.1:5000/get-segment-data?protein="+getSelectedProtein()+"&samples="+getSelectedSamples(), function(error, data) {
     if (error) throw error;
+    console.log(data);
     var rect_patches = data.peptide_patches;
     var mod_patches = data.mod_patches;
     var plot_height = data.height;
@@ -51,6 +52,7 @@ function renderSegmentPlot(){
     }
 
     var selector_height = 100
+    var histogram_height = selector_height / 4;
 
     // set the dimensions and margins of the graph
     var margin = {top: 30, right: 20, bottom: 30, left: 20};
@@ -65,7 +67,7 @@ function renderSegmentPlot(){
     var svg = d3.select("#graphDiv3")
     .append("svg")
     .attr("width", width)
-    .attr("height", height + selector_height)
+    .attr("height", height + selector_height + histogram_height + 50)
     .append("g")
     
     var segment_height = 5;
@@ -99,12 +101,12 @@ function renderSegmentPlot(){
         
     var x_ticks = svg.append("g")
         .attr("class", "xAxis_ticks")
-        .attr("transform", "translate(" + 0 + "," + (selector_height + margin_overview.bottom - 1+12) + ")")
+        .attr("transform", "translate(" + 0 + "," + (histogram_height + selector_height + margin_overview.bottom - 1+12) + ")")
         .call(xAxis_ticks);
     
     var x_labels = svg.append("g")
         .attr("class", "xAxis_labels")
-        .attr("transform", "translate(" + 0 + "," + (selector_height + margin_overview.bottom - 1+12) + ")")
+        .attr("transform", "translate(" + 0 + "," + (histogram_height + selector_height + margin_overview.bottom - 1+12) + ")")
         .call(xAxis_labels);
 
     // make every other label smaller
@@ -140,7 +142,7 @@ function renderSegmentPlot(){
         .enter()
         .append("rect")
         .attr("x", d => d[0]*values_distance)
-        .attr("y", d => (selector_height + margin_overview.bottom +12) + d[1]*segment_height)
+        .attr("y", d => (histogram_height + selector_height + margin_overview.bottom +12) + d[1]*segment_height)
         .attr("width", d=> d[2]*values_distance)
         .attr("height", d=> d[3]*segment_height)
         .attr("fill", d=> d[4])
@@ -205,7 +207,6 @@ function renderSegmentPlot(){
         var mod_positions = modPositionsAndTypes[1];
         var mod_types_and_positions_str = mod_types_and_positions.join(", "); 
         console.log("protein is here: ");
-        selectedProteinIntensity = d[5];
         proteinStartPos = d[0]+1;
         proteinEndPos = proteinStartPos+d[2] - 1;
         console.log("(" + proteinStartPos + "-" + proteinEndPos + ")");
@@ -307,7 +308,7 @@ function renderSegmentPlot(){
         .enter()
         .append("rect")
         .attr("x", d => d[0]*values_distance)
-        .attr("y", d=> (selector_height + margin_overview.bottom+12) + d[1]*segment_height)
+        .attr("y", d=> (histogram_height + selector_height + margin_overview.bottom+12) + d[1]*segment_height)
         .attr("width", d=> d[2]*values_distance)
         .attr("height", d=> d[3]*segment_height)
         // .attr("fill", d=> d[4])
@@ -503,7 +504,7 @@ function renderSegmentPlot(){
         .enter()
         .append("rect")
         .attr("x", d => d[0]*sub_values_distance)
-        .attr("y", d=>  d[1]*sub_segment_height)
+        .attr("y", d=>  histogram_height + d[1]*sub_segment_height)
         .attr("width", d=> d[2]*sub_values_distance)
         .attr("height", d=> d[3]*sub_segment_height)
         .attr("fill", d=> d[4])
@@ -512,7 +513,7 @@ function renderSegmentPlot(){
     var selector = svg.append("rect")
         .attr("class", "mover")
         .attr("x", 0)
-        .attr("y", 0)
+        .attr("y", histogram_height)
         .attr("height", selector_height)
         .attr("width", selector_width)
         .attr("fill", "grey")
@@ -524,7 +525,7 @@ function renderSegmentPlot(){
     var left_selector_border = svg.append("rect")
         .attr("class", "left_selector_border")
         .attr("x", 0)
-        .attr("y", 0)
+        .attr("y", histogram_height)
         .attr("height", selector_height)
         .attr("width", 4)
         .attr("fill", "grey")
@@ -536,7 +537,7 @@ function renderSegmentPlot(){
     var right_selector_border = svg.append("rect")
         .attr("class", "right_selector_border")
         .attr("x", selector_width)
-        .attr("y", 0)
+        .attr("y", histogram_height)
         .attr("height", selector_height)
         .attr("width", 4)
         .attr("fill", "grey")
@@ -562,8 +563,8 @@ function renderSegmentPlot(){
 
         rects.attr("transform", "translate(" + (-selector_range/selector_width * nx - overview_scale *left_selector_border_x) + "," + 0 + ")");
         mod_rects.attr("transform", "translate(" + (-selector_range/selector_width * nx - overview_scale *left_selector_border_x) + "," + 0 + ")");
-        x_ticks.attr("transform", "translate(" + (-selector_range/selector_width * nx - overview_scale *left_selector_border_x) + "," + (selector_height + margin_overview.bottom - 1+12) + ")");
-        x_labels.attr("transform", "translate(" + (-selector_range/selector_width * nx - overview_scale *left_selector_border_x) + "," + (selector_height + margin_overview.bottom - 1+12) + ")");
+        x_ticks.attr("transform", "translate(" + (-selector_range/selector_width * nx - overview_scale *left_selector_border_x) + "," + (histogram_height + selector_height + margin_overview.bottom - 1+12) + ")");
+        x_labels.attr("transform", "translate(" + (-selector_range/selector_width * nx - overview_scale *left_selector_border_x) + "," + (histogram_height + selector_height + margin_overview.bottom - 1+12) + ")");
         left_selector_border.attr("transform", "translate(" + nx + "," + 0 + ")");
         right_selector_border.attr("transform", "translate(" + nx + "," + 0 + ")");
     }
@@ -614,11 +615,11 @@ function renderSegmentPlot(){
         xScale_labels.range([label_r[0]*scaleFactor, label_r[1] * scaleFactor]);
 
         x_ticks
-            .attr("transform", "translate(" + (scaleFactor * (selector_range/ndx) - (selector_x + left_selector_border_x) *overview_scale) + "," + (selector_height + margin_overview.bottom - 1+12) + ")")
+            .attr("transform", "translate(" + (scaleFactor * (selector_range/ndx) - (selector_x + left_selector_border_x) *overview_scale) + "," + (histogram_height + selector_height + margin_overview.bottom - 1+12) + ")")
             .call(xAxis_ticks);
 
         x_labels
-            .attr("transform", "translate(" + (scaleFactor * (selector_range/ndx) - (selector_x + left_selector_border_x) *overview_scale) + "," + (selector_height + margin_overview.bottom - 1+12) + ")")
+            .attr("transform", "translate(" + (scaleFactor * (selector_range/ndx) - (selector_x + left_selector_border_x) *overview_scale) + "," + (histogram_height + selector_height + margin_overview.bottom - 1+12) + ")")
             .call(xAxis_labels);
     }
 
@@ -670,11 +671,11 @@ function renderSegmentPlot(){
         xScale_labels.range([label_r[0]*scaleFactor, label_r[1] * scaleFactor]);
 
         x_ticks
-            .attr("transform", "translate(" + (scaleFactor * (selector_range/right_selector_border_x)  - (ndx + selector_x) * overview_scale) + "," + (selector_height + margin_overview.bottom - 1+12) + ")")
+            .attr("transform", "translate(" + (scaleFactor * (selector_range/right_selector_border_x)  - (ndx + selector_x) * overview_scale) + "," + (histogram_height + selector_height + margin_overview.bottom - 1+12) + ")")
             .call(xAxis_ticks);
 
         x_labels
-            .attr("transform", "translate(" + (scaleFactor * (selector_range/right_selector_border_x)  - (ndx + selector_x) * overview_scale) + "," + (selector_height + margin_overview.bottom - 1+12) + ")")
+            .attr("transform", "translate(" + (scaleFactor * (selector_range/right_selector_border_x)  - (ndx + selector_x) * overview_scale) + "," + (histogram_height + selector_height + margin_overview.bottom - 1+12) + ")")
             .call(xAxis_labels);
     }
 
@@ -747,8 +748,8 @@ function toggleColorModRects(mod_rects, color_val, opacity_mod) {
 function makeHistogramPlot(histogram_data, selector_height, peptide_length, width, svg) {
     var modification_positions = Object.values(histogram_data.x);
     var unique_values = Array.from(new Set(modification_positions)).length; // get number of unique modification positions
-    var num_bins = unique_values ; // determine bin size based on number of unique modification positions
-    var histogram_height = selector_height / 2;
+    var num_bins = peptide_length ; // determine bin size based on number of unique modification positions
+    var histogram_height = selector_height / 4;
 
     // make histogram from values
     var histogram = d3.histogram()
@@ -764,16 +765,11 @@ function makeHistogramPlot(histogram_data, selector_height, peptide_length, widt
         .domain([0, d3.max(bins, d => d.length)])
         .range([histogram_height, 0]);
     var xAxis = d3.axisBottom(x);
-    var yAxis = d3.axisLeft(y);
 
     svg.append("g")
         .attr("class", "x axis")
         .attr("transform", "translate(" + 0 + "," + histogram_height + ")")
         .call(xAxis);
-    svg.append("g")
-        .attr("class", "y axis")
-        .attr("transform", "translate(" + 0 + "," + 0 + ")")
-        .call(yAxis);
 
     // make histogram bars
     var bar = svg.selectAll(".bar")
@@ -784,6 +780,7 @@ function makeHistogramPlot(histogram_data, selector_height, peptide_length, widt
     bar.append("rect")
         .attr("x", 1)
         .attr('fill', 'grey')
+        .style("opacity", 0.7)
         .attr("width", x(bins[0].x1) - x(bins[0].x0) - 1)        
         .attr("height", function (d) { return histogram_height - y(d.length); });
 
