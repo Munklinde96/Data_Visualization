@@ -42,7 +42,6 @@ function getSelectedSamples(){
     var selectedSamples = window.localStorage.getItem(selectedSamplesKey);
     if(selectedSamples && selectedSamples !== ""){
         var jsonSamples = JSON.parse(selectedSamples);
-        console.log(jsonSamples);
         if(jsonSamples){
             jsonSamples.samples.sort();
             return jsonSamples.samples;
@@ -65,7 +64,6 @@ function setSelectedSamples(samples){
 
 function getSelectedNormalization(){
     var normalization = window.localStorage.getItem(selectedNormalizationKey);
-    console.log("normalization: "+normalization);
     if(normalization){
         return normalization
     }
@@ -79,7 +77,6 @@ function setSelectedNormalization(normalization){
 
 function getMinModificationCount(){
     var modCount = Number(window.localStorage.getItem(selectedMinModificationCountKey));
-    console.log("modCount: "+modCount);
     return modCount;
 }
 
@@ -102,7 +99,6 @@ function setTabPressed(){
 }
 
 function setDocumentLabels(){
-    console.log("setting document labels");
     // inputs
     try {
         document.getElementById("min_mod_count_input").value = getMinModificationCount();

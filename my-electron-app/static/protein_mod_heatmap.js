@@ -1,9 +1,8 @@
 
 function renderProteinModPlot(){
-    console.log("drawing mod heatap");
     // set the dimensions and margins of the graph
     var margin = {top: 30, right: 65, bottom: 30, left: 130},
-        width = screen.width*0.35,
+        width = screen.width*0.325,
         height = 500 - margin.top - margin.bottom;
     // remove old svg
     d3.select("#mod_heatmap").select("svg").remove();

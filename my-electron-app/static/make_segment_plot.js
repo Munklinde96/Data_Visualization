@@ -21,7 +21,6 @@ function renderSegmentPlot(){
     
     d3.json("http://127.0.0.1:5000/get-segment-data?protein="+getSelectedProtein()+"&samples="+getSelectedSamples(), function(error, data) {
     if (error) throw error;
-    console.log(data);
     var rect_patches = data.peptide_patches;
     var mod_patches = data.mod_patches;
     var plot_height = data.height;
@@ -203,10 +202,8 @@ function renderSegmentPlot(){
         var mod_types_and_positions = modPositionsAndTypes[0];
         var mod_positions = modPositionsAndTypes[1];
         var mod_types_and_positions_str = mod_types_and_positions.join(", "); 
-        console.log("protein is here: ");
         proteinStartPos = d[0]+1;
         proteinEndPos = proteinStartPos+d[2] - 1;
-        console.log("(" + proteinStartPos + "-" + proteinEndPos + ")");
         selectedSequence=data.seqq.substring(proteinStartPos-1, proteinEndPos);
         toolTipWidth = selectedSequence.length*15;
         if(toolTipWidth > 600){

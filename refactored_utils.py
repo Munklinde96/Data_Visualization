@@ -106,7 +106,6 @@ def normalize_intensities(df, sample_column_id = 'Area'):
 
 # nomalize peptide intensity(per sample) over protetin intensity
 def normalize_intensities_by_protein_intensity(df, sample_column_id='Area'):
-    print(df.head())
     protein_start = [0]
     protein_end = []
     protein_id = ""
@@ -132,7 +131,6 @@ def normalize_intensities_by_protein_intensity(df, sample_column_id='Area'):
             protein_df[col_name] = protein_df[col_name].divide(intensity_sum)
         
         dataframes.append(protein_df)
-    print(len(dataframes))
     
     return pd.concat(dataframes, axis=0, ignore_index=True)
 

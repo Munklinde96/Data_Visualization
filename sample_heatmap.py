@@ -30,7 +30,6 @@ def combine_and_aggregate_intensity(dataframes: list, sample_column_id='Area'):
             df_collection.append(df)
             continue
         df = df.copy()
-        print(df.head())
         df['#modifications'] = df['#modifications'].fillna(0)
         df['#modifications'] = df['#modifications'].replace(0,1)
         df['Intensity'] = df[sample_columns[i]].divide(df['#modifications'])
