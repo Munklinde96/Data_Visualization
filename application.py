@@ -108,7 +108,7 @@ def buildSegmentData(df, protein, _samples=[], start_pos=0, end_pos=0, _stacked=
 def homepage():
     # Get data and build dataframe
     # path = r"protein-peptides.csv"
-    path = r"UHT milk P036.csv"
+    path = r"protein-peptides.csv"
     #path = r"protein-peptides.csv"
     df = get_and_prepare_data(path)
     data.DataFrame = df

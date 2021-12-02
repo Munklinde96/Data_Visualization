@@ -148,7 +148,7 @@ function renderSegmentPlot(){
         .attr("stroke", "black")
         .attr("stroke-width", stroke_width)
         .on("mouseover",mouseover)
-        .on("mousemove", mousemove_segments)
+        .on("mouseenter", mousemove_segments)
         .on("click", mouseclick)
         .on("mouseout", mouseleave);
         

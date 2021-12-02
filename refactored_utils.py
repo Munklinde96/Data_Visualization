@@ -78,6 +78,8 @@ def sanitize_data(df, sample_column_id='Area'):
         #The start and end are 1-indexed
         protein_sequence_substring = protein_sequence[row['Start'] - 1 : int(row['End'])]
         if protein_sequence_substring != peptide:
+            print(protein_sequence_substring)
+            print(peptide)
             print('peptide mismatch')
             dropped_indices.append(index)
             continue
@@ -158,7 +160,8 @@ def get_color_palette_for_modifications(modification_types = []):
     
     mod_type_map = {}
     for i in range(len(modification_types)):
-        mod_type_map[modification_types[i]] = COLORS[i]
+        # mod_type_map[modification_types[i]] = COLORS[i]
+        mod_type_map[modification_types[i]] = 'grey'    
     return mod_type_map
 
 def get_color_legend_mods(modification_types_to_color_map):

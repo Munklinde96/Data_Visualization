@@ -30,9 +30,10 @@ def combine_and_aggregate_intensity(dataframes: list, sample_column_id='Area'):
             df_collection.append(df)
             continue
         df = df.copy()
-        df['#modifications'] = df['#modifications'].fillna(0)
-        df['#modifications'] = df['#modifications'].replace(0,1)
-        df['Intensity'] = df[sample_columns[i]].divide(df['#modifications'])
+        # df['#modifications'] = df['#modifications'].fillna(0)
+        # df['#modifications'] = df['#modifications'].replace(0,1)
+        df['Intensity'] = df[sample_columns[i]]
+        df['Intensity'] = df['Intensity'] / df['Intensity'].sum()
         df['PTM'] = df['PTM'].str.split(';').str[0]
         df_new = df[['PTM', 'Intensity']]
         df_new = df_new.groupby(['PTM']).sum()
@@ -50,7 +51,7 @@ def create_and_plot_sample_heatmap(df, _protein='P02666'):
 
 def get_sample_heatmap_data(df, _protein='P02666', sample_column_id='Area'):
     df = df[df['Protein Accession'] == _protein]
-    df = normalize_intensities(df, sample_column_id=sample_column_id)
+    # df = normalize_intensities(df, sample_column_id=sample_column_id)
     df_list = split_data_in_samples(df, sample_column_id=sample_column_id)
     combined = combine_and_aggregate_intensity(df_list, sample_column_id=sample_column_id).sort_values(by=['PTM'])
 
