@@ -741,7 +741,7 @@ function toggleColorModRects(mod_rects, color_val, opacity_mod) {
 function makeHistogramPlot(histogram_data, selector_height, peptide_length, width, svg) {
     var modification_positions = Object.values(histogram_data.x);
     var unique_values = Array.from(new Set(modification_positions)).length; // get number of unique modification positions
-    var num_bins = unique_values ; // determine bin size based on number of unique modification positions
+    var num_bins = peptide_length ; // determine bin size based on number of unique modification positions
     var histogram_height = selector_height / 4;
 
     // make histogram from values
