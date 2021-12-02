@@ -78,8 +78,6 @@ def sanitize_data(df, sample_column_id='Area'):
         #The start and end are 1-indexed
         protein_sequence_substring = protein_sequence[row['Start'] - 1 : int(row['End'])]
         if protein_sequence_substring != peptide:
-            print(protein_sequence_substring)
-            print(peptide)
             print('peptide mismatch')
             dropped_indices.append(index)
             continue
