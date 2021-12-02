@@ -312,7 +312,7 @@ function renderSegmentPlot(){
         .attr("opacity", opacity_mod)
         .attr("stroke", "black")
         .attr("stroke-width", stroke_width)
-        .on("mouseover",mouseover_mod)
+        .on("mouseenter",mouseover_mod)
         .on("mouseleave", mouseleave_mod);
 
 
