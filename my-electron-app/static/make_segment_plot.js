@@ -16,10 +16,7 @@ function renderSegmentPlot(){
         selectedSamplesKey = getSelectedSamples();
     }
     var p = document.getElementById("graphDiv3").getElementsByTagName("p")[0];
-    p.innerHTML = "Peptide Segments Plot - Protein: " + getSelectedProtein()+"; Samples: "+getSelectedSamples();
-    p.style.fontWeight = "bold";
-    p.style.fontStyle = "italic";
-
+    p.innerHTML = "<h5>Peptide Segments Plot</h5><h6>Protein: " + getSelectedProtein()+"; Samples: "+getSelectedSamples()+"</h6>";
     
     
     d3.json("http://127.0.0.1:5000/get-segment-data?protein="+getSelectedProtein()+"&samples="+getSelectedSamples(), function(error, data) {
